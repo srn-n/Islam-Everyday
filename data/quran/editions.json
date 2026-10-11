@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "numbering": "Kufan, 114 surahs, 6,236 ayat; ayah 1 of Al-Fatihah is the basmala",
+  "ar": {
+    "id": "ar-uthmani-quranenc",
+    "language": "ar",
+    "title": "The Noble Qur'an, Uthmani script",
+    "source": "quran-json npm package v3.1.2 (risan/quran-json), which takes the Uthmani text from the Noble Qur'an Encyclopedia (quranenc.com)",
+    "sourceUrl": "https://github.com/risan/quran-json",
+    "license": "Package licensed CC BY-SA 4.0 (LICENSE.txt); the Qur'an text itself is not subject to copyright",
+    "attribution": "Arabic text: Noble Qur'an Encyclopedia (quranenc.com) via quran-json",
+    "inputSha256": "de179b59bcae1e196444e5abb2c68fa39dc12303d7d98757e588f429797e3d52"
+  },
+  "en": {
+    "id": "en-pickthall",
+    "language": "en",
+    "title": "The Meaning of the Glorious Koran",
+    "translator": "Mohammed Marmaduke William Pickthall (1875-1936)",
+    "edition": "First published 1930. Digital text: Tanzil 'en.pickthall', mirrored in fawazahmed0/quran-api edition 'eng-mohammedmarmadu'",
+    "sourceUrl": "https://raw.githubusercontent.com/fawazahmed0/quran-api/1/editions/eng-mohammedmarmadu.json",
+    "sourceCommit": "47ca096b0976443ba2eab2e45cdf0fb4096a2610",
+    "upstream": "https://tanzil.net/trans/en.pickthall",
+    "license": "Public domain. The translator died in 1936, so the work is out of copyright in life+70 countries (including Australia and Bangladesh); the 1930 US publication entered the US public domain on 1 January 2026. The fawazahmed0/quran-api repository is released under The Unlicense.",
+    "attribution": "English translation: Marmaduke Pickthall, The Meaning of the Glorious Koran (1930). Digital text from Tanzil (tanzil.net) via fawazahmed0/quran-api.",
+    "notices": [
+      "Text bundled unmodified, as Tanzil asks for its translation texts."
+    ],
+    "inputSha256": "aaff752d4349005282d977eebb86398279330c8df8736d4528a7afe80dd9ce66"
+  },
+  "bn": {
+    "id": "bn-zakaria-quranenc",
+    "language": "bn",
+    "title": "Translation of the Meanings of the Noble Quran - Bengali Translation - Abu Bakr Zakaria",
+    "translator": "Dr. Abu Bakr Muhammad Zakaria",
+    "version": "1.1.1",
+    "versionDate": "2021-05-22",
+    "publisher": "Encyclopedia of the Noble Qur'an (QuranEnc.com)",
+    "sourceUrl": "https://quranenc.com/en/browse/bengali_zakaria",
+    "api": "https://quranenc.com/api/v1/translation/sura/bengali_zakaria/{1..114}",
+    "retrieved": "2026-10-11",
+    "license": "QuranEnc republication terms: (1) no modification, addition or deletion of the content; (2) clearly refer to the publisher and the source (QuranEnc.com); (3) mention the version number; (4) keep the transcript information inside the document; (5) notify QuranEnc.com of any note on the translation; (6) update to the latest version issued by QuranEnc.com; (7) no inappropriate advertisements alongside the translation.",
+    "attribution": "Bangla translation: Dr. Abu Bakr Muhammad Zakaria, version 1.1.1 (2021-05-22), published by QuranEnc.com (https://quranenc.com/en/browse/bengali_zakaria).",
+    "notices": [
+      "Translation and footnotes are bundled exactly as returned by the QuranEnc API (footnotes included, nothing removed).",
+      "Maintenance duty: check QuranEnc.com for newer versions and re-run `npm run import:quran`.",
+      "Islam Everyday shows no advertisements."
+    ],
+    "inputSha256": "aabc75546a73da563f4f90d1e5c9a3136aec8776b3242c33b2e0539076563365"
+  }
+}

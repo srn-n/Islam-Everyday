@@ -1,0 +1,16 @@
+{
+  "name": "islam-everyday-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Islam Everyday: static, offline-capable Muslim companion web app (English and Bangla).",
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "test": "node --test",
+    "import:quran": "node tools/import-quran.mjs"
+  }
+}

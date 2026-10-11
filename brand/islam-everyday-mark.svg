@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="96 40 320 400" width="320" height="400">
+<title>Islam Everyday mark</title>
+<defs>
+  <linearGradient id="mbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0E6B5C"/><stop offset="1" stop-color="#0A4A40"/></linearGradient>
+  <linearGradient id="mdawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0B5A4D"/><stop offset=".62" stop-color="#147A66"/><stop offset="1" stop-color="#3C8F72"/></linearGradient>
+  <radialGradient id="msun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#F7D488"/><stop offset="1" stop-color="#E7AE46"/></radialGradient>
+</defs>
+  <clipPath id="mdoor"><path d="M150.0 392.0V248.0A140.0 140.0 0 0 1 256.0 112.2A140.0 140.0 0 0 1 362.0 248.0V392.0Z"/></clipPath>
+  <g clip-path="url(#mdoor)">
+    <rect x="0" y="0" width="512" height="512" fill="url(#mdawn)"/>
+    <path d="M186.0 330.0Q256.0 210.0 326.0 330.0" fill="none" stroke="#F2C66D" stroke-opacity=".75" stroke-width="7.0" stroke-linecap="round"/>
+    <circle cx="256.0" cy="392.0" r="66.0" fill="url(#msun)"/>
+  </g>
+  <path d="M150.0 392.0V248.0A140.0 140.0 0 0 1 256.0 112.2A140.0 140.0 0 0 1 362.0 248.0V392.0Z" fill="none" stroke="#F6EEDC" stroke-width="22.0" stroke-linejoin="round"/>
+  <path d="M118.0 393.0H394.0" stroke="#F6EEDC" stroke-width="22.0" stroke-linecap="round"/>
+</svg>

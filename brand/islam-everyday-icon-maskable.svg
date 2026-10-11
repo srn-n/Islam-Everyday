@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<title>Islam Everyday</title>
+<!-- Maskable variant: full-bleed background, artwork kept inside the central 80% safe zone. -->
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0E6B5C"/><stop offset="1" stop-color="#0A4A40"/></linearGradient>
+  <linearGradient id="dawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0B5A4D"/><stop offset=".62" stop-color="#147A66"/><stop offset="1" stop-color="#3C8F72"/></linearGradient>
+  <radialGradient id="sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#F7D488"/><stop offset="1" stop-color="#E7AE46"/></radialGradient>
+</defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <clipPath id="door"><path d="M169.07999999999998 367.52V249.44A114.8 114.8 0 0 1 256.0 138.1A114.8 114.8 0 0 1 342.92 249.44V367.52Z"/></clipPath>
+  <g clip-path="url(#door)">
+    <rect x="0" y="0" width="512" height="512" fill="url(#dawn)"/>
+    <path d="M198.6 316.68Q256.0 218.28 313.4 316.68" fill="none" stroke="#F2C66D" stroke-opacity=".75" stroke-width="5.739999999999999" stroke-linecap="round"/>
+    <circle cx="256.0" cy="367.52" r="54.12" fill="url(#sun)"/>
+  </g>
+  <path d="M169.07999999999998 367.52V249.44A114.8 114.8 0 0 1 256.0 138.1A114.8 114.8 0 0 1 342.92 249.44V367.52Z" fill="none" stroke="#F6EEDC" stroke-width="18.04" stroke-linejoin="round"/>
+  <path d="M142.84 368.34H369.15999999999997" stroke="#F6EEDC" stroke-width="18.04" stroke-linecap="round"/>
+</svg>

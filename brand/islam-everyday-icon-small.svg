@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<title>Islam Everyday</title>
+<!-- Small-size variant for favicons (16-32px): heavier strokes, no arc. Original artwork: mihrab-shaped doorway framing a rising sun, with an arc for the daily prayer cycle. -->
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0E6B5C"/><stop offset="1" stop-color="#0A4A40"/></linearGradient>
+  <linearGradient id="dawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0B5A4D"/><stop offset=".62" stop-color="#147A66"/><stop offset="1" stop-color="#3C8F72"/></linearGradient>
+  <radialGradient id="sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#F7D488"/><stop offset="1" stop-color="#E7AE46"/></radialGradient>
+</defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <clipPath id="door"><path d="M150.0 392.0V248.0A140.0 140.0 0 0 1 256.0 112.2A140.0 140.0 0 0 1 362.0 248.0V392.0Z"/></clipPath>
+  <g clip-path="url(#door)">
+    <rect x="0" y="0" width="512" height="512" fill="url(#dawn)"/>
+    <circle cx="256.0" cy="392.0" r="84" fill="#F2BE5C"/>
+  </g>
+  <path d="M150.0 392.0V248.0A140.0 140.0 0 0 1 256.0 112.2A140.0 140.0 0 0 1 362.0 248.0V392.0Z" fill="none" stroke="#F6EEDC" stroke-width="40" stroke-linejoin="round"/>
+  <path d="M118.0 393.0H394.0" stroke="#F6EEDC" stroke-width="40" stroke-linecap="round"/>
+</svg>

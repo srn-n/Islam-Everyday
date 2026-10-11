@@ -1,0 +1,930 @@
+/* Islam Everyday (project folder: DinSathi-Web) — daily Muslim companion (English / বাংলা). Plain JS, no build step required. */
+(() => {
+"use strict";
+const QM = window.QURAN_META, X = window.DINSATHI;
+const { I18N, TL, DUAS, DUA_CATS, CITIES, METHODS, EVENTS, HM, CURRENCIES } = X;
+const NM = window.DINSATHI_NAMES, VOTD = window.DINSATHI_VOTD, NAMES = NM.names, GD = window.IE_GUIDE;
+const PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"], ROWS = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
+const TABS = ["today", "quran", "duas", "more"];
+const mq = (() => { try { return matchMedia("(min-width: 1024px)"); } catch (e) { return { matches: false }; } })();
+const desk = () => !!mq.matches;
+/* Running inside the Android app (Capacitor)? Everything is bundled there, so no service worker is needed. */
+const NATIVE = (() => { try { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); } catch (e) { return false; } })();
+
+/* ---------------- state ---------------- */
+const KEY = "dinsathi.web.v1";
+const DEF = { lang: "en", theme: "system", city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
+  school: null, log: {}, last: null, read: [], bm: [], fav: [], tab: "today",
+  zk: { cur: "AUD", basis: "silver", price: "", v: {} } };
+let st = JSON.parse(JSON.stringify(DEF));
+try {
+  const s = JSON.parse(localStorage.getItem(KEY) || "null");
+  if (s && typeof s === "object") {
+    st = Object.assign(st, s);
+    st.zk = Object.assign({}, DEF.zk, s.zk || {});
+  }
+} catch (e) {}
+let saveT = 0;
+const save = () => { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }, 120); };
+
+/* ---------------- helpers ---------------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const bn = () => st.lang === "bn";
+const t = k => (I18N[st.lang] && I18N[st.lang][k] != null ? I18N[st.lang][k] : (I18N.en[k] != null ? I18N.en[k] : k));
+const num = x => bn() ? String(x).replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[d]) : String(x);
+const L = o => (bn() ? o.bn : o.en);
+const reduce = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } })();
+const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+const pad2 = n => String(n).padStart(2, "0");
+
+const STAR = (c, R, r) => { let d = ""; for (let k = 0; k < 16; k++) { const a = (k * 22.5 - 90) * Math.PI / 180, q = k % 2 ? r : R; d += (k ? "L" : "M") + (c + q * Math.cos(a)).toFixed(2) + " " + (c + q * Math.sin(a)).toFixed(2); } return d + "Z"; };
+const P = {
+  today: '<path d="M3 18h18M6 18a6 6 0 0 1 12 0M12 5v3M4.5 9.5l2 2M19.5 9.5l-2 2"/>',
+  quran: '<path d="M12 6.5c-2-1.5-5-2-8-1.5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5zM12 6.5V20"/>',
+  duas: '<path d="M19.5 14.5A8 8 0 1 1 9.5 4.5a6.5 6.5 0 0 0 10 10z"/>',
+  more: '<rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/>',
+  pin: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',
+  gear: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/>',
+  names: '<path d="' + STAR(12, 9.5, 6.6) + '"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  zakat: '<ellipse cx="12" cy="6.5" rx="7" ry="2.8"/><path d="M5 6.5v5c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8v-5M5 11.5v5c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8v-5"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.4"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  chev: '<path d="M9 5l7 7-7 7"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+  bm: '<path d="M6.5 4h11v16l-5.5-4-5.5 4z"/>',
+  heart: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.3a4.3 4.3 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z"/>',
+  locate: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7.5"/><path d="M12 1.8v2.7M12 19.5v2.7M1.8 12h2.7M19.5 12h2.7"/>',
+  aa: '<path d="M3.5 18l4.5-12 4.5 12M5.3 13.5h5.4M14.5 18l3-8 3 8M15.6 15.5h3.8"/>',
+  play: '<path d="M8 5.5v13l10-6.5z"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  guide: '<path d="M5 20V10a7 7 0 0 1 14 0v10M3 20h18M12 13v7M9.5 16h5"/>',
+  ext: '<path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>'
+};
+const ic = (n, cls) => `<svg viewBox="0 0 24 24" aria-hidden="true"${cls ? ` class="${cls}"` : ""}>${P[n]}</svg>`;
+
+/* ---------------- theme ---------------- */
+const hostTheme = document.documentElement.getAttribute("data-theme");
+function applyTheme() {
+  const r = document.documentElement;
+  if (st.theme === "system") { if (hostTheme) r.setAttribute("data-theme", hostTheme); else r.removeAttribute("data-theme"); }
+  else r.setAttribute("data-theme", st.theme);
+  r.lang = st.lang;
+  r.style.setProperty("--ar-scale", st.ar);
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.content = getComputedStyle(r).getPropertyValue("--ground").trim() || "#EEF3F1";
+}
+
+/* ---------------- location ---------------- */
+const city = () => (st.city === "gps" && st.gps) ? st.gps : (CITIES.find(c => c.id === st.city) || CITIES[0]);
+const cname = c => c.id === "gps" ? t("myloc") : L(c);
+
+/* ---------------- astronomy ---------------- */
+const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI, fix = (a, b) => ((a % b) + b) % b;
+function julian(y, m, d) { if (m <= 2) { y -= 1; m += 12; } const A = Math.floor(y / 100), B = 2 - A + Math.floor(A / 4); return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + B - 1524.5; }
+function sunPos(jd) {
+  const d = jd - 2451545, g = fix(357.529 + 0.98560028 * d, 360), q = fix(280.459 + 0.98564736 * d, 360),
+    Lm = fix(q + 1.915 * Math.sin(rad(g)) + 0.02 * Math.sin(rad(2 * g)), 360), e = 23.439 - 0.00000036 * d;
+  const RA = fix(deg(Math.atan2(Math.cos(rad(e)) * Math.sin(rad(Lm)), Math.cos(rad(Lm)))) / 15, 24);
+  return { decl: deg(Math.asin(Math.sin(rad(e)) * Math.sin(rad(Lm)))), eqt: fix(q / 15 - RA + 12, 24) - 12 };
+}
+function prayerTimes(y, m, d, lat, lng, tz, method, asrF) {
+  const M = METHODS[method] || METHODS.MWL, jd0 = julian(y, m, d) - lng / 360;
+  const mid = h => fix(12 - sunPos(jd0 + h / 24).eqt, 24);
+  const ang = (a, h, dir) => {
+    const s = sunPos(jd0 + h / 24), x = (-Math.sin(rad(a)) - Math.sin(rad(s.decl)) * Math.sin(rad(lat))) / (Math.cos(rad(s.decl)) * Math.cos(rad(lat)));
+    return mid(h) + dir * deg(Math.acos(Math.max(-1, Math.min(1, x)))) / 15;
+  };
+  const asrT = h => { const s = sunPos(jd0 + h / 24); return ang(-deg(Math.atan(1 / (asrF + Math.tan(rad(Math.abs(lat - s.decl)))))), h, 1); };
+  const adj = h => h + tz - lng / 15;
+  const o = { fajr: adj(ang(M.f, 5, -1)), sunrise: adj(ang(0.833, 6, -1)), dhuhr: adj(mid(12)), asr: adj(asrT(13)), maghrib: adj(ang(0.833, 18, 1)) };
+  o.isha = M.im ? o.maghrib + M.im / 60 : adj(ang(M.i, 18, 1));
+  return o;
+}
+function zoneParts(zone, date) {
+  const p = {};
+  const f = new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" });
+  for (const x of f.formatToParts(date)) if (x.type !== "literal") p[x.type] = +x.value;
+  return p;
+}
+function tzOffset(zone, date) { const p = zoneParts(zone, date); return (Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - Math.floor(date.getTime() / 1000) * 1000) / 36e5; }
+const dkey = (y, m, d) => y + "-" + pad2(m) + "-" + pad2(d);
+function shiftDay(y, m, d, n) { const u = new Date(Date.UTC(y, m - 1, d + n)); return [u.getUTCFullYear(), u.getUTCMonth() + 1, u.getUTCDate()]; }
+function dayTimes(c, y, m, d) {
+  const tz = tzOffset(c.zone, new Date(Date.UTC(y, m - 1, d, 12) - c.lng / 15 * 36e5));
+  const tm = prayerTimes(y, m, d, c.lat, c.lng, tz, st.method, +st.asr), base = Date.UTC(y, m - 1, d) - tz * 36e5;
+  return { tm, base, tz, abs: k => base + tm[k] * 36e5 };
+}
+function snapshot() {
+  const c = city(), now = Date.now(), p = zoneParts(c.zone, new Date(now));
+  const d0 = dayTimes(c, p.year, p.month, p.day), d1 = dayTimes(c, ...shiftDay(p.year, p.month, p.day, 1)), dm = dayTimes(c, ...shiftDay(p.year, p.month, p.day, -1));
+  let next = null;
+  for (const k of PRAYERS) if (d0.abs(k) > now) { next = { k, at: d0.abs(k) }; break; }
+  if (!next) next = { k: "fajr", at: d1.abs("fajr"), tomorrow: true };
+  return { c, p, d0, d1, dm, next, now, nowH: p.hour + p.minute / 60 + p.second / 3600, key: dkey(p.year, p.month, p.day) };
+}
+function period(s) {
+  const n = s.now, a = k => s.d0.abs(k);
+  if (n < a("fajr")) return "night"; if (n < a("sunrise")) return "dawn"; if (n < a("dhuhr")) return "morning";
+  if (n < a("asr")) return "noon"; if (n < a("maghrib")) return "afternoon"; if (n < a("isha")) return "dusk"; return "night";
+}
+/* Current prayer period and next prayer, from the same schedule the chart uses.
+   Periods: Fajr→sunrise, Dhuhr→Asr, Asr→Maghrib, Maghrib→Isha, Isha→next day's Fajr.
+   Between sunrise and Dhuhr no obligatory prayer is in progress (cur = null). */
+function prayerState(s) {
+  const now = s.now, items = [];
+  for (const D of [s.dm, s.d0, s.d1]) {
+    items.push({ k: "fajr", start: D.abs("fajr"), end: D.abs("sunrise"), D });
+    items.push({ k: "dhuhr", start: D.abs("dhuhr"), end: D.abs("asr"), D });
+    items.push({ k: "asr", start: D.abs("asr"), end: D.abs("maghrib"), D });
+    items.push({ k: "maghrib", start: D.abs("maghrib"), end: D.abs("isha"), D });
+  }
+  items.push({ k: "isha", start: s.dm.abs("isha"), end: s.d0.abs("fajr"), D: s.dm });
+  items.push({ k: "isha", start: s.d0.abs("isha"), end: s.d1.abs("fajr"), D: s.d0 });
+  const cur = items.find(x => x.start <= now && now < x.end) || null;
+  const nx = items.filter(x => x.start > now).sort((a, b) => a.start - b.start)[0];
+  return { cur, next: { k: nx.k, at: nx.start, D: nx.D, tomorrow: nx.D === s.d1 } };
+}
+/* Hour-of-day for an absolute time, measured from the local midnight of day D. */
+const hOf = (ms, D) => (ms - D.base) / 36e5;
+function extras(s) {
+  const tm = s.d0.tm, h = ms => (ms - s.d0.base) / 36e5;
+  const ns = s.d0.abs("maghrib"), night = s.d1.abs("fajr") - ns;
+  return { sehri: tm.fajr, iftar: tm.maghrib, ishraq: tm.sunrise + 0.25, duhaEnd: tm.dhuhr - 1 / 6,
+    midnight: h(ns + night / 2), tahajjud: h(ns + night * 2 / 3),
+    forb: [["fsun", tm.sunrise, tm.sunrise + 0.25], ["fzaw", tm.dhuhr - 1 / 6, tm.dhuhr], ["fset", tm.maghrib - 0.25, tm.maghrib]] };
+}
+function clock(h) {
+  let m = Math.round(h * 60); m = ((m % 1440) + 1440) % 1440;
+  const H = Math.floor(m / 60), mm = pad2(m % 60), h12 = H % 12 || 12;
+  return num(h12 + ":" + mm) + " " + (H < 12 ? t("am") : t("pm"));
+}
+function left(ms) { const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return num((h ? h + ":" + pad2(m) : m) + ":" + pad2(x)); }
+
+/* ---------------- hijri ---------------- */
+function hijri(date) {
+  const dt = new Date(date.getTime() + st.hadj * 864e5);
+  try {
+    const f = new Intl.DateTimeFormat("en-u-ca-islamic-umalqura-nu-latn", { day: "numeric", month: "numeric", year: "numeric", timeZone: city().zone });
+    const p = {}; for (const x of f.formatToParts(dt)) if (x.type !== "literal") p[x.type] = parseInt(x.value, 10);
+    return p.day && p.month ? { d: p.day, m: p.month, y: p.year } : null;
+  } catch (e) { return null; }
+}
+const hText = h => h ? `${num(h.d)} ${HM[st.lang][h.m - 1]} ${num(h.y)} ${t("ah")}` : "";
+const localNoon = (y, m, d) => { const c = city(), g = new Date(Date.UTC(y, m - 1, d, 12)); return new Date(g.getTime() - tzOffset(c.zone, g) * 36e5); };
+function eventsOn(h) { return h ? EVENTS.filter(e => e.m === h.m && e.d === h.d) : []; }
+
+/* ---------------- tracker ---------------- */
+function streak(s) {
+  let n = 0, [y, m, d] = [s.p.year, s.p.month, s.p.day];
+  const full = k => { const o = st.log[k] || {}; return PRAYERS.every(p => o[p]); };
+  if (!full(s.key)) [y, m, d] = shiftDay(y, m, d, -1);
+  while (full(dkey(y, m, d)) && n < 400) { n++; [y, m, d] = shiftDay(y, m, d, -1); }
+  return n;
+}
+function pruneLog(s) { const keep = new Set(); let [y, m, d] = [s.p.year, s.p.month, s.p.day]; for (let i = 0; i < 120; i++) { keep.add(dkey(y, m, d)); [y, m, d] = shiftDay(y, m, d, -1); } for (const k of Object.keys(st.log)) if (!keep.has(k)) delete st.log[k]; }
+
+/* ---------------- routing ---------------- */
+let R = { tab: TABS.includes(st.tab) ? st.tab : "today", sub: null, surah: 0, ayah: 0 };
+const SUBS = ["guide", "names", "calendar", "zakat", "settings", "about"];
+const hashSub = h => SUBS.includes(h) ? h : (h.startsWith("more/") && SUBS.includes(h.slice(5)) ? h.slice(5) : null);
+const h0 = (location.hash || "").slice(1);
+if (TABS.includes(h0)) R.tab = h0;
+else if (hashSub(h0)) R = { tab: "more", sub: hashSub(h0), surah: 0, ayah: 0 };
+let depth = 0;
+function go(r, push = true) {
+  R = Object.assign({ tab: R.tab, sub: null, surah: 0, ayah: 0 }, r);
+  st.tab = R.tab; save();
+  if (push) { try { history.pushState(R, ""); depth++; } catch (e) {} }
+  render(true);
+  if (!R.ayah) window.scrollTo(0, 0);
+}
+addEventListener("hashchange", () => {
+  const h = (location.hash || "").slice(1);
+  if (TABS.includes(h)) go({ tab: h }, false);
+  else if (hashSub(h)) go({ tab: "more", sub: hashSub(h) }, false);
+});
+addEventListener("popstate", e => { depth = Math.max(0, depth - 1); if (e.state && e.state.tab) { R = e.state; render(true); } });
+try { history.replaceState(R, ""); } catch (e) {}
+
+/* ---------------- shell ---------------- */
+function header() {
+  const c = city();
+  $("top").innerHTML = `
+    <button type="button" class="brand" data-act="home" aria-label="${esc(t("brand"))}">${LOGO}<b>${t("brand")}</b></button>
+    <span class="hdate">${esc(dateLine())}</span>
+    <button type="button" class="chip-btn" data-act="loc" aria-label="${esc(t("chooseloc"))}">${ic("pin")}<span>${esc(cname(c))}</span></button>
+    <button type="button" class="icon-btn lang-btn" data-act="lang" aria-label="${esc(t("langswitch"))}">${bn() ? "EN" : "বাং"}</button>
+    <button type="button" class="icon-btn" data-act="go" data-tab="more" data-sub="settings" aria-label="${esc(t("settings"))}">${ic("gear")}</button>`;
+}
+function nav() {
+  const i = TABS.indexOf(R.tab);
+  $("tabs").innerHTML = `<span class="ind" style="transform:translateX(${i * 100}%)"></span>` +
+    TABS.map(id => `<button type="button" data-act="tab" data-tab="${id}"${id === R.tab ? ' aria-current="page"' : ""}>${ic(id)}<span>${t(id)}</span></button>`).join("");
+}
+let post = [], heroAnim = false;
+function render(anim) {
+  applyTheme(); header(); nav(); side();
+  const v = $("view"); post = []; heroAnim = !!anim;
+  v.className = "view v-" + (R.tab === "more" ? (R.sub || "more") : R.tab);
+  let f;
+  if (R.tab === "today") f = vToday;
+  else if (R.tab === "quran") f = desk() ? vQuranDesk : (R.surah ? vReader : vQuran);
+  else if (R.tab === "duas") f = vDuas;
+  
+  else f = { guide: vGuide, names: vNames, calendar: vCalendar, zakat: vZakat, settings: vSettings, about: vAbout }[R.sub] || vMore;
+  v.innerHTML = f();
+  if (anim && !reduce) { v.classList.remove("enter"); [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); void v.offsetWidth; v.classList.add("enter"); }
+  else v.classList.remove("enter");
+  post.forEach(fn => fn());
+}
+const back = (label) => `<button type="button" class="icon-btn" data-act="back" aria-label="${esc(label || t("back"))}">${ic("back")}</button>`;
+
+/* ---------------- toast / burst / sheet ---------------- */
+let toastT = 0;
+function toast(msg) { const el = $("toast"); el.textContent = msg; el.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), 2200); }
+function burst(x, y) {
+  if (reduce) return;
+  const b = document.createElement("div"); b.className = "burst"; b.style.left = x + "px"; b.style.top = y + "px";
+  for (let k = 0; k < 14; k++) { const i = document.createElement("i"); i.style.setProperty("--a", (k * 360 / 14) + "deg"); i.style.setProperty("--c", k % 2 ? "var(--accent)" : "var(--gold)"); b.appendChild(i); }
+  document.body.appendChild(b); setTimeout(() => b.remove(), 900);
+}
+/* Bottom sheet / dialog. Focus moves into it, Tab is kept inside, and focus returns to the opener on close. */
+let sheetReturn = null;
+function openSheet(html, returnTo) {
+  const sh = $("sheet"), wasOpen = sh.classList.contains("on");
+  if (!wasOpen) sheetReturn = returnTo || document.activeElement;
+  sh.innerHTML = `<div class="grab"></div><button type="button" class="icon-btn sheet-x" data-act="closesheet" aria-label="${esc(t("close"))}">${ic("x")}</button>` + html;
+  const h = sh.querySelector("h2, h3"); if (h) { h.id = h.id || "sheet-title"; sh.setAttribute("aria-labelledby", h.id); } else sh.removeAttribute("aria-labelledby");
+  sh.classList.add("on"); $("scrim").classList.add("on"); sh.setAttribute("aria-hidden", "false");
+  $("view").setAttribute("aria-hidden", "true");
+  const f = sh.querySelector("[data-autofocus]") || sh.querySelector(".sheet-x");
+  setTimeout(() => { if (sh.classList.contains("on") && !sh.contains(document.activeElement)) f.focus({ preventScroll: true }); }, 30);
+  sh.scrollTop = 0;
+}
+function closeSheet() {
+  const sh = $("sheet"); if (!sh.classList.contains("on")) return;
+  sh.classList.remove("on"); $("scrim").classList.remove("on"); sh.setAttribute("aria-hidden", "true"); $("view").removeAttribute("aria-hidden");
+  const r = sheetReturn; sheetReturn = null;
+  if (r && document.contains(r) && r.focus) r.focus({ preventScroll: true });
+}
+function trapSheet(e) {
+  const sh = $("sheet"); if (!sh.classList.contains("on")) return;
+  const f = [...sh.querySelectorAll('a[href],button:not([disabled]),input,select,textarea,summary,[tabindex]:not([tabindex="-1"])')].filter(x => x.offsetParent !== null);
+  if (!f.length) return; const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && (document.activeElement === first || !sh.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && (document.activeElement === last || !sh.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+}
+function copyText(txt) {
+  try { navigator.clipboard.writeText(txt).then(() => toast(t("copied")), () => toast(t("copyfail"))); }
+  catch (e) { toast(t("copyfail")); }
+}
+
+/* ---------------- hero landscape ---------------- */
+const SCENE = (() => {
+  const W = 800, H = 400;
+  function ridge(seed, base, amp, rough) {
+    let sd = seed; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
+    const n = 65, y = new Array(n).fill(base);
+    y[0] = base + (rnd() - 0.5) * amp; y[n - 1] = base + (rnd() - 0.5) * amp;
+    for (let step = n - 1, a = amp; step > 1; step /= 2, a *= rough)
+      for (let i = step / 2; i < n; i += step) y[i] = (y[i - step / 2] + y[i + step / 2]) / 2 + (rnd() - 0.5) * a;
+    const at = x => { const f = x / W * (n - 1), i = Math.min(n - 2, Math.floor(f)); return y[i] + (y[i + 1] - y[i]) * (f - i); };
+    let d = `M0 ${H}`; y.forEach((v, i) => { d += `L${(i * W / (n - 1)).toFixed(1)} ${v.toFixed(1)}`; });
+    return { d: d + `L${W} ${H}Z`, at };
+  }
+  const far = ridge(7, 262, 110, 0.56), mid = ridge(23, 300, 80, 0.52), near = ridge(41, 352, 34, 0.5);
+  // small mosque on the near ridge: two domes, a minaret, finials
+  const mx = 468, g = near.at(mx + 22) + 2;
+  const mosque = `M${mx} ${g}V${g - 14}H${mx + 44}V${g}Z` +
+    `M${mx + 8} ${g - 14}a14 14 0 0 1 28 0Z` + `M${mx + 21} ${g - 28}h2v-6h-2Z` +
+    `M${mx + 50} ${g}V${g - 40}h5V${g}Z` + `M${mx + 49} ${g - 40}h7l-3.5 -7Z` +
+    `M${mx - 12} ${g}V${g - 8}H${mx}V${g}Z` + `M${mx - 10} ${g - 8}a4 4 0 0 1 8 0Z`;
+  return { far: far.d, mid: mid.d, near: near.d, mosque };
+})();
+function heroScene() {
+  return `<svg class="sky-clouds" viewBox="0 0 800 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+    <defs><filter id="cl-f" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.0055 0.018" numOctaves="4" seed="5" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.9 0 0 0 -0.78" result="a"/><feFlood class="cl-flood" result="c"/><feComposite in="c" in2="a" operator="in"/><feGaussianBlur stdDeviation="1.2"/></filter>
+    <linearGradient id="cl-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset=".75" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <mask id="cl-m"><rect width="800" height="300" fill="url(#cl-g)"/></mask></defs>
+    <g mask="url(#cl-m)"><rect class="cloud" width="800" height="300" filter="url(#cl-f)"/></g>
+  </svg>
+  <svg class="sky-land" viewBox="0 0 800 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+    <defs><linearGradient id="hz-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="hz0"/><stop offset="1" class="hz1"/></linearGradient>
+    <filter id="gr-f"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></defs>
+    <path class="hl-far" d="${SCENE.far}"/><rect y="220" width="800" height="180" fill="url(#hz-g)"/>
+    <path class="hl-mid" d="${SCENE.mid}"/><path class="hl-near" d="${SCENE.near}"/><path class="hl-near" d="${SCENE.mosque}"/>
+    <rect class="grain" width="800" height="400" filter="url(#gr-f)"/>
+  </svg>`;
+}
+
+/* ---------------- TODAY ---------------- */
+let snap = null;
+function vToday() {
+  const s = snap = snapshot(), tm = s.d0.tm, ex = extras(s), done = st.log[s.key] || {};
+  const per = period(s), n = PRAYERS.filter(k => done[k]).length;
+  const ps = s.ps = prayerState(s), cur = ps.cur, nx = ps.next;
+  const hj = hijriNow(s);
+  const greg = new Intl.DateTimeFormat(bn() ? "bn-BD" : "en-AU", { timeZone: s.c.zone, weekday: "long", day: "numeric", month: "long" }).format(new Date(s.now));
+  // sun / moon position along the arc
+  let f;
+  if (s.now >= s.d0.abs("sunrise") && s.now < s.d0.abs("maghrib")) f = (s.now - s.d0.abs("sunrise")) / (s.d0.abs("maghrib") - s.d0.abs("sunrise"));
+  else { const a = s.now < s.d0.abs("fajr") || s.now < s.d0.abs("sunrise") ? s.dm.abs("maghrib") : s.d0.abs("maghrib"), b = s.now < s.d0.abs("sunrise") ? s.d0.abs("sunrise") : s.d1.abs("sunrise"); f = (s.now - a) / (b - a); }
+  f = Math.max(0, Math.min(1, f));
+  const stars = (per === "night" || per === "dusk" || per === "dawn") ? `<div class="stars" aria-hidden="true">${[[12, 18], [24, 9], [38, 22], [55, 12], [70, 26], [83, 10], [91, 30], [64, 6], [47, 33], [30, 38], [8, 40], [76, 40]].map(([x, y], i) => `<i style="left:${x}%;top:${y}%;animation-delay:${(i * 0.37).toFixed(2)}s"></i>`).join("")}</div>` : "";
+  const ARC = "M178 150 Q262 -24 340 150";
+  post.push(() => animateArc(f));
+  const edges = [0, tm.fajr, tm.sunrise, tm.dhuhr, tm.asr, tm.maghrib, Math.min(tm.isha, 24), 24], cls = ["night", "twi", "day", "day2", "late", "twi", "night"];
+  // week strip
+  let days = "", [y, m, d] = [s.p.year, s.p.month, s.p.day];
+  const wfmt = new Intl.DateTimeFormat(bn() ? "bn-BD" : "en-AU", { weekday: "short", timeZone: "UTC" });
+  const cols = [];
+  for (let i = 6; i >= 0; i--) { const [yy, mm, dd] = shiftDay(y, m, d, -i); const o = st.log[dkey(yy, mm, dd)] || {}; cols.push(`<div><span class="d${i ? "" : " today"}">${wfmt.format(new Date(Date.UTC(yy, mm - 1, dd, 12)))}</span><div class="dots">${PRAYERS.map(p => `<b class="${o[p] ? "on" : ""}" title="${esc(t(p))}"></b>`).join("")}</div></div>`); }
+  days = cols.join("");
+  const nowStr = ex.forb.find(w => s.nowH >= w[1] && s.nowH < w[2]);
+  const ev = (() => { for (let i = 0; i < 400; i++) { const [a1, b1, c1] = shiftDay(y, m, d, i); const h = hijri(localNoon(a1, b1, c1)); const e = eventsOn(h).filter(x => !x.minor); if (e.length) return { e: e[0], i }; } return null; })();
+  const v = votdPick = VOTD.verseFor(s.p.year, s.p.month, s.p.day, COUNTS);
+  return `
+  <section class="sky a-hero" data-p="${per}" aria-label="${esc(t("curp"))}">
+    ${heroScene()}
+    ${stars}
+    <svg class="arc" viewBox="0 0 340 160" aria-hidden="true"><defs><radialGradient id="glow-g"><stop offset="0" class="gl0"/><stop offset="1" class="gl1"/></radialGradient></defs><path class="horizon" d="M0 150H340" stroke-width="1" fill="none"/><path id="arcpath" class="track" d="${ARC}" fill="none" stroke-width="1.5"/><path id="trail" class="trail" d="${ARC}" pathLength="100" stroke-dasharray="0 100" fill="none" stroke-width="2" stroke-linecap="round"/><circle id="glow" cx="178" cy="150" r="58" fill="url(#glow-g)"/><circle id="orb" class="orb" cx="178" cy="150" r="9"/></svg>
+    <div class="sky-scrim" aria-hidden="true"></div>
+    <div class="sky-body">
+      <p class="eyebrow">${t("curp")}</p>
+      ${cur ? `<h1>${t(cur.k)}</h1>
+      <p class="cur-end"><span class="lbl">${t("endsin")}</span> <span class="count" id="count-cur">${left(cur.end - s.now)}</span></p>
+      <p class="at">${t("endsat")} ${clock(hOf(cur.end, s.d0))}${cur.end >= s.d1.base ? " · " + t("tomorrow") : ""}</p>`
+      : `<h1 class="h1-sm">${t("nocur")}</h1>
+      <p class="at">${t("fajrended").replace("{t}", clock(tm.sunrise))}</p>`}
+      <div class="next-pill">
+        <span class="np-l"><span class="np-k">${t("next")}</span><b>${t(nx.k)}</b><span class="np-at">${clock(hOf(nx.at, nx.D))}${nx.tomorrow ? " · " + t("tomorrow") : ""}</span></span>
+        <span class="np-r"><span class="np-k">${t("startsin")}</span><b class="tnum" id="count-next">${left(nx.at - s.now)}</b></span>
+      </div>
+      <p class="dates">${esc(greg)}<br>${esc(hText(hj))}</p>
+    </div>
+  </section>
+
+  <section class="card a-times">
+    <div class="row pad" style="padding-bottom:0"><h3 class="grow">${t("ptimes")}</h3><span class="note">${esc(L(METHODS[st.method]).short)}${+st.asr === 2 ? " · " + t("hanafi") : ""}</span></div>
+    <div class="ribbon" role="img" aria-label="${esc(t("ribbon"))}"><div class="rb">${cls.map((c, i) => `<span class="${c}" style="flex:${Math.max(0, edges[i + 1] - edges[i]).toFixed(3)} 0 0"></span>`).join("")}</div><i id="nowmark" style="left:${(s.nowH / 24 * 100).toFixed(2)}%"></i></div>
+    <div class="scale tnum"><span>${clock(0)}</span><span>${clock(6)}</span><span>${clock(12)}</span><span>${clock(18)}</span><span>${clock(0)}</span></div>
+    <ol class="times">${ROWS.map(k => { const isC = cur && cur.k === k, isN = nx.k === k; let when = "", hrs = tm[k];
+      if (isC && cur.D === s.dm) { hrs = hOf(cur.start, s.dm); when = t("yday"); }
+      else if (isN && nx.tomorrow) { hrs = hOf(nx.at, s.d1); when = t("tomorrow"); }
+      return `<li class="${k === "sunrise" ? "minor" : ""}${isC ? " is-cur" : ""}${isN ? " is-next" : ""}"${isC ? ' aria-current="time"' : ""}><span class="nm">${t(k)}${isC ? `<span class="badge cur">${t("curb")}</span>` : ""}${isN ? `<span class="badge nxt">${t("nextb")}</span>` : ""}</span><span class="tm">${clock(hrs)}${when ? `<small class="when">${when}</small>` : ""}</span>${k === "sunrise" ? '<span class="gap44"></span>' : `<button type="button" class="tick${justTicked === k ? " just" : ""}" data-act="pray" data-k="${k}" aria-pressed="${!!done[k]}" aria-label="${esc(t("markp"))}: ${esc(t(k))}"><i><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></i></button>`}</li>`; }).join("")}</ol>
+  </section>
+
+  <section class="card verse a-verse" aria-labelledby="votd-h">
+    <h3 class="sec-title" id="votd-h">${t("votd")}</h3>
+    ${votdBody(v)}
+  </section>
+
+  <section class="card pad a-track">
+    <div class="row"><div class="grow"><h3 class="sec-title">${t("tracker")}</h3><p class="note">${bn() ? `${num(5)}-এর মধ্যে ${num(n)} ${t("prayedtoday")}` : `${n} ${t("of")} 5 ${t("prayedtoday")}`}</p></div>
+    <div class="streak"><strong>${num(streak(s))}</strong><span class="note">${t("daystreak")}</span></div></div>
+    <div class="week" style="margin-top:14px">${days}</div>
+  </section>
+
+  <section class="card pad a-forb">
+    <h3 class="sec-title">${t("forbidden")}${nowStr ? ` <span class="badge now">${t("now")}</span>` : ""}</h3>
+    <ul class="list-kv forb" style="margin-top:6px">${ex.forb.map(w => `<li${w === nowStr ? ' class="warn" aria-current="time"' : ""}><span>${t(w[0])}${w === nowStr ? `<span class="sr"> (${t("nowwin")})</span>` : ""}</span><span class="v">${clock(w[1])} – ${clock(w[2])}</span></li>`).join("")}</ul>
+    <h3 class="sec-title" style="margin-top:18px">${t("optional")}</h3>
+    <ul class="list-kv" style="margin-top:6px">
+      <li><span>${t("ishraq")}</span><span class="v">${clock(ex.ishraq)} – ${clock(ex.duhaEnd)}</span></li>
+      <li><span>${t("midnight")}</span><span class="v">${clock(ex.midnight)}</span></li>
+      <li><span>${t("tahajjud")}</span><span class="v">${t("from")} ${clock(ex.tahajjud)}</span></li>
+    </ul>
+    <p class="note" style="margin-top:8px">${t("approx")}</p>
+  </section>
+
+  <button type="button" class="hcal a-tiles" data-act="go" data-tab="more" data-sub="calendar" aria-label="${esc(t("calendar") + ": " + hText(hj))}">
+    ${moonSvg(hj ? hj.d : 1, s.c.lat)}
+    <span class="hc-main"><span class="hc-title">${t("calendar")}</span>
+      <span class="hc-day">${hj ? `<b>${num(hj.d)}</b> ${HM[st.lang][hj.m - 1]}` : ""}</span>
+      <span class="hc-sub">${hj ? num(hj.y) + " " + t("ah") + " · " : ""}${esc(greg)}</span></span>
+    ${ic("chev", "hc-chev")}
+    ${ev ? `<span class="hc-ev"><i aria-hidden="true"></i>${esc(L(ev.e))} · ${ev.i ? t("inn").replace("{n}", num(ev.i)) : t("todayl")}</span>` : ""}
+  </button>
+
+  <section class="card pad a-fast">
+    <h3 class="sec-title">${t("fasting")}</h3>
+    <div class="duo" style="margin-top:10px"><div class="kv"><span class="note">${t("sehri")}</span><span class="v">${clock(ex.sehri)}</span></div><div class="kv"><span class="note">${t("iftar")}</span><span class="v">${clock(ex.iftar)}</span></div></div>
+  </section>`;
+}
+/* The Hijri day begins at maghrib, so after maghrib the Today page and menus show the next Hijri date. */
+function hijriNow(s) { return hijri(new Date(s.now + (s.now >= s.d0.abs("maghrib") ? 864e5 : 0))); }
+let votdPick = null;
+const COUNTS = QM.meta.map(m => m[3]);
+/* Verse for today: whole ayah (never truncated) in Arabic and the selected translation. */
+function votdBody(v) {
+  const [i, a] = v, ref = `<span class="verse-ref">${esc(sname(i))} · ${num(i)}:${num(a)}</span>`;
+  const foot = `<div class="verse-foot">${ref}<button type="button" class="btn soft" data-act="surah" data-s="${i}" data-a="${a}">${t("readsurah")}</button></div>`;
+  if (!qReady(i)) {
+    if (qFailed(i)) return `<p class="note">${t("fail")}</p><div><button type="button" class="btn" data-act="retry">${t("retry")}</button></div>${foot}`;
+    qEnsure(i).catch(() => {}).then(() => { if (R.tab === "today" && !R.sub) render(false); });
+    return `<p class="note" aria-busy="true">${t("loading")}</p>${foot}`;
+  }
+  const tr = QS[st.lang + ":" + i], fn = tr.f && tr.f[a - 1];
+  return `<p class="ar verse-ar" lang="ar" dir="rtl">${QS["ar:" + i][a - 1]}</p>
+    <p class="verse-tr" lang="${st.lang}">${esc(tr.t[a - 1])}</p>${fn ? `<details class="fn"><summary>${t("footnotes")}</summary><div lang="bn">${richText(fn)}</div></details>` : ""}
+    ${foot}`;
+}
+/* Moon drawn for the Hijri day; the lit side is mirrored for the southern hemisphere. */
+function moonSvg(day, lat) {
+  const R = 26, c = 32, p = Math.min(0.999, Math.max(0, (day - 1) / 29.53)), k = Math.cos(2 * Math.PI * p);
+  const rx = (R * Math.abs(k)).toFixed(2), wax = p < 0.5, gib = k < 0;
+  const d = wax ? `M${c} ${c - R}A${R} ${R} 0 0 1 ${c} ${c + R}A${rx} ${R} 0 0 ${gib ? 1 : 0} ${c} ${c - R}Z`
+                : `M${c} ${c - R}A${R} ${R} 0 0 0 ${c} ${c + R}A${rx} ${R} 0 0 ${gib ? 0 : 1} ${c} ${c - R}Z`;
+  return `<svg class="hc-moon" viewBox="0 0 64 64" aria-hidden="true"><circle class="mn-glow" cx="${c}" cy="${c}" r="31"/><circle class="mn-dark" cx="${c}" cy="${c}" r="${R}"/><path class="mn-lit" d="${d}"${lat < 0 ? ` transform="matrix(-1 0 0 1 ${2 * c} 0)"` : ""}/></svg>`;
+}
+let justTicked = null;
+function animateArc(f) {
+  const p = $("arcpath"), o = $("orb"), tr = $("trail"); if (!p || !p.getTotalLength) return;
+  const Ln = p.getTotalLength();
+  const gl = $("glow");
+  const setP = x => { const pt = p.getPointAtLength(Ln * x); o.setAttribute("cx", pt.x.toFixed(1)); o.setAttribute("cy", pt.y.toFixed(1)); if (gl) { gl.setAttribute("cx", pt.x.toFixed(1)); gl.setAttribute("cy", pt.y.toFixed(1)); } tr.setAttribute("stroke-dasharray", `${(x * 100).toFixed(2)} 100`); };
+  if (reduce || !heroAnim) { setP(f); return; }
+  const t0 = performance.now(), D = 1500;
+  const step = now => { const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3); setP(f * e); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+setInterval(() => {
+  if (R.tab !== "today" || !snap || document.hidden) return;
+  const now = Date.now();
+  const ps = snap.ps, cur = ps && ps.cur;
+  if (now >= snap.next.at || (cur && now >= cur.end) || zoneParts(snap.c.zone, new Date(now)).minute !== snap.p.minute) { render(false); return; }
+  const c = $("count-cur"); if (c && cur) c.textContent = left(cur.end - now);
+  const n = $("count-next"); if (n && ps) n.textContent = left(ps.next.at - now);
+}, 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && R.tab === "today") render(false); });
+
+/* ---------------- QURAN ---------------- */
+let qQuery = "", qFilter = "all";
+/* Qur'an text and translations live in data/quran/{ar,en,bn}/NNN.json and are fetched per surah on demand
+   (the service worker keeps every fetched surah for offline use). Nothing is fetched from outside this site. */
+const QS = {}, QP = {}, QERR = {};
+const qpad = i => String(i).padStart(3, "0");
+function qLoad(lang, i) {
+  const k = lang + ":" + i;
+  if (QS[k]) return Promise.resolve(QS[k]);
+  if (QP[k]) return QP[k];
+  delete QERR[k];
+  return (QP[k] = fetch(`data/quran/${lang}/${qpad(i)}.json`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(j => (QS[k] = lang === "bn" ? j : lang === "en" ? { t: j, f: null } : j))
+    .catch(e => { QERR[k] = true; throw e; })
+    .finally(() => { delete QP[k]; }));
+}
+const qReady = i => QS["ar:" + i] && QS[st.lang + ":" + i];
+const qFailed = i => QERR["ar:" + i] || QERR[st.lang + ":" + i];
+const qEnsure = i => Promise.all([qLoad("ar", i), qLoad(st.lang, i)]);
+/* Bangla footnotes are published with <b> only; everything is escaped, then <b> is restored. */
+const richText = s => esc(s || "").replace(/&lt;(\/?)b&gt;/g, "<$1b>").replace(/\n{2,}/g, "<br><br>").replace(/\n/g, "<br>");
+const trCredit = () => bn() ? "অনুবাদ: ড. আবু বকর মুহাম্মাদ যাকারিয়া, সংস্করণ ১.১.১, QuranEnc.com" : "Translation: Marmaduke Pickthall (1930), public domain; text via Tanzil";
+const sname = i => bn() ? QM.meta[i - 1][2] : QM.meta[i - 1][1];
+function listRows() {
+  const q = qQuery.trim().toLowerCase(), out = [];
+  QM.meta.forEach((m, ix) => {
+    const i = ix + 1;
+    if (qFilter === "read" && !st.read.includes(i)) return;
+    if (q && !(m[1].toLowerCase().includes(q) || m[2].includes(qQuery.trim()) || String(i) === q || num(i) === qQuery.trim() || m[0].includes(qQuery.trim()))) return;
+    out.push(`<li><button type="button" class="rowlink" data-act="surah" data-s="${i}"${R.surah === i ? ' aria-current="true"' : ""}><span class="no"><span>${num(i)}</span></span><span class="nm">${esc(sname(i))}<small>${num(m[3])} ${t("verses")} · ${t(m[4])}${st.read.includes(i) ? ` · <span class="done">✓ ${t("readmark")}</span>` : ""}</small></span><span class="an" lang="ar">${m[0]}</span></button></li>`);
+  });
+  return out.join("") || `<li class="note" style="padding:16px 0">${t("none")}</li>`;
+}
+function ring(val, max) {
+  const C = 2 * Math.PI * 26, frac = max ? val / max : 0;
+  post.push(() => { const r = $("ringfg"); if (r) requestAnimationFrame(() => r.setAttribute("stroke-dashoffset", (C * (1 - frac)).toFixed(2))); });
+  return `<svg class="ring" viewBox="0 0 64 64" aria-hidden="true"><circle class="bg" cx="32" cy="32" r="26" fill="none" stroke-width="6"/><circle id="ringfg" class="fg" cx="32" cy="32" r="26" fill="none" stroke-width="6" stroke-linecap="round" transform="rotate(-90 32 32)" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${(reduce ? C * (1 - frac) : C).toFixed(2)}"/><text x="32" y="36.5" text-anchor="middle">${num(Math.round(frac * 100))}%</text></svg>`;
+}
+function vQuran() {
+  const last = st.last && st.last.s ? st.last : null;
+  const bms = st.bm.slice(-6).reverse();
+  return `
+  <div class="page-head"><h2>${t("quran")}</h2></div>
+  <section class="card pad row">${ring(st.read.length, 114)}<div class="grow"><b>${bn() ? `${num(114)}টির মধ্যে ${num(st.read.length)}টি সূরা পড়া হয়েছে` : `${st.read.length} of 114 surahs read`}</b><p class="note">${t("khatmnote")}</p></div></section>
+  ${last ? `<button type="button" class="card pad row" style="text-align:left;width:100%" data-act="surah" data-s="${last.s}" data-a="${last.a}"><span class="grow"><span class="eyebrow">${t("cont")}</span><br><b>${esc(sname(last.s))}</b> <span class="note">${num(last.s)}:${num(last.a)}</span></span>${ic("chev", "chev")}</button>` : ""}
+  ${bms.length ? `<section><p class="eyebrow" style="margin-bottom:8px">${t("bookmarks")}</p><div class="chips">${bms.map(b => { const [s1, a1] = b.split(":"); return `<button type="button" class="chip" data-act="surah" data-s="${s1}" data-a="${a1}">${esc(sname(+s1))} ${num(s1)}:${num(a1)}</button>`; }).join("")}</div></section>` : ""}
+  <div class="search">${ic("search")}<input id="q-search" class="field" type="search" inputmode="search" autocomplete="off" placeholder="${esc(t("search"))}" aria-label="${esc(t("search"))}" value="${esc(qQuery)}"></div>
+  <div class="chips">${[["all", t("all")], ["read", t("readmark")]].map(([k, l]) => `<button type="button" class="chip" data-act="qf" data-k="${k}" aria-pressed="${qFilter === k}">${l}</button>`).join("")}</div>
+  <ul id="surah-list">${listRows()}</ul>`;
+}
+let obs = null;
+function vReader() {
+  const i = R.surah, m = QM.meta[i - 1], tl = TL[i] && TL[i][st.lang], isRead = st.read.includes(i);
+  let body;
+  if (!qReady(i) && qFailed(i)) body = `<p class="note">${t("fail")}</p><div><button type="button" class="btn" data-act="retry">${t("retry")}</button></div>`;
+  else if (!qReady(i)) { body = `<p class="note">${t("loading")}</p>`; qEnsure(i).catch(() => {}).then(() => { if (R.tab === "quran" && R.surah === i) render(false); }); }
+  else {
+    const ar = QS["ar:" + i], tr = QS[st.lang + ":" + i];
+    body = (i !== 1 && i !== 9 ? `<p class="ar bismillah" lang="ar">${QM.starter[1][0]}</p>` : "") +
+      `<ol>${ar.map((a, k) => { const id = i + ":" + (k + 1), on = st.bm.includes(id), fn = tr.f && tr.f[k]; return `<li class="ayah" id="a-${k + 1}" data-a="${k + 1}"><div class="ayah-bar"><span class="n">${num(i)}:${num(k + 1)}</span><button type="button" class="mini" data-act="bm" data-id="${id}" aria-pressed="${on}" aria-label="${esc(t("bookmark"))} ${num(i)}:${num(k + 1)}">${ic("bm")}</button><button type="button" class="mini" data-act="copyayah" data-k="${k}" aria-label="${esc(t("copy"))} ${num(i)}:${num(k + 1)}">${ic("copy")}</button></div><p class="ar" lang="ar">${a}</p>${st.tl && tl ? `<p class="tl">${esc(tl[k])}</p>` : ""}<p class="tr" lang="${st.lang}">${esc(tr.t[k])}</p>${fn ? `<details class="fn"><summary>${t("footnotes")}</summary><div lang="bn">${richText(fn)}</div></details>` : ""}</li>`; }).join("")}</ol>
+      <p class="note credit">${esc(trCredit())} · <button type="button" class="linkish" data-act="go" data-tab="more" data-sub="about">${t("sources")}</button></p>
+      <div class="row" style="gap:10px;padding-block:8px 4px"><button type="button" class="btn grow${isRead ? " soft" : ""}" data-act="markread">${isRead ? "✓ " + t("readmark") : t("markread")}</button>${i < 114 ? `<button type="button" class="btn ghost" data-act="surah" data-s="${i + 1}">${t("next2")} ${ic("chev")}</button>` : ""}</div>`;
+    post.push(() => {
+      if (R.ayah) { const el = $("a-" + R.ayah); if (el) { el.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); el.classList.add("mark"); } R.ayah = 0; }
+      if ("IntersectionObserver" in window) {
+        if (obs) obs.disconnect();
+        obs = new IntersectionObserver(es => { for (const e of es) if (e.isIntersecting) { st.last = { s: i, a: +e.target.dataset.a }; save(); } }, { rootMargin: "-35% 0px -60% 0px" });
+        document.querySelectorAll(".ayah").forEach(el => obs.observe(el));
+      }
+    });
+  }
+  return `
+  <div class="reader-head">${desk() ? "" : back(t("allsurahs"))}<div class="grow"><b>${esc(sname(i))}</b> <span class="an" lang="ar" style="font-family:var(--arabic);color:var(--accent)">${m[0]}</span><br><small class="note">${num(m[3])} ${t("verses")} · ${t(m[4])}</small></div><button type="button" class="icon-btn" data-act="aa" aria-label="${esc(t("textsettings"))}">${ic("aa")}</button></div>
+  ${body}`;
+}
+function aaSheet() {
+  openSheet(`<h3>${t("textsettings")}</h3><ul class="set" style="margin-top:6px">
+    <li><span class="lb">${t("arsize")}<small>${t("arsizeh")}</small></span><input id="ar-size" type="range" min="0.8" max="1.6" step="0.1" value="${st.ar}" aria-label="${esc(t("arsize"))}"></li>
+    <li><span class="lb">${t("showtl")}<small>${t("showtlh")}</small></span><button type="button" class="switch" role="switch" data-act="tl" aria-checked="${st.tl}" aria-label="${esc(t("showtl"))}"></button></li></ul>
+    <p class="ar" lang="ar" style="margin-top:8px">${QM.starter[112][0]}</p>`);
+}
+
+/* ---------------- DUAS ---------------- */
+let dQuery = "", dCat = "all";
+function duaList() {
+  const q = dQuery.trim().toLowerCase();
+  const list = DUAS.map((d, i) => [d, i]).filter(([d, i]) => (dCat === "all" || (dCat === "fav" ? st.fav.includes(i) : d.c === dCat)) &&
+    (!q || [d.te, d.tb, d.en, d.bn, d.tl, d.bt].join(" ").toLowerCase().includes(q)));
+  if (!list.length) return `<p class="note">${dCat === "fav" ? t("nofav") : t("none")}</p>`;
+  return list.map(([d, i]) => { const fav = st.fav.includes(i); return `<article class="card dua"><div class="dua-head"><h3>${esc(bn() ? d.tb : d.te)}</h3><button type="button" class="mini" data-act="fav" data-i="${i}" aria-pressed="${fav}" aria-label="${esc(t("save"))}">${ic("heart")}</button><button type="button" class="mini" data-act="copydua" data-i="${i}" aria-label="${esc(t("copy"))}">${ic("copy")}</button></div><p class="ar" lang="ar">${d.ar}</p>${st.tl ? `<p class="tl">${esc(bn() ? d.bt : d.tl)}</p>` : ""}<p>${esc(bn() ? d.bn : d.en)}</p><p class="ref">${esc(bn() ? d.rb : d.re)}</p></article>`; }).join("");
+}
+function vDuas() {
+  return `
+  <div class="page-head"><h2>${t("duas")}</h2></div>
+  <div class="search">${ic("search")}<input id="d-search" class="field" type="search" autocomplete="off" placeholder="${esc(t("dsearch"))}" aria-label="${esc(t("dsearch"))}" value="${esc(dQuery)}"></div>
+  <div class="chips">${[["all", t("all")], ["fav", "♥ " + t("saved")]].concat(DUA_CATS.map(c => [c[0], bn() ? c[2] : c[1]])).map(([k, l]) => `<button type="button" class="chip" data-act="dcat" data-k="${k}" aria-pressed="${dCat === k}">${esc(l)}</button>`).join("")}</div>
+  <div id="dua-list" style="display:grid;gap:12px">${duaList()}</div>`;
+}
+
+/* ---------------- MORE + sub pages ---------------- */
+function vMore() {
+  const s = snap || snapshot(), hj = hijriNow(s);
+  const items = [["guide", "guide", t("guide_s")], ["names", "names", t("names_s")], ["calendar", "calendar", hText(hj)], ["zakat", "zakat", t("zakat_s")], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")]];
+  return `<div class="page-head"><h2>${t("more")}</h2></div>
+  <ul class="card menu">${items.map(([k, icn, sub]) => `<li><button type="button" data-act="go" data-tab="more" data-sub="${k}"><span class="ic">${ic(icn)}</span><span class="grow"><b>${t(k === "names" ? "names99" : k)}</b><small>${esc(sub)}</small></span>${ic("chev", "chev")}</button></li>`).join("")}</ul>`;
+}
+let nQuery = "";
+const nameMatch = (x, q) => !q || [x.tl, x.bt, x.en, x.bn, x.ar, x.id, String(x.n), num(x.n)].concat(skel(x.ar)).join(" ").toLowerCase().includes(q);
+const skel = s => String(s).replace(/[ً-ٰٟـ]/g, "").replace(/[آأإٱ]/g, "ا");
+function namesList() {
+  const q = skel(nQuery.trim().toLowerCase());
+  const l = NAMES.map((x, i) => [x, i]).filter(([x]) => nameMatch(x, q));
+  $("names-count") && ($("names-count").textContent = countText(l.length));
+  return l.length ? l.map(([x, i]) => `<button type="button" class="card name" data-act="name" data-i="${i}" aria-haspopup="dialog" aria-label="${esc(`${num(x.n)}. ${bn() ? x.bt : x.tl}: ${bn() ? x.bn : x.en}`)}"><span class="i">${num(x.n)}</span><span class="ar" lang="ar">${x.ar}</span><b>${esc(bn() ? x.bt : x.tl)}</b><small>${esc(bn() ? x.bn : x.en)}</small>${x.status === "none" ? `<span class="pill muted">${t("noexpl")}</span>` : ""}</button>`).join("") : `<p class="note">${t("none")}</p>`;
+}
+const countText = k => bn() ? `${num(99)}টির মধ্যে ${num(k)}টি নাম` : `${k} of 99 names`;
+function vNames() {
+  return `<div class="page-head">${back()}<h2>${t("names99")}</h2></div>
+  <div class="search">${ic("search")}<input id="n-search" class="field" type="search" autocomplete="off" placeholder="${esc(t("nsearch"))}" aria-label="${esc(t("nsearch"))}" aria-controls="names-list" value="${esc(nQuery)}"></div>
+  <p class="note" id="names-count" aria-live="polite">${countText(NAMES.filter(x => nameMatch(x, skel(nQuery.trim().toLowerCase()))).length)}</p>
+  <div class="names" id="names-list">${namesList()}</div>
+  <section class="card pad"><h3 class="sec-title">${t("aboutlist")}</h3><p style="margin-top:6px">${esc(L(NM.meta.collection.note))}</p><p style="margin-top:8px">${esc(L(NM.meta.reviewText))}</p>${citeList(NM.meta.collection.note.src.concat(NM.meta.collection.hadith).concat(NM.meta.collection.quran.map(x => "quran:" + x.ref)))}</section>`;
+}
+/* A citation id is "work:locator". Returns {label, url, title}. */
+function cite(id) {
+  const k = id.indexOf(":"), w = k < 0 ? id : id.slice(0, k), loc = k < 0 ? "" : id.slice(k + 1), W = NM.works[w];
+  if (!W) return { label: id, url: "", title: id };
+  const [s1, a1] = loc.split(":");
+  const url = W.url.replace("{s}", s1).replace("{a}", a1).replace("{n}", loc);
+  const short = { quran: bn() ? "কুরআন" : "Qur'an", saadi: bn() ? "তাফসিরে সাদি" : "Tafsir al-Sa'di", ibnkathir: bn() ? "তাফসিরে ইবনে কাসির" : "Tafsir Ibn Kathir", bukhari: bn() ? "বুখারি" : "al-Bukhari", muslim: bn() ? "মুসলিম" : "Muslim", tirmidhi: bn() ? "তিরমিযি" : "at-Tirmidhi", abudawud: bn() ? "আবু দাউদ" : "Abu Dawud", ibnmajah: bn() ? "ইবনে মাজাহ" : "Ibn Majah", jamil2021: "Wan Jamil et al. 2021" }[w] || w;
+  return { label: short + (loc ? " " + num(loc) : ""), url, title: W.title };
+}
+function citeList(ids) {
+  const u = [...new Set(ids)];
+  return u.length ? `<ol class="cites">${u.map(id => { const c = cite(id), h = NM.hadith[id]; return `<li><a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label)} ${ic("ext", "ext")}<span class="sr"> (${t("opensnew")})</span></a><small>${esc(c.title)}${h ? ` · ${esc(L(h))}${h.grade ? ` <i>(${esc(h.grade)})</i>` : ""}` : ""}</small></li>`; }).join("")}</ol>` : "";
+}
+function nameSheet(i, opener) {
+  const x = NAMES[i]; if (!x) return;
+  const form = f => ({ name: t("f_name"), verb: t("f_verb"), related: t("f_related") }[f]);
+  const ev = x.quran.map(v => { const [s1, a1] = v.ref.split(":").map(Number), tr = QS[st.lang + ":" + s1], arr = QS["ar:" + s1];
+    return `<li><div class="ev-head"><button type="button" class="linkish" data-act="surah" data-s="${s1}" data-a="${a1}">${esc(sname(s1))} ${num(s1)}:${num(a1)}</button><span class="pill">${form(v.form)}</span></div>
+      ${arr ? `<p class="ar" lang="ar" dir="rtl">${arr[a1 - 1]}</p>` : `<p class="ar" lang="ar" dir="rtl">${esc(v.match)} …</p>`}
+      ${tr ? `<p class="tr" lang="${st.lang}">${esc(tr.t[a1 - 1])}</p>` : `<p class="note">${t("loading")}</p>`}</li>`; }).join("");
+  const missing = [...new Set(x.quran.map(v => +v.ref.split(":")[0]))].filter(s1 => !(QS["ar:" + s1] && QS[st.lang + ":" + s1]));
+  if (missing.length) Promise.all(missing.map(s1 => qEnsure(s1).catch(() => {}))).then(() => { if ($("sheet").classList.contains("on") && $("sheet").dataset.name === x.id) nameSheet(i); });
+  const had = x.hadith.map(id => { const c = cite(id), h = NM.hadith[id]; return `<li><a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label)} ${ic("ext", "ext")}<span class="sr"> (${t("opensnew")})</span></a>${h ? `<p>${esc(L(h))} <small class="note">(${esc(h.grade)})</small></p>` : ""}</li>`; }).join("");
+  const allSrc = x.quran.map(v => "quran:" + v.ref).concat(x.hadith, x.expl.src, x.note ? x.note.src : []);
+  openSheet(`<div class="name-sheet" lang="${st.lang}">
+    <p class="eyebrow">${t("names99")} · ${num(x.n)}</p>
+    <h3 class="ns-title">${esc(bn() ? x.bt : x.tl)}</h3>
+    <p class="ar ns-ar" lang="ar" dir="rtl">${x.ar}</p>
+    <dl class="ns-mean"><div><dt>English</dt><dd lang="en">${esc(x.en)}</dd></div><div><dt>বাংলা</dt><dd lang="bn">${esc(x.bn)}</dd></div></dl>
+    <section aria-labelledby="ns-ev"><h4 id="ns-ev">${t("evidence")}</h4>
+      ${ev ? `<ul class="ev">${ev}</ul>` : ""}${had ? `<ul class="ev had">${had}</ul>` : ""}${!ev && !had ? `<p class="note">${t("noevidence")}</p>` : ""}</section>
+    <section aria-labelledby="ns-ex"><h4 id="ns-ex">${t(x.status === "commentary" ? "explanation" : "explanation2")}</h4><p>${esc(L(x.expl))}</p>
+      <p class="ns-status note"><span>${t("basedon")}: ${x.expl.src.map(id => { const c = cite(id); return `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label)}</a>`; }).join("; ")}.</span> <span>${t("rv_" + x.status)}</span></p></section>
+    ${x.note ? `<section aria-labelledby="ns-nt"><h4 id="ns-nt">${t("scholarnote")}</h4><p>${esc(L(x.note))}</p></section>` : ""}
+    <section class="refl" aria-labelledby="ns-rf"><h4 id="ns-rf">${t("reflection")}</h4><p class="note">${t("reflectionh")}</p><p>${esc(L(x.refl))}</p></section>
+    <section aria-labelledby="ns-src"><h4 id="ns-src">${t("sources")}</h4>${citeList(allSrc)}</section>
+    <div class="row ns-nav"><button type="button" class="btn ghost" data-act="name" data-i="${(i + 98) % 99}">${ic("back")} ${t("prevname")}</button><button type="button" class="btn ghost" data-act="name" data-i="${(i + 1) % 99}">${t("nextname")} ${ic("chev")}</button></div>
+  </div>`, opener);
+  $("sheet").dataset.name = x.id;
+}
+
+/* ---------------- Prayer guide ---------------- */
+const KINDS = ["fard", "wajib", "sm", "sg", "witr"];
+const school = () => st.school === "hanafi" || st.school === "shafii" ? st.school : (+st.asr === 2 ? "hanafi" : "shafii");
+function gCite(id) {
+  const r = GD.refs[id], m = /^(bukhari|muslim|tirmidhi|abudawud):(.+)$/.exec(id);
+  const lab = m ? cite(id).label : { badat: "Badat (Hanafi)", shafiifiqh: "Shafiifiqh (Shafi'i)", islamweb84719: "IslamWeb 84719", birmingham: "Darul Ifta Birmingham", islamqa36793: "IslamQA 36793" }[id] || id;
+  return { label: lab, url: r.url, desc: L(r), grade: r.grade };
+}
+function gSources(ids) {
+  return `<ol class="cites">${[...new Set(ids)].map(id => { const c = gCite(id); return `<li><a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label)} ${ic("ext", "ext")}<span class="sr"> (${t("opensnew")})</span></a><small>${esc(c.desc)}${c.grade ? ` <i>(${esc(c.grade)})</i>` : ""}</small></li>`; }).join("")}</ol>`;
+}
+const unit = x => `<span class="u u-${x.kind}"><b>${num(x.n)}</b> ${t("k_" + x.kind)}</span>`;
+const unitS = x => `<span class="u u-${x.kind}" title="${esc(t("k_" + x.kind))}"><b>${num(x.n)}</b>${t("k_" + x.kind + "_s")}<span class="sr"> (${esc(t("k_" + x.kind))})</span></span>`;
+function vGuide() {
+  const sc = school();
+  const cell = (p, w) => { const xs = p[sc].filter(x => x.when === w); return xs.length ? xs.map(unitS).join("") : `<span class="u-none" aria-label="${esc(t("g_none"))}">—</span>`; };
+  const rows = GD.prayers.map(p => `<tr><th scope="row">${t(p.k)}</th><td>${cell(p, "before")}</td><td>${cell(p, "fard")}</td><td>${cell(p, "after")}${p[sc].some(x => x.when === "witr") ? `<div class="then">${t("g_then")} ${p[sc].filter(x => x.when === "witr").map(unitS).join("")}</div>` : ""}</td></tr>`).join("");
+  const detail = p => `<details class="card g-det"><summary><b>${t(p.k)}</b><span class="seq">${p[sc].map(x => `${num(x.n)}${t("k_" + x.kind + "_s")}`).join(" → ")}</span></summary>
+    <div class="g-body"><ol class="g-order">${p[sc].map(x => `<li>${unit(x)} <span class="note">${t("w_" + x.when)}</span></li>`).join("")}</ol>
+    <p>${esc(L(p.note))}</p>
+    <p class="note g-status">${t("basedon")}: ${[...new Set(p.src)].map(id => { const c = gCite(id); return `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label)}</a>`; }).join("; ")}. ${t("g_unreviewed")}</p></div></details>`;
+  return `<div class="page-head">${back()}<h2>${t("guide")}</h2></div>
+  <section class="card pad g-intro"><p>${t("g_intro")}</p>
+    <div class="g-school"><p class="note" id="g-sch-l">${t("g_school")}</p><div class="seg" role="group" aria-labelledby="g-sch-l">${[["hanafi", t("hanafi_s")], ["shafii", t("shafii_s")]].map(([k, l]) => `<button type="button" data-act="school" data-k="${k}" aria-pressed="${sc === k}">${l}</button>`).join("")}</div></div>
+    <p class="note">${t("g_schoolh")}</p></section>
+  <section class="card pad">
+    <h3 class="sec-title" id="g-sum">${t("g_summary")} · ${t(sc === "hanafi" ? "hanafi_s" : "shafii_s")}</h3>
+    <div class="g-legend" aria-hidden="true">${KINDS.filter(k => GD.prayers.some(p => p[sc].some(x => x.kind === k))).map(k => `<span class="u u-${k}">${t("k_" + k)}</span>`).join("")}</div>
+    <div class="g-wrap"><table class="g-table" aria-labelledby="g-sum"><thead><tr><th scope="col">${t("g_prayer")}</th><th scope="col">${t("w_before")}</th><th scope="col">${t("w_fard")}</th><th scope="col">${t("w_after")}</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="note" style="margin-top:10px">${t("g_tablenote")}</p>
+  </section>
+  <section class="g-list"><h3 class="sec-title">${t("g_details")}</h3>${GD.prayers.map(detail).join("")}</section>
+  <section class="g-list"><h3 class="sec-title">${t("g_terms")}</h3>${GD.terms.map(x => `<details class="card g-det"><summary><b>${esc(L(x)[0])}</b></summary><div class="g-body"><p>${esc(L(x)[1])}</p>${x.src.length ? `<p class="note g-status">${t("basedon")}: ${x.src.map(id => { const c = gCite(id); return `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label)}</a>`; }).join("; ")}.</p>` : ""}</div></details>`).join("")}</section>
+  <section class="card pad"><h3 class="sec-title">${t("g_schools")}</h3>
+    <p style="margin-top:6px">${esc(L(GD.notes.maliki))}</p><p class="note g-status">${t("basedon")}: ${GD.notes.maliki.src.map(id => esc(gCite(id).label)).join("; ")}.</p>
+    <p style="margin-top:10px">${esc(L(GD.notes.hanbali))}</p><p class="note g-status">${t("basedon")}: ${GD.notes.hanbali.src.map(id => esc(gCite(id).label)).join("; ")}.</p>
+    <p style="margin-top:10px">${esc(L(GD.notes.scope))}</p></section>
+  <section class="card pad"><h3 class="sec-title">${t("sources")}</h3>${gSources(GD.prayers.flatMap(p => p.src).concat(GD.terms.flatMap(x => x.src), GD.notes.maliki.src))}
+    <p class="note" style="margin-top:10px">${esc(L(GD.notes.review))}</p></section>`;
+}
+
+let calM = null;
+function vCalendar() {
+  const s = snap || snapshot();
+  if (!calM) calM = [s.p.year, s.p.month];
+  const [y, m] = calM, first = new Date(Date.UTC(y, m - 1, 1)), dim = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const lead = (first.getUTCDay() + 6) % 7; // Monday first
+  const loc = bn() ? "bn-BD" : "en-AU";
+  const title = new Intl.DateTimeFormat(loc, { month: "long", year: "numeric", timeZone: "UTC" }).format(first);
+  const wdf = (k, f) => new Intl.DateTimeFormat(loc, { weekday: f, timeZone: "UTC" }).format(new Date(Date.UTC(2024, 0, 1 + k)));
+  const full = new Intl.DateTimeFormat(loc, { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+  let cells = Array.from({ length: 7 }, (_, k) => `<span class="wd${k === 4 ? " fri" : ""}" aria-hidden="true" title="${esc(wdf(k, "long"))}">${wdf(k, "short")}</span>`).join("") + '<span class="c pad" aria-hidden="true"></span>'.repeat(lead);
+  const hms = new Set();
+  for (let d = 1; d <= dim; d++) {
+    const h = hijri(localNoon(y, m, d)); if (h) hms.add(h.m + "/" + h.y);
+    const evs = eventsOn(h), major = evs.filter(e => !e.minor), wh = h && h.d >= 13 && h.d <= 15, today = y === s.p.year && m === s.p.month && d === s.p.day;
+    const label = `${full.format(new Date(Date.UTC(y, m - 1, d, 12)))}${h ? `, ${num(h.d)} ${HM[st.lang][h.m - 1]} ${num(h.y)}` : ""}${today ? ", " + t("todayl") : ""}${wh ? ", " + t("whitedays") : ""}${evs.length ? ", " + evs.map(L).join(", ") : ""}`;
+    cells += `<span role="listitem" class="c${today ? " today" : ""}${major.length ? " ev" : ""}${wh && !today ? " wh" : ""}${h && h.d === 1 ? " h1" : ""}" aria-label="${esc(label)}" title="${esc(evs.map(L).join(", "))}"${today ? ' aria-current="date"' : ""}><b aria-hidden="true">${num(d)}</b><small aria-hidden="true">${h ? (h.d === 1 ? esc(HM[st.lang][h.m - 1].split(/[\s']/)[0]) : num(h.d)) : ""}</small></span>`;
+  }
+  const hm = [...hms].map(k => { const [mm, yy] = k.split("/"); return `${HM[st.lang][mm - 1]} ${num(yy)}`; }).join(" – ");
+  const up = []; let [a, b, c] = [s.p.year, s.p.month, s.p.day];
+  for (let i = 0; i < 400 && up.length < 6; i++) { const [a1, b1, c1] = shiftDay(a, b, c, i), h = hijri(localNoon(a1, b1, c1)); for (const e of eventsOn(h)) if (!e.minor) up.push({ e, i, h, g: new Date(Date.UTC(a1, b1 - 1, c1, 12)) }); }
+  const df = o => new Intl.DateTimeFormat(loc, Object.assign({ timeZone: "UTC" }, o));
+  return `<div class="page-head">${back()}<h2>${t("calendar")}</h2></div>
+  <section class="card pad" style="display:grid;gap:14px" aria-labelledby="cal-title">
+    <div class="cal-head"><button type="button" class="icon-btn" data-act="cal" data-d="-1" aria-label="${esc(t("prevm"))}">${ic("back")}</button><div class="t" aria-live="polite"><b id="cal-title">${esc(title)}</b><small>${esc(hm)}</small></div><button type="button" class="icon-btn" data-act="cal" data-d="1" aria-label="${esc(t("nextm"))}">${ic("chev")}</button></div>
+    <div class="cal" role="list" aria-labelledby="cal-title">${cells}</div>
+    <p class="cal-legend"><span><i class="lg-td" aria-hidden="true"></i>${t("todayl")}</span><span><i class="lg-wh" aria-hidden="true"></i>${t("whitedays")}</span><span><i class="lg-ev" aria-hidden="true"></i>${t("events")}</span></p>
+  </section>
+  <section class="card pad"><h3 class="sec-title">${t("upcoming")}</h3><ul class="up-list" style="margin-top:6px">${up.map(u => `<li><span class="d" aria-hidden="true"><b>${esc(df({ day: "numeric" }).format(u.g))}</b><small>${esc(df({ month: "short" }).format(u.g))}</small></span><span class="e"><b>${esc(L(u.e))}</b><small>${esc(df({ weekday: "long", day: "numeric", month: "long" }).format(u.g))}${u.h ? ` · ${num(u.h.d)} ${HM[st.lang][u.h.m - 1]}` : ""} · ${u.i ? t("inn").replace("{n}", num(u.i)) : t("todayl")}</small></span></li>`).join("")}</ul>
+  <p class="note" style="margin-top:10px">${t("calnote")}</p></section>`;
+}
+
+function zakatCalc() {
+  const v = st.zk.v, n = k => Math.max(0, parseFloat(v[k]) || 0);
+  const assets = n("cash") + n("gold") + n("silver") + n("inv") + n("biz") + n("recv"), net = assets - n("debt");
+  const grams = st.zk.basis === "gold" ? 87.48 : 612.36, price = parseFloat(st.zk.price) || 0, nisab = grams * price;
+  const fmt = x => num(x.toLocaleString("en-AU", { maximumFractionDigits: 2, minimumFractionDigits: 0 }));
+  const cur = st.zk.cur;
+  if (!price) return `<p class="note">${t("zkprice")}</p><p class="big">${cur} ${fmt(net)}</p><p class="note">${t("zknet")}</p>`;
+  const due = net >= nisab ? net * 0.025 : 0;
+  return `<span class="note">${t("zkdue")}</span><p class="big">${cur} ${fmt(due)}</p><p class="note">${t("zknet")}: ${cur} ${fmt(net)} · ${t("nisab")}: ${cur} ${fmt(nisab)} (${num(grams)} g)</p><p class="note">${net >= nisab ? t("zkabove") : t("zkbelow")}</p>`;
+}
+function vZakat() {
+  const f = (k, lab) => `<label>${lab}<input class="field tnum" id="zk-${k}" data-zk="${k}" type="number" inputmode="decimal" min="0" step="any" placeholder="0" value="${esc(st.zk.v[k] || "")}"></label>`;
+  return `<div class="page-head">${back()}<h2>${t("zakat")}</h2></div>
+  <section class="result" id="zk-result" aria-live="polite">${zakatCalc()}</section>
+  <section class="card pad form">
+    <label>${t("currency")}<select id="zk-cur" class="field">${CURRENCIES.map(c => `<option${c === st.zk.cur ? " selected" : ""}>${c}</option>`).join("")}</select></label>
+    <div><p class="note" style="margin-bottom:6px">${t("nisabbasis")}</p><div class="seg">${[["silver", t("silver")], ["gold", t("gold")]].map(([k, l]) => `<button type="button" data-act="zkb" data-k="${k}" aria-pressed="${st.zk.basis === k}">${l}</button>`).join("")}</div></div>
+    <label>${t("pricegram").replace("{m}", st.zk.basis === "gold" ? t("gold") : t("silver"))}<input class="field tnum" id="zk-price" data-zkp="1" type="number" inputmode="decimal" min="0" step="any" placeholder="0" value="${esc(st.zk.price)}"></label>
+  </section>
+  <section class="card pad form"><p class="eyebrow">${t("assets")}</p>${f("cash", t("zcash"))}${f("gold", t("zgold"))}${f("silver", t("zsilver"))}${f("inv", t("zinv"))}${f("biz", t("zbiz"))}${f("recv", t("zrecv"))}<p class="eyebrow" style="margin-top:6px">${t("liab")}</p>${f("debt", t("zdebt"))}</section>
+  <p class="note">${t("zknote")}</p>`;
+}
+
+function vSettings() {
+  const segb = (act, cur, opts) => `<div class="seg">${opts.map(([k, l]) => `<button type="button" data-act="${act}" data-k="${k}" aria-pressed="${String(cur) === String(k)}">${l}</button>`).join("")}</div>`;
+  return `<div class="page-head">${back()}<h2>${t("settings")}</h2></div>
+  <ul class="card set">
+    <li><span class="lb">${t("language")}</span><div style="width:100%">${segb("setlang", st.lang, [["en", "English"], ["bn", "বাংলা"]])}</div></li>
+    <li><span class="lb">${t("theme")}</span><div style="width:100%">${segb("settheme", st.theme, [["system", t("system")], ["light", t("light")], ["dark", t("dark")]])}</div></li>
+    <li><span class="lb">${t("location")}<small>${esc(cname(city()))}</small></span><button type="button" class="btn ghost" data-act="loc">${t("change")}</button></li>
+  </ul>
+  <p class="eyebrow">${t("ptimes")}</p>
+  <ul class="card set">
+    <li><label for="method">${t("method")}<select id="method" class="field" style="margin-top:6px">${Object.entries(METHODS).map(([k, m]) => `<option value="${k}"${k === st.method ? " selected" : ""}>${esc(L(m).name)}</option>`).join("")}</select></label></li>
+    <li><span class="lb">${t("asrm")}</span><div style="width:100%">${segb("setasr", st.asr, [["1", t("std")], ["2", t("hanafi")]])}</div></li>
+    <li><span class="lb">${t("hadj")}<small>${t("hadjh")}</small></span><button type="button" class="icon-btn" data-act="hadj" data-d="-1" aria-label="−1">−</button><b class="tnum" style="min-width:2.5ch;text-align:center">${num((st.hadj > 0 ? "+" : "") + st.hadj)}</b><button type="button" class="icon-btn" data-act="hadj" data-d="1" aria-label="+1">+</button></li>
+  </ul>
+  <p class="eyebrow">${t("reading")}</p>
+  <ul class="card set">
+    <li><span class="lb">${t("arsize")}</span><input id="ar-size" type="range" min="0.8" max="1.6" step="0.1" value="${st.ar}" aria-label="${esc(t("arsize"))}"></li>
+    <li><span class="lb">${t("showtl")}<small>${t("showtlh")}</small></span><button type="button" class="switch" role="switch" data-act="tl" aria-checked="${st.tl}" aria-label="${esc(t("showtl"))}"></button></li>
+  </ul>
+  <ul class="card set"><li><span class="lb">${t("offline")}<small>${t(NATIVE ? "offlineapp" : "offlineh")}</small></span>${NATIVE ? `<span class="note">✓ ${t("inapp")}</span>` : (() => { let done = false; try { done = localStorage.getItem(KEY + ".offline.v4") === "1"; } catch (x) {} return `<button type="button" class="btn ghost" data-act="savequran">${done ? "✓ " + t("savedq") : t("saveq")}</button>`; })()}</li></ul>
+  <ul class="card set"><li><span class="lb">${t("resetall")}<small>${t("resetallh")}</small></span><button type="button" class="btn ghost warn" data-act="wipe" id="wipe">${t("reset")}</button></li></ul>`;
+}
+function vAbout() {
+  const E = bn() ? [
+    ["আরবি পাঠ", "উসমানি লিপি, নোবেল কুরআন এনসাইক্লোপিডিয়া (quranenc.com), quran-json প্যাকেজের মাধ্যমে (CC BY-SA 4.0)।"],
+    ["বাংলা অনুবাদ", "ড. আবু বকর মুহাম্মাদ যাকারিয়া, সংস্করণ ১.১.১ (২২ মে ২০২১), প্রকাশক QuranEnc.com। অনুবাদ ও টীকা অপরিবর্তিতভাবে দেওয়া হয়েছে। QuranEnc-এর শর্ত: বিষয়বস্তুতে কোনো পরিবর্তন নয়; প্রকাশক ও উৎস উল্লেখ; সংস্করণ নম্বর উল্লেখ; সর্বশেষ সংস্করণে হালনাগাদ; অনুপযুক্ত বিজ্ঞাপন নয়।"],
+    ["ইংরেজি অনুবাদ", "মারমাডিউক পিকথল, The Meaning of the Glorious Koran (১৯৩০), পাবলিক ডোমেইন; ডিজিটাল পাঠ Tanzil (tanzil.net) থেকে, fawazahmed0/quran-api-এর মাধ্যমে।"],
+    ["আল্লাহর ৯৯ নাম", "তাফসিরে সাদি, তাফসিরে ইবনে কাসির (সংক্ষিপ্ত ইংরেজি), সহিহ বুখারি, সহিহ মুসলিম, তিরমিযি, আবু দাউদ, ইবনে মাজাহ এবং একটি গবেষণা প্রবন্ধ থেকে। প্রতিটি নামের ব্যাখ্যার শেষে ব্যবহৃত সূত্র ও পর্যালোচনার অবস্থা দেওয়া আছে। কোনো ব্যাখ্যাই এখনো কোনো যোগ্য আলেম স্বতন্ত্রভাবে পর্যালোচনা করেননি।"],
+    ["নামাজ শিক্ষা", "sunnah.com-এ যাচাই করা হাদিস এবং হানাফি ও শাফিই ফতোয়া উত্তর (IslamQA.org), ইসলামওয়েব ও ইসলামকিউএ থেকে সংক্ষেপিত। এটি ফতোয়া নয়, এবং এখনো কোনো যোগ্য আলেম স্বতন্ত্রভাবে পর্যালোচনা করেননি।"],
+    ["লোগো", "মিহরাব-আকৃতির খোলা দরজায় উদীয়মান সূর্য—এই অ্যাপের জন্য আঁকা মৌলিক ভেক্টর ছবি (brand/ ফোল্ডার)।"],
+    ["ফন্ট", "হিন্দ শিলিগুড়ি, শেহেরাজাদ নিউ ও তিরো বাংলা, SIL Open Font License 1.1, এই অ্যাপের সঙ্গেই সংযুক্ত।"]
+  ] : [
+    ["Arabic text", "Uthmani script from the Noble Qur'an Encyclopedia (quranenc.com), via the quran-json package (CC BY-SA 4.0)."],
+    ["Bangla translation", "Dr. Abu Bakr Muhammad Zakaria, version 1.1.1 (22 May 2021), published by QuranEnc.com. Translation and footnotes are included unchanged. QuranEnc's terms: no change to the content; credit the publisher and source; state the version; update to the latest version; no inappropriate advertising."],
+    ["English translation", "Marmaduke Pickthall, The Meaning of the Glorious Koran (1930), public domain. Digital text from Tanzil (tanzil.net) via fawazahmed0/quran-api."],
+    ["99 Names", "From Tafsir al-Sa'di, Tafsir Ibn Kathir (abridged English), Sahih al-Bukhari, Sahih Muslim, at-Tirmidhi, Abu Dawud, Ibn Majah and one journal article. Each explanation ends with the sources it used and its review status. None has yet been independently reviewed by a qualified scholar."],
+    ["Prayer guide", "Summarised from hadith checked on sunnah.com and from Hanafi and Shafi'i fatwa answers (IslamQA.org), IslamWeb and IslamQA.info. It is not a fatwa and has not yet been independently reviewed by a qualified scholar."],
+    ["Logo", "A mihrab-shaped open doorway framing a rising sun: original vector artwork drawn for this app (brand/ folder)."],
+    ["Fonts", "Hind Siliguri, Scheherazade New and Tiro Bangla, SIL Open Font License 1.1, bundled with the app."]
+  ];
+  return `<div class="page-head">${back()}<h2>${t("about")}</h2></div>
+  <section class="card pad" style="display:grid;gap:10px">${t("aboutbody").split("\n").map(p => `<p>${esc(p)}</p>`).join("")}</section>
+  <section class="card pad"><h3 class="sec-title">${t("qcredit")}</h3><dl class="credits">${E.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
+  <p class="note" style="margin-top:8px"><a href="data/quran/editions.json" target="_blank" rel="noopener">editions.json</a> · <a href="https://quranenc.com/en/browse/bengali_zakaria" target="_blank" rel="noopener noreferrer">QuranEnc.com</a> · <a href="https://tanzil.net/trans/" target="_blank" rel="noopener noreferrer">Tanzil</a></p></section>
+  <p class="note">Islam Everyday · ${t("version")} ${num("1.0.0")}</p>`;
+}
+/* Ask the service worker to store every surah file so the whole Qur'an works offline. */
+function saveQuranOffline(b) {
+  const sw = navigator.serviceWorker && navigator.serviceWorker.controller;
+  if (!sw) { toast(t("saveqfail")); return; }
+  const urls = []; for (const l of ["ar", "en", "bn"]) for (let i = 1; i <= 114; i++) urls.push(`data/quran/${l}/${qpad(i)}.json`);
+  b.disabled = true; b.textContent = t("savingq").replace("{n}", num(0));
+  const on = e => { const m = e.data || {}; if (m.type !== "cache-progress") return; const pct = Math.round(m.done / m.total * 100);
+    const el = document.querySelector('[data-act="savequran"]');
+    if (el) el.textContent = m.done >= m.total ? "✓ " + t("savedq") : t("savingq").replace("{n}", num(pct));
+    if (m.done >= m.total) { navigator.serviceWorker.removeEventListener("message", on); try { localStorage.setItem(KEY + ".offline.v4", "1"); } catch (x) {} toast(t("savedq")); } };
+  navigator.serviceWorker.addEventListener("message", on);
+  sw.postMessage({ type: "cache-data", urls });
+}
+
+/* ---------------- location sheet ---------------- */
+function locSheet(filter = "") {
+  const q = filter.trim().toLowerCase();
+  const groups = [["au", t("au")], ["bd", t("bd")], ["world", t("world")]];
+  const opts = groups.map(([g, lab]) => {
+    const cs = CITIES.filter(c => c.g === g && (!q || c.en.toLowerCase().includes(q) || c.bn.includes(filter.trim())));
+    return cs.length ? `<p class="group">${lab}</p>` + cs.map(c => `<button type="button" class="opt" data-act="city" data-id="${c.id}" aria-pressed="${st.city === c.id}">${esc(L(c))}${st.city === c.id ? " ✓" : ""}</button>`).join("") : "";
+  }).join("");
+  return opts || `<p class="note" style="padding:12px 4px">${t("none")}</p>`;
+}
+function openLoc() {
+  openSheet(`<h3>${t("chooseloc")}</h3>
+  <div style="display:grid;gap:10px;margin-top:12px"><button type="button" class="btn soft" data-act="gps">${ic("locate")}${t("usegps")}</button>
+  <div class="search">${ic("search")}<input id="c-search" class="field" type="search" autocomplete="off" placeholder="${esc(t("csearch"))}" aria-label="${esc(t("csearch"))}"></div></div>
+  <div id="city-list">${locSheet()}</div>`);
+}
+function locate() {
+  if (!navigator.geolocation) { toast(t("nogeo")); return; }
+  toast(t("locating"));
+  try {
+    navigator.geolocation.getCurrentPosition(p => {
+      const zone = (Intl.DateTimeFormat().resolvedOptions().timeZone) || city().zone;
+      st.gps = { id: "gps", lat: +p.coords.latitude.toFixed(4), lng: +p.coords.longitude.toFixed(4), zone, en: "My location", bn: "আমার অবস্থান", g: "gps" };
+      st.city = "gps"; save(); closeSheet(); render(true); toast(t("locset"));
+    }, () => toast(t("nogeo")), { enableHighAccuracy: false, timeout: 12000, maximumAge: 6e5 });
+  } catch (e) { toast(t("nogeo")); }
+}
+
+/* ---------------- desktop ---------------- */
+let sideNext = null;
+const SIDE = [["today", "today", "today"], ["quran", "quran", "quran"], ["duas", "duas", "duas"], null,
+  ["guide", "guide", "more/guide"], ["calendar", "calendar", "more/calendar"], ["names99", "names", "more/names"], ["zakat", "zakat", "more/zakat"], null,
+  ["settings", "gear", "more/settings"], ["about", "info", "more/about"]];
+function side() {
+  const el = $("side"); if (!el) return;
+  if (!desk()) { el.innerHTML = ""; sideNext = null; return; }
+  const s = snapshot(); sideNext = s.next;
+  el.innerHTML = `<button type="button" class="brand" data-act="home" aria-label="${esc(t("brand"))}">${LOGO}<b>${t("brand")}</b></button>
+  <nav class="side-nav" aria-label="${esc(t("sections"))}">${SIDE.map(x => { if (!x) return "<hr>"; const [tab, sub] = x[2].split("/"); const on = R.tab === tab && (R.sub || null) === (sub || null); return `<button type="button" data-act="go" data-tab="${tab}"${sub ? ` data-sub="${sub}"` : ""}${on ? ' aria-current="page"' : ""}>${ic(x[1])}<span>${t(x[0])}</span></button>`; }).join("")}</nav>
+  <div class="side-next"><p class="eyebrow">${t("next")}${s.next.tomorrow ? " · " + t("tomorrow") : ""}</p><b>${t(s.next.k)}</b><span class="tnum" id="side-count">${left(s.next.at - s.now)}</span><small class="note">${esc(cname(s.c))}</small></div>`;
+}
+function dateLine() {
+  const s = snapshot();
+  const g = new Intl.DateTimeFormat(bn() ? "bn-BD" : "en-AU", { timeZone: s.c.zone, weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(s.now));
+  return g + " · " + hText(hijri(new Date(s.now + (s.now >= s.d0.abs("maghrib") ? 864e5 : 0))));
+}
+function readerEmpty() {
+  const last = st.last && st.last.s ? st.last : null;
+  return `<div class="card empty-read"><p class="ar" lang="ar" style="text-align:center;width:100%">${QM.starter[1][0]}</p><h2>${t("pickSurah")}</h2><p class="note">${t("pickSurahH")}</p><button type="button" class="btn" data-act="surah" data-s="${last ? last.s : 1}" data-a="${last ? last.a : 0}">${last ? `${t("cont")}: ${esc(sname(last.s))} ${num(last.s)}:${num(last.a)}` : t("startfat")}</button></div>`;
+}
+function vQuranDesk() {
+  return `<div class="split"><aside class="pane-list" id="pane-list">${vQuran()}</aside><section class="pane-read" id="read-pane">${R.surah ? vReader() : readerEmpty()}</section></div>`;
+}
+function openSurahDesk(s, a) {
+  R = Object.assign({}, R, { surah: s, ayah: a });
+  try { history.pushState(R, ""); depth++; } catch (e) {}
+  post = [];
+  const p = $("read-pane"); p.innerHTML = vReader();
+  if (!reduce) { p.classList.remove("enter-pane"); void p.offsetWidth; p.classList.add("enter-pane"); }
+  document.querySelectorAll("#surah-list .rowlink").forEach(b => { if (+b.dataset.s === s) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current"); });
+  post.forEach(fn => fn());
+  if (!a) { const top = p.getBoundingClientRect().top + scrollY - 90; if (scrollY > top) scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" }); }
+}
+
+/* ---------------- events ---------------- */
+document.addEventListener("click", e => {
+  if (NATIVE) { const a = e.target.closest('a[target="_blank"]'); if (a && /^https?:/.test(a.href) && new URL(a.href).origin !== location.origin) { e.preventDefault(); location.href = a.href; return; } } // opens in the phone's browser
+  const b = e.target.closest("[data-act]"); if (!b) { return; }
+  const a = b.dataset.act, d = b.dataset;
+  switch (a) {
+    case "tab": if (d.tab === R.tab && !R.sub && !R.surah) { window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); break; } go({ tab: d.tab }); break;
+    case "go": go({ tab: d.tab, sub: d.sub || null }); break;
+    case "home": go({ tab: "today" }); break;
+    case "back": if (depth > 0) { try { history.back(); break; } catch (x) {} } go({ tab: R.tab }, false); break;
+    case "lang": st.lang = bn() ? "en" : "bn"; save(); render(true); break;
+    case "setlang": st.lang = d.k; save(); render(false); break;
+    case "settheme": st.theme = d.k; save(); render(false); break;
+    case "setasr": st.asr = +d.k; save(); render(false); break;
+    case "hadj": st.hadj = Math.max(-2, Math.min(2, st.hadj + +d.d)); save(); render(false); break;
+    case "tl": st.tl = !st.tl; save(); b.setAttribute("aria-checked", st.tl); if (R.tab === "quran" || R.tab === "duas") { const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "aa": aaSheet(); break;
+    case "closesheet": closeSheet(); break;
+    case "name": nameSheet(+d.i, b); break;
+    case "savequran": saveQuranOffline(b); break;
+    case "loc": openLoc(); break;
+    case "gps": locate(); break;
+    case "city": { st.city = d.id; const c = city(); if (c.g === "bd") { st.method = "KAR"; st.asr = 2; } else if (c.g === "au") { st.method = "MWL"; st.asr = 1; } save(); closeSheet(); render(true); break; }
+    case "pray": {
+      if (!snap) break; const k = d.k, o = Object.assign({}, st.log[snap.key]); o[k] = !o[k]; st.log[snap.key] = o; pruneLog(snap); save();
+      justTicked = o[k] ? k : null; const rc = b.getBoundingClientRect(); const y = scrollY; render(false); scrollTo(0, y); justTicked = null;
+      if (o[k]) { buzz(15); if (PRAYERS.every(p => o[p])) { burst(rc.left + rc.width / 2, rc.top + rc.height / 2); toast(t("alldone")); buzz([30, 50, 30]); } }
+      break;
+    }
+    case "surah": closeSheet(); if (desk() && R.tab === "quran") { openSurahDesk(+d.s, +d.a || 0); break; } go({ tab: "quran", surah: +d.s, ayah: +d.a || 0 }); break;
+    case "qf": qFilter = d.k; document.querySelectorAll('[data-act="qf"]').forEach(x => x.setAttribute("aria-pressed", x.dataset.k === qFilter)); $("surah-list").innerHTML = listRows(); break;
+    case "retry": { const i = R.surah || (votdPick && votdPick[0]); if (i) { delete QERR["ar:" + i]; delete QERR[st.lang + ":" + i]; } render(false); break; }
+    case "markread": { const i = R.surah; const was = st.read.includes(i); st.read = was ? st.read.filter(x => x !== i) : st.read.concat(i); save(); if (!was) { const rc = b.getBoundingClientRect(); burst(rc.left + rc.width / 2, rc.top); buzz(20); } b.classList.toggle("soft", !was); b.textContent = !was ? "✓ " + t("readmark") : t("markread"); break; }
+    case "bm": { const id = d.id, on = st.bm.includes(id); st.bm = on ? st.bm.filter(x => x !== id) : st.bm.concat(id); save(); b.setAttribute("aria-pressed", !on); toast(on ? t("bmremoved") : t("bmadded")); break; }
+    case "copyayah": { const k = +d.k, i = R.surah, ar = QS["ar:" + i], tr = QS[st.lang + ":" + i]; if (!ar) break; copyText(`${ar[k]}\n${tr ? tr.t[k] + "\n" : ""}— ${sname(i)} ${i}:${k + 1}\n${trCredit()}`); break; }
+    case "dcat": dCat = d.k; document.querySelectorAll('[data-act="dcat"]').forEach(x => x.setAttribute("aria-pressed", x.dataset.k === dCat)); $("dua-list").innerHTML = duaList(); break;
+    case "fav": { const i = +d.i, on = st.fav.includes(i); st.fav = on ? st.fav.filter(x => x !== i) : st.fav.concat(i); save(); b.setAttribute("aria-pressed", !on); if (!on && !reduce) { b.animate && b.animate([{ transform: "scale(1)" }, { transform: "scale(1.3)" }, { transform: "scale(1)" }], { duration: 320, easing: "cubic-bezier(.34,1.56,.64,1)" }); } if (dCat === "fav") $("dua-list").innerHTML = duaList(); break; }
+    case "copydua": { const x = DUAS[+d.i]; copyText(`${x.ar}\n${bn() ? x.bt : x.tl}\n${bn() ? x.bn : x.en}\n— ${bn() ? x.rb : x.re}`); break; }
+    case "cal": { let [y, m] = calM; m += +d.d; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; } calM = [y, m]; render(false); break; }
+    case "school": st.school = d.k; save(); render(false); break;
+    case "zkb": st.zk.basis = d.k; save(); render(false); break;
+    case "wipe": if (b.dataset.armed) { try { localStorage.removeItem(KEY); } catch (x) {} st = JSON.parse(JSON.stringify(DEF)); render(true); toast(t("resetdone")); } else { b.dataset.armed = "1"; b.textContent = t("tapagain"); } break;
+  }
+});
+$("scrim").addEventListener("click", closeSheet);
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { closeSheet(); return; }
+  if (e.key === "Tab") { trapSheet(e); return; }
+  const tg = e.target, typing = tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA" || tg.tagName === "SELECT" || tg.isContentEditable);
+  if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "/") { const s = document.querySelector('#view input[type="search"]'); if (s) { e.preventDefault(); s.focus(); } }
+  else if (R.sub === "calendar" && calM && (e.key === "ArrowLeft" || e.key === "ArrowRight")) { let [y, m] = calM; m += e.key === "ArrowLeft" ? -1 : 1; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; } calM = [y, m]; render(false); }
+});
+if (mq.addEventListener) mq.addEventListener("change", () => render(false));
+setInterval(() => {
+  if (!desk() || document.hidden || !sideNext) return;
+  const el = $("side-count"), now = Date.now(); if (!el) return;
+  if (now >= sideNext.at) { side(); return; }
+  el.textContent = left(sideNext.at - now);
+}, 1000);
+document.addEventListener("input", e => {
+  const el = e.target;
+  if (el.id === "q-search") { qQuery = el.value; $("surah-list").innerHTML = listRows(); }
+  else if (el.id === "d-search") { dQuery = el.value; $("dua-list").innerHTML = duaList(); }
+  else if (el.id === "n-search") { nQuery = el.value; $("names-list").innerHTML = namesList(); }
+  else if (el.id === "c-search") { $("city-list").innerHTML = locSheet(el.value); }
+  else if (el.id === "ar-size") { st.ar = +el.value; save(); document.documentElement.style.setProperty("--ar-scale", st.ar); }
+  else if (el.dataset.zk) { st.zk.v[el.dataset.zk] = el.value; save(); $("zk-result").innerHTML = zakatCalc(); }
+  else if (el.dataset.zkp) { st.zk.price = el.value; save(); $("zk-result").innerHTML = zakatCalc(); }
+});
+document.addEventListener("change", e => {
+  const el = e.target;
+  if (el.id === "method") { st.method = el.value; save(); toast(t("saved2")); }
+  else if (el.id === "zk-cur") { st.zk.cur = el.value; save(); $("zk-result").innerHTML = zakatCalc(); }
+});
+
+/* ---------------- boot ---------------- */
+const LOGO = `<svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="104" fill="#0E6B5C"/><clipPath id="ie-door"><path d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392Z"/></clipPath><g clip-path="url(#ie-door)"><rect width="512" height="512" fill="#167C68"/><circle cx="256" cy="392" r="84" fill="#F2BE5C"/></g><path d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392Z" fill="none" stroke="#F6EEDC" stroke-width="40" stroke-linejoin="round"/><path d="M118 393H394" stroke="#F6EEDC" stroke-width="40" stroke-linecap="round"/></svg>`;
+render(true);
+if (!NATIVE && "serviceWorker" in navigator && document.querySelector('link[rel="manifest"]') && window.top === window) {
+  try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {}
+}
+})();

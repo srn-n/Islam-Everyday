@@ -1,0 +1,79 @@
+/* Islam Everyday — Prayer guide: rak'ahs of the five daily prayers, by school.
+ *
+ * Educational summary, not a fatwa. Not yet independently reviewed by a qualified scholar.
+ * Every count is tied to the sources listed in `src`. Hadith ids are "collection:number" (checked on sunnah.com);
+ * other sources are scholarly answers from recognised fatwa services, listed in `refs`.
+ *
+ * Unit kinds: "fard" (obligatory), "wajib" (Hanafi: binding, ranked below fard), "sm" (sunnah mu'akkadah,
+ * emphasised sunnah), "sg" (other sunnah / nafl, non-emphasised), "witr".
+ * Schools shown: "hanafi" and "shafii". The Hanbali emphasised counts are the same as the Shafi'i ones (IslamWeb 84719);
+ * the extra non-emphasised units in the Shafi'i column come from the Shafi'i answer only.
+ */
+(function (root, factory) {
+  const data = factory();
+  if (typeof module === "object" && module.exports) module.exports = data;
+  else root.IE_GUIDE = data;
+})(typeof self !== "undefined" ? self : this, function () {
+"use strict";
+const refs = {
+  "bukhari:46": { en: "Talhah ibn 'Ubaydullah: the five daily prayers are obligatory; anything more is voluntary.", bn: "তালহা ইবনে উবাইদুল্লাহ: পাঁচ ওয়াক্ত নামাজ ফরজ; এর বেশি যা কিছু, তা নফল (স্বেচ্ছামূলক)।", url: "https://sunnah.com/bukhari:46", grade: "sahih" },
+  "bukhari:1180": { en: "Ibn 'Umar: ten rak'ahs he learned from the Prophet ﷺ - two before Dhuhr, two after it, two after Maghrib, two after Isha and two before Fajr.", bn: "ইবনে উমর: রাসূল ﷺ থেকে শেখা দশ রাকাত—যোহরের আগে দুই ও পরে দুই, মাগরিবের পরে দুই, ইশার পরে দুই এবং ফজরের আগে দুই।", url: "https://sunnah.com/bukhari:1180", grade: "sahih" },
+  "bukhari:1182": { en: "'A'ishah: the Prophet ﷺ never left four rak'ahs before Dhuhr and two before Fajr.", bn: "আয়েশা রা.: রাসূল ﷺ যোহরের আগে চার রাকাত ও ফজরের আগে দুই রাকাত কখনো ছাড়তেন না।", url: "https://sunnah.com/bukhari:1182", grade: "sahih" },
+  "tirmidhi:415": { en: "Umm Habibah: the twelve rak'ahs - four before Dhuhr, two after it, two after Maghrib, two after Isha, two before Fajr.", bn: "উম্মে হাবিবা রা.: বারো রাকাত—যোহরের আগে চার, পরে দুই, মাগরিবের পরে দুই, ইশার পরে দুই, ফজরের আগে দুই।", url: "https://sunnah.com/tirmidhi:415", grade: "sahih (Darussalam); hasan sahih (at-Tirmidhi)" },
+  "abudawud:1271": { en: "Ibn 'Umar: 'May Allah have mercy on a person who prays four rak'ahs before 'Asr.'", bn: "ইবনে উমর: ‘আল্লাহ সেই ব্যক্তির ওপর রহম করুন, যে আসরের আগে চার রাকাত পড়ে।’", url: "https://sunnah.com/abudawud:1271", grade: "hasan (al-Albani)" },
+  "bukhari:1183": { en: "'Abdullah al-Muzani: 'Pray before Maghrib', said three times, adding 'for whoever wishes', so that people would not treat it as a fixed practice.", bn: "আবদুল্লাহ আল-মুযানি: ‘মাগরিবের আগে নামাজ পড়ো’—তিনবার, শেষে যোগ করেন ‘যে চায়’, যাতে মানুষ একে নির্দিষ্ট রীতি না বানায়।", url: "https://sunnah.com/bukhari:1183", grade: "sahih" },
+  "abudawud:1422": { en: "Abu Ayyub: Witr is a right (duty) on every Muslim; one may pray it with five, three or one rak'ah.", bn: "আবু আইয়ুব: বিতর প্রত্যেক মুসলমানের ওপর একটি হক; কেউ চাইলে পাঁচ, তিন বা এক রাকাতে তা পড়তে পারে।", url: "https://sunnah.com/abudawud:1422", grade: "sahih (al-Albani)" },
+  "abudawud:1416": { en: "'Ali: 'Allah is Witr (One) and loves what is odd, so pray Witr, people of the Qur'an.'", bn: "আলি রা.: ‘আল্লাহ বিতর (এক) এবং বিজোড় পছন্দ করেন; তাই হে কুরআনের অনুসারীরা, বিতর পড়ো।’", url: "https://sunnah.com/abudawud:1416", grade: "sahih (al-Albani)" },
+  "bukhari:990": { en: "Ibn 'Umar: the night prayer is two by two; when dawn is near, pray one rak'ah to make what you prayed odd (Witr).", bn: "ইবনে উমর: রাতের নামাজ দুই দুই রাকাত করে; ফজর ঘনিয়ে এলে এক রাকাত পড়ো, যা আগের নামাজকে বিজোড় (বিতর) করবে।", url: "https://sunnah.com/bukhari:990", grade: "sahih" },
+  "muslim:754a": { en: "Abu Sa'id al-Khudri: 'Observe Witr before it is morning.'", bn: "আবু সাঈদ আল-খুদরি: ‘সকাল হওয়ার আগে বিতর পড়ো।’", url: "https://sunnah.com/muslim:754a", grade: "sahih" },
+  "badat": { en: "Shaykh Yusuf Badat (Mathabah Institute), \"Specific number of prayer units attached with fard prayers\" - Hanafi answer, IslamQA.org.", bn: "শায়খ ইউসুফ বাদাত (মাথাবাহ ইনস্টিটিউট), ফরজের সঙ্গে নির্দিষ্ট সুন্নাত রাকাত — হানাফি উত্তর, IslamQA.org।", url: "https://islamqa.org/hanafi/mathabah/177793/specific-number-of-prayer-units-attached-with-far%e1%b8%8d-prayers/" },
+  "shafiifiqh": { en: "Shafiifiqh.com Fatwa Department, \"How many rakahs are fard or sunnah in the five daily prayers\" - Shafi'i answer citing Mughni al-Muhtaj 1/450-51, IslamQA.org.", bn: "শাফিইফিকহ ডট কম ফতোয়া বিভাগ, পাঁচ ওয়াক্তের ফরজ ও সুন্নাত রাকাত — শাফিই উত্তর (মুগনিল মুহতাজ ১/৪৫০-৫১), IslamQA.org।", url: "https://islamqa.org/shafii/shafiifiqh/30058/how-many-rakahs-are-fard-or-sunnah-in-the-five-daily-prayers/" },
+  "islamweb84719": { en: "IslamWeb Fatwa 84719, \"Number of rawaatib prayers\": ten for the Shafi'i and Hanbali schools, twelve for the Hanafi school, no fixed number in the Maliki school; Witr minimum one rak'ah (Hanafi: three).", bn: "ইসলামওয়েব ফতোয়া ৮৪৭১৯, রাওয়াতিব নামাজের সংখ্যা: শাফিই ও হাম্বলি মতে দশ, হানাফি মতে বারো, মালিকি মতে নির্দিষ্ট সংখ্যা নেই; বিতর কমপক্ষে এক রাকাত (হানাফি মতে তিন)।", url: "https://islamweb.net/en/fatwa/84719/number-of-rawaatib-prayers" },
+  "birmingham": { en: "Mufti Mohammed Tosir Miah (Darul Ifta Birmingham), \"Witr salah according to the four madhab\": Hanafi - three rak'ahs with one salam; the other three schools - between one and seven, usually two then one.", bn: "মুফতি মোহাম্মদ তসির মিয়া (দারুল ইফতা বার্মিংহাম), চার মাযহাবে বিতর: হানাফি—এক সালামে তিন রাকাত; বাকি তিন মাযহাব—এক থেকে সাত, সাধারণত দুই রাকাতের পর এক।", url: "https://islamqa.org/hanafi/daruliftaa-birmingham/135226/witr-salah-according-to-the-four-madhab/" },
+  "islamqa36793": { en: "IslamQA.info 36793, \"Is Witr compulsory?\": a confirmed sunnah according to the majority of scholars; Abu Hanifah held it obligatory (citing Ibn Qudamah).", bn: "ইসলামকিউএ ডট ইনফো ৩৬৭৯৩, বিতর কি বাধ্যতামূলক?: অধিকাংশ আলেমের মতে সুন্নাতে মুআক্কাদা; আবু হানিফার মতে বাধ্যতামূলক (ইবনে কুদামার সূত্রে)।", url: "https://islamqa.info/en/answers/36793/is-witr-compulsory" }
+};
+const terms = [
+  { k: "rakah", en: ["Rak'ah", "One unit of prayer: standing and reciting, bowing (ruku'), and two prostrations (sujud). Prayers are counted in rak'ahs."], bn: ["রাকাত", "নামাজের এক একক: দাঁড়িয়ে তিলাওয়াত, রুকু ও দুটি সিজদা। নামাজ রাকাত হিসেবে গণনা করা হয়।"], src: [] },
+  { k: "fard", en: ["Fard", "Obligatory. The five daily prayers are fard; anything beyond them is voluntary."], bn: ["ফরজ", "বাধ্যতামূলক। পাঁচ ওয়াক্ত নামাজ ফরজ; এর বাইরে যা কিছু, তা নফল (স্বেচ্ছামূলক)।"], src: ["bukhari:46"] },
+  { k: "wajib", en: ["Wajib (Hanafi)", "A Hanafi category: binding, but ranked below fard. Hanafi scholars place Witr here; the other schools do not use this category for Witr."], bn: ["ওয়াজিব (হানাফি)", "হানাফি মাযহাবের একটি শ্রেণি: পালন করা আবশ্যক, তবে ফরজের নিচে। হানাফি আলেমরা বিতরকে এ শ্রেণিতে রাখেন; অন্য মাযহাবগুলো বিতরের ক্ষেত্রে এ শ্রেণি ব্যবহার করে না।"], src: ["shafiifiqh", "islamqa36793"] },
+  { k: "sm", en: ["Sunnah mu'akkadah", "Emphasised sunnah: voluntary prayers the Prophet ﷺ prayed regularly with the fard prayers. Not obligatory, but strongly encouraged."], bn: ["সুন্নাতে মুআক্কাদা", "গুরুত্বপূর্ণ সুন্নাত: যে নফল নামাজ রাসূল ﷺ ফরজের সঙ্গে নিয়মিত পড়তেন। ফরজ নয়, তবে জোরালোভাবে উৎসাহিত।"], src: ["bukhari:1180", "tirmidhi:415"] },
+  { k: "sg", en: ["Other sunnah / nafl", "Non-emphasised voluntary prayer (ghayr mu'akkadah or nafl): recommended, but the Prophet ﷺ did not pray it regularly or said it is 'for whoever wishes'."], bn: ["অন্যান্য সুন্নাত / নফল", "গায়রে মুআক্কাদা বা নফল: পড়া উত্তম, তবে রাসূল ﷺ নিয়মিত পড়েননি অথবা বলেছেন ‘যে চায়’।"], src: ["bukhari:1183", "abudawud:1271"] },
+  { k: "witr", en: ["Witr", "An odd-numbered prayer prayed after Isha and before dawn, ending the night's prayers. Its ruling and number of rak'ahs differ between schools: see Isha."], bn: ["বিতর", "বিজোড় সংখ্যার নামাজ, ইশার পরে ও ফজরের আগে পড়া হয়, রাতের নামাজের শেষে। এর হুকুম ও রাকাতসংখ্যা মাযহাবভেদে ভিন্ন: ইশা দেখুন।"], src: ["bukhari:990", "muslim:754a"] }
+];
+/* u(kind, count, when) — when: "before" | "fard" | "after" */
+const u = (kind, n, when) => ({ kind, n, when });
+const prayers = [
+  { k: "fajr",
+    hanafi: [u("sm", 2, "before"), u("fard", 2, "fard")],
+    shafii: [u("sm", 2, "before"), u("fard", 2, "fard")],
+    note: { en: "The Hanafi, Shafi'i and Hanbali sources here agree: two emphasised sunnah rak'ahs before the two fard. The Prophet ﷺ never left them.", bn: "এখানকার হানাফি, শাফিই ও হাম্বলি সূত্র একমত: দুই রাকাত ফরজের আগে দুই রাকাত সুন্নাতে মুআক্কাদা। রাসূল ﷺ এগুলো কখনো ছাড়তেন না।" },
+    src: ["bukhari:1182", "bukhari:1180", "badat", "shafiifiqh", "islamweb84719"] },
+  { k: "dhuhr",
+    hanafi: [u("sm", 4, "before"), u("fard", 4, "fard"), u("sm", 2, "after")],
+    shafii: [u("sm", 2, "before"), u("sg", 2, "before"), u("fard", 4, "fard"), u("sm", 2, "after"), u("sg", 2, "after")],
+    note: { en: "This is the main difference between the schools. Hanafi: four emphasised before (following the hadith of 'A'ishah and Umm Habibah). Shafi'i and Hanbali: two emphasised before (following Ibn 'Umar); the Shafi'i answer adds that one may pray four before and four after, the extra two each side being non-emphasised. Hanafi scholars allow the four before Dhuhr with one salam or as two pairs.", bn: "মাযহাবগুলোর মধ্যে মূল পার্থক্য এখানেই। হানাফি: আগে চার রাকাত সুন্নাতে মুআক্কাদা (আয়েশা রা. ও উম্মে হাবিবা রা.-এর হাদিস অনুযায়ী)। শাফিই ও হাম্বলি: আগে দুই রাকাত মুআক্কাদা (ইবনে উমরের হাদিস অনুযায়ী); শাফিই উত্তরে আরও আছে, চাইলে আগে চার ও পরে চার পড়া যায়, প্রতিদিকে অতিরিক্ত দুই রাকাত গায়রে মুআক্কাদা। হানাফি আলেমদের মতে যোহরের আগের চার রাকাত এক সালামে বা দুই দুই করে পড়া যায়।" },
+    src: ["bukhari:1182", "tirmidhi:415", "bukhari:1180", "badat", "shafiifiqh", "islamweb84719"] },
+  { k: "asr",
+    hanafi: [u("sg", 4, "before"), u("fard", 4, "fard")],
+    shafii: [u("sg", 4, "before"), u("fard", 4, "fard")],
+    note: { en: "Asr has no emphasised sunnah. Four rak'ahs before it are recommended (non-emphasised) in both the Hanafi and the Shafi'i answers, based on the hadith 'May Allah have mercy on a person who prays four before Asr.' Nothing is prayed after Asr's fard as a set sunnah.", bn: "আসরের কোনো সুন্নাতে মুআক্কাদা নেই। হানাফি ও শাফিই উভয় উত্তরে আসরের আগে চার রাকাত গায়রে মুআক্কাদা হিসেবে উত্তম বলা হয়েছে, হাদিস: ‘আল্লাহ সেই ব্যক্তির ওপর রহম করুন, যে আসরের আগে চার রাকাত পড়ে।’ আসরের ফরজের পরে নির্দিষ্ট কোনো সুন্নাত নেই।" },
+    src: ["abudawud:1271", "badat", "shafiifiqh"] },
+  { k: "maghrib",
+    hanafi: [u("fard", 3, "fard"), u("sm", 2, "after")],
+    shafii: [u("sg", 2, "before"), u("fard", 3, "fard"), u("sm", 2, "after")],
+    note: { en: "Two emphasised rak'ahs after the three fard in the Hanafi, Shafi'i and Hanbali sources here. Two short rak'ahs before Maghrib are 'for whoever wishes'; the Shafi'i answer lists them as non-emphasised sunnah, and the Hanafi answer does not list them.", bn: "এখানকার হানাফি, শাফিই ও হাম্বলি সূত্রে তিন রাকাত ফরজের পরে দুই রাকাত সুন্নাতে মুআক্কাদা। মাগরিবের আগে দুই রাকাত ‘যে চায়’ তার জন্য; শাফিই উত্তরে এগুলো গায়রে মুআক্কাদা হিসেবে আছে, হানাফি উত্তরে এগুলোর উল্লেখ নেই।" },
+    src: ["bukhari:1180", "bukhari:1183", "badat", "shafiifiqh"] },
+  { k: "isha",
+    hanafi: [u("fard", 4, "fard"), u("sm", 2, "after"), u("wajib", 3, "witr")],
+    shafii: [u("fard", 4, "fard"), u("sm", 2, "after"), u("witr", 1, "witr")],
+    note: { en: "Two emphasised rak'ahs after the four fard in the Hanafi, Shafi'i and Hanbali sources here. Witr follows, any time before dawn. Hanafi: Witr is wajib, three rak'ahs with one salam. The majority (Maliki, Shafi'i, Hanbali): Witr is a confirmed sunnah; the minimum is one rak'ah, it is commonly prayed as two then one, and more odd numbers are allowed (Shafi'i and Hanbali: up to eleven).", bn: "এখানকার হানাফি, শাফিই ও হাম্বলি সূত্রে চার রাকাত ফরজের পরে দুই রাকাত সুন্নাতে মুআক্কাদা। এরপর বিতর, ফজরের আগে যেকোনো সময়। হানাফি: বিতর ওয়াজিব, এক সালামে তিন রাকাত। অধিকাংশ আলেম (মালিকি, শাফিই, হাম্বলি): বিতর সুন্নাতে মুআক্কাদা; কমপক্ষে এক রাকাত, সাধারণত দুই রাকাতের পর এক রাকাত পড়া হয়, এবং আরও বেশি বিজোড় সংখ্যাও পড়া যায় (শাফিই ও হাম্বলি: সর্বোচ্চ এগারো)।" },
+    src: ["bukhari:1180", "badat", "shafiifiqh", "abudawud:1422", "abudawud:1416", "bukhari:990", "muslim:754a", "islamqa36793", "birmingham", "islamweb84719"] }
+];
+const notes = {
+  maliki: { en: "Maliki school: no fixed number of sunnah rak'ahs is set before or after Dhuhr, Asr, Maghrib or Isha, so voluntary prayer there has no set count. On Witr the Maliki school is with the majority (a confirmed sunnah), usually prayed as two then one.", bn: "মালিকি মাযহাব: যোহর, আসর, মাগরিব বা ইশার আগে-পরে সুন্নাতের নির্দিষ্ট সংখ্যা নেই; তাই সেখানে নফলের নির্দিষ্ট সংখ্যা নেই। বিতরের বিষয়ে মালিকি মাযহাব অধিকাংশের সঙ্গে (সুন্নাতে মুআক্কাদা), সাধারণত দুই রাকাতের পর এক রাকাত।", src: ["islamweb84719", "islamqa36793", "birmingham"] },
+  hanbali: { en: "Hanbali school: the emphasised sunnah counts are the same as the Shafi'i ones shown here (ten rak'ahs a day). The extra non-emphasised units in the Shafi'i column come from the Shafi'i answer and are not separately sourced for the Hanbali school.", bn: "হাম্বলি মাযহাব: সুন্নাতে মুআক্কাদার সংখ্যা এখানে দেখানো শাফিই সংখ্যার মতোই (দিনে দশ রাকাত)। শাফিই কলামের অতিরিক্ত গায়রে মুআক্কাদা রাকাতগুলো শাফিই উত্তর থেকে নেওয়া; হাম্বলি মাযহাবের জন্য আলাদাভাবে উৎস দেওয়া হয়নি।", src: ["islamweb84719"] },
+  scope: { en: "Friday's Jumu'ah prayer, travel shortening, prayers missed and made up, and how to perform each movement are not covered here.", bn: "জুমার নামাজ, সফরে কসর, কাজা নামাজ এবং প্রতিটি রুকনের পদ্ধতি এখানে আলোচনা করা হয়নি।" },
+  review: { en: "This guide summarises the cited sources for learning. It is not a fatwa, and it has not yet been independently reviewed by a qualified scholar. Ask a scholar you trust about your own practice.", bn: "এই নির্দেশিকা শেখার জন্য উল্লিখিত সূত্রগুলোর সারাংশ। এটি কোনো ফতোয়া নয় এবং এখনো কোনো যোগ্য আলেম স্বতন্ত্রভাবে পর্যালোচনা করেননি। নিজের আমলের বিষয়ে আস্থাভাজন আলেমকে জিজ্ঞেস করুন।" }
+};
+return { refs, terms, prayers, notes };
+});

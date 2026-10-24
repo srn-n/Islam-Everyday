@@ -53,7 +53,27 @@ These were **drafted with an AI assistant during development** and are labelled 
 - Default nisab weights 87.48 g / 612.36 g (7.5 / 52.5 tola), option 85 g / 595 g; silver as the default basis.
 - Learn sections: what counts, hawl, debts due now, jewellery, shares, superannuation and other points of difference are named but not ruled on.
 
-## 6. Already listed earlier (unchanged)
+## 6. Added in Face 7 (October 2026) — all drafts, labelled in the app
+
+- **Qur'an study notes** (`assets/study.js`): overview, learning themes and reflection prompt for 45 surahs, drafted with an AI assistant and marked "draft". Check each for accuracy, tone, and that nothing reads as tafsir, a ruling, an occasion of revelation or a virtue. Quoted phrases are from Pickthall (English) and Zakaria (Bangla). Meccan/Medinan labels follow Tanzil metadata; confirm or note differences of opinion.
+- **Ayat al-Kursi** (Core remembrance): text from the app's Qur'an data; the note on Sahih Muslim 810; the English and Bangla transliterations written for the app.
+- **Shahada:** Arabic as in Sahih Muslim 403a; the app's own English and Bangla translations and transliterations; the reference note (403a, 8a) and the note on the term "Kalima".
+- **Friday label note:** "Jumu'ah is shown at the calculated Dhuhr start time; the khutbah and congregation time may be different…". Is the wording fair?
+- **Thursday/Friday verse** (`assets/votd-day.js`): one draft, 62:9–10 for Friday, chosen because the verses themselves name the call to prayer on the day of congregation. It is not shown until marked reviewed. No Thursday entry exists. Approve, change or withhold; any further entry needs a reliable source for its link to the day.
+- Zakat (section 5) is no longer shown in the app; its review is not needed unless it is restored.
+
+## 6a. Added in Face 7.1 — drafts, labelled in the app
+
+- **Qur'an study pages** (`tools/study-notes/notes_*.py`): for each of the 45 surahs — overview, how the surah unfolds (verse ranges), key ideas and terms (each tagged "From the verses" or "Al-Mukhtasar (tafsir)"), takeaways and an everyday example. Check accuracy, that each point follows from the verses cited, and that nothing reads as tafsir, a ruling, an occasion of revelation or a virtue.
+- **Qur'an Stories** (`tools/stories/stories_*.py`), 28 entries. For each: does every "Qur'an account" part say only what the cited verses say; are the "What the sources do not tell us" notes correct; are "Why this matters" notes fair; is each modern example appropriate. Points to check in particular:
+  - Ibrahim's son in 37:101–107 named as Isma'il (from Al-Mukhtasar; scholars have discussed this).
+  - The speaker in 19:24 identified as 'Isa (from Al-Mukhtasar).
+  - Musa and the servant: the hadith part (Sahih al-Bukhari 3401) naming al-Khidr; the note that 18:74–81 is not a rule for anyone else.
+  - Hadith stories (Bukhari 2272/Muslim 2743a; Muslim 2766a/Bukhari 3470; Bukhari 2363/Muslim 2244; Bukhari 3464/Muslim 2964; Muslim 3005; Bukhari 3436/Muslim 2550a): summaries faithful? The boy-and-king story is presented as linked to 85:4–8 only as a commentators' view.
+  - The note in "Musa: the river, the palace and Madyan" that Pharaoh's wife is named Asiyah through hadith (Sahih al-Bukhari 3411 names her).
+- **Verse for today in English** now uses the Rowwad Translation Center translation (QuranEnc v1.0.20) with its own footnotes. Confirm the edition choice; QuranEnc's terms ask that newer versions be adopted when published.
+
+## 7. Already listed earlier (unchanged)
 
 White Days evidence (four references), Prayer guide, 99 Names explanations, duas and pronunciation guide: see `docs/scholar-review.md` and each section's own review note.
 

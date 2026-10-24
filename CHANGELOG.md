@@ -2,6 +2,55 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Face 7.1: final worship, Qur'an and UI pass (24 October 2026)
+
+Local working-tree edits only: nothing was staged, committed, pushed or deployed. As requested, no test suite was run and no tests were added; the review was visual and interactive.
+
+### Changed
+- **Prayer tracker and Extra worship are separate cards again.** The prayer-times list has no completion marks at all; the Prayer tracker is the only place fard prayers are marked.
+- **Prayer tracker history:** a 7-day × 5-prayer grid (square cells, information only) with labelled day headings that pick the date to edit, today and selected days marked by frame and bar, a daily total row and a text alternative.
+- **Extra worship history:** each practice has its own small gold strip of its own records (7 days; voluntary fasting 30 days), with a count. No combined score; nothing touches the fard count or streak. Undo and saved data unchanged.
+- **Qur'an study:** every one of the 45 surahs (all of 78–114, so all of 95–114, plus 1, 18, 32, 36, 55, 56, 67, 76) now has an overview, how the surah unfolds (verse ranges that open the reader), key ideas and terms (tagged "From the verses" or "Al-Mukhtasar (tafsir)"), takeaways, and an everyday example labelled as an illustration (`assets/study-notes.js`, built by `tools/study-notes/build.py`).
+- **Verse for today (English):** the Rowwad Translation Center's plain modern English (QuranEnc.com, version 1.0.20) replaces Pickthall for the 267 scheduled verses, with its translators' notes, unchanged (`assets/en-rwwad.js`, built by `tools/import-rwwad-subset.py` from QuranEnc's own download). Word help is now "Word guide" and appears only in the Pickthall reader. Ayat al-Kursi in Duas uses the same translation.
+
+### Added
+- **Qur'an Stories** (`assets/stories.js`, built by `tools/stories/build.py`): 28 stories — 15 prophets, 7 peoples and communities, 6 stories the Prophet ﷺ told — each split into parts labelled Qur'an account / Prophetic hadith / Tafsir explanation, with references, "What the sources do not tell us", "Why this matters" and a labelled modern example. Reached from a switch on the Qur'an study page, the sidebar, and `#stories`.
+
+### Release check (24 October 2026)
+- **Terms of Use and Privacy Policy added** (`assets/legal.js`, English and Bangla) at `#more/terms` and `#more/privacy`, linked from a footer on every page (© notice, Privacy Policy, Terms of Use, About & sources), the desktop sidebar and the More menu. Operator: Samiur Rahman (individual, NSW, Australia); contact: GitHub Issues (public, so users are told not to post personal information). Drafted with an AI assistant; not legal advice.
+- **User-journey test (phone 390px and desktop 1366px)** covering location search and denied GPS, tracker, extra worship, language switch, study → reader → Back, stories search/filter/Back, duas, calendar, settings persistence, legal pages and offline use. Fixed: opening the stories list from a `#stories` link and then a story, Back did not return to the list (hash changes and history entries without saved state are now routed properly).
+- The web app manifest description no longer mentions zakat (that view is not reachable since Face 7).
+
+### UI review fixes
+- The brand name no longer runs under the header controls (truncates; logo only below 375px).
+- Tablet widths (700–1023px) use a 720px column instead of the phone-width strip.
+- ﷺ is drawn from the bundled Arabic font everywhere (it showed a placeholder box on systems without a suitable font).
+- Calendar month labels fit on 320px screens; the Qur'an section switch keeps a sensible width on desktop.
+
+## Face 7: facelift (24 October 2026)
+
+Local working-tree edits only: nothing was staged, committed, pushed or deployed.
+
+### Changed
+- **Worship tracker:** fard prayers are ticked only in one merged card (the prayer-times list now shows a read-only mark and links to it); extra worship is a separate group in the same card, counted separately. `log`/`xlog` unchanged.
+- **Qur'an tab → Qur'an study:** a curated library of 45 surahs (Juz 'Amma + 1, 18, 32, 36, 55, 56, 67, 76) with search, collections and themes; draft study notes clearly labelled; classification from Tanzil Quran Metadata 1.0. The full reader is "All 114 surahs" (`#quran/all`); progress and bookmarks unchanged.
+- **Themes:** Classic Teal, Emerald Ivory, Sandstone Teal (light); Midnight Jade, Indigo Moon, Plum Dusk (dark), as grouped preview cards; `lightTheme`/`darkTheme` with an idempotent migration from `mode`/`palette`/`theme` (also in `assets/theme-boot.js`). Burgundy is no longer a light theme.
+- **Hijri calendar:** today, selected, focus, hover, events and White Days are distinct by shape and border as well as colour.
+- **Header** rounded; **Prayer guide** polished in dark themes.
+- **Friday:** "Jumu'ah" label for Dhuhr with a caveat note; calculation and saved key unchanged.
+
+### Added
+- Core remembrance: Ayat al-Kursi (2:255) and the Shahada, with content labels and sources (Sahih Muslim 810, 403a, 8a); appended so favourites keep their indexes.
+- Settings: Glass (Subtle/Balanced/High/Solid), Interaction motion (Off/Subtle/Playful), Prayer scene (Scenic landscape/Open sky/Mosque silhouette).
+- `assets/study.js`, `assets/votd-day.js` (Thursday/Friday verse; one Friday draft, not shown until reviewed).
+
+### Removed
+- Zakat from the interface (menu, sidebar, route, About credit). `assets/zakat.js` and saved `zk` values are kept; `#more/zakat` opens More.
+
+### Tests
+- Existing assertions were updated only where behaviour changed on purpose (each marked "Face 7" in the test): palette names and sets, theme-boot migration, the Friday label in the countdown, the Subtle/Playful motion split, the zakat credit and page, and `#quran` → `#quran/all` for the full reader. No test files were added.
+- Results this session: `npm test` 126 passed; browser `phase52` 52, `phase53` 63 (four zakat checks replaced by three removal checks), `phase54` 14, `offline` 36 (with the v4, v5 and Phase 5.2 builds) — all passed, 0 failed. axe-core: no WCAG A/AA violations in the six themes; the three known best-practice findings remain.
+
 ## Phase 5.4: release audit (19 October 2026)
 
 Nothing was committed, pushed or deployed. An audit of the Phase 4–5.3 build; only demonstrable technical defects were fixed. See `docs/release-readiness.md`.

@@ -1,7 +1,7 @@
 {
   "name": "Islam Everyday",
   "short_name": "Islam Everyday",
-  "description": "Prayer times, prayer guide, Qur'an with English and Bangla translations, duas, Hijri calendar, 99 Names and zakat. Private and offline.",
+  "description": "Prayer times and tracker, prayer guide, Qur'an with English and Bangla translations, Qur'an study and stories, duas, Hijri calendar and 99 Names. Private and offline.",
   "lang": "en",
   "start_url": "./",
   "scope": "./",

@@ -5,7 +5,7 @@ const QM = window.QURAN_META, X = window.DINSATHI;
 const { I18N, TL, DUAS, DUA_CATS, CITIES, METHODS, EVENTS, HM, CURRENCIES } = X;
 const NM = window.DINSATHI_NAMES, VOTD = window.DINSATHI_VOTD, NAMES = NM.names, GD = window.IE_GUIDE;
 const FIX = window.IE_BNFIX || { repair: s => s }, XT = window.IE_XTRACK, HD = window.IE_HADITH, GL = window.IE_GLOSS, NW = window.IE_NAWAWI;
-const LOC = window.IE_LOCALE, VE = window.IE_VOTD_EN, DV = window.IE_DAYVIZ;
+const LOC = window.IE_LOCALE, VE = window.IE_VOTD_EN, DV = window.IE_DAYVIZ, SD = window.IE_STUDY;
 const PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"], ROWS = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
 const TABS = ["today", "quran", "duas", "more"];
 const mq = (() => { try { return matchMedia("(min-width: 1024px)"); } catch (e) { return { matches: false }; } })();
@@ -15,7 +15,7 @@ const NATIVE = (() => { try { return !!(window.Capacitor && window.Capacitor.isN
 
 /* ---------------- state ---------------- */
 const KEY = "dinsathi.web.v1";
-const DEF = { lang: "en", loc: "en-IN", mode: "system", palette: "classic", city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
+const DEF = { lang: "en", loc: "en-IN", mode: "system", lightTheme: "classic", darkTheme: "jade", glass: "balanced", motion: "subtle", scene: "landscape", city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
   school: null, log: {}, xlog: {}, fplan: {}, gloss: false, last: null, read: [], bm: [], fav: [], tab: "today", hcol: "general", nwread: [],
   zk: { cur: "AUD", basis: "silver", w: "tola", price: "", v: {} } };
 let st = JSON.parse(JSON.stringify(DEF));
@@ -36,6 +36,10 @@ const save = () => { clearTimeout(saveT); saveT = setTimeout(() => { try { local
 /* ---------------- helpers ---------------- */
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+/* Face 7.1: the honorific ﷺ is set in the Arabic font (span.saw), as elsewhere in the app, so it never falls back to
+   a missing glyph inside Latin or Bangla text. */
+const sawS = h => String(h).replace(/ﷺ/g, '<span class="saw" lang="ar">ﷺ</span>');
+const escS = x => sawS(esc(x));
 const bn = () => st.lang === "bn";
 /* Interface strings. English has two variants (st.loc, see assets/locale.js): the US one changes a few strings
    and uses US spelling. Bangla has none. Results are cached per variant. */
@@ -61,6 +65,7 @@ const pad2 = n => String(n).padStart(2, "0");
 const STAR = (c, R, r) => { let d = ""; for (let k = 0; k < 16; k++) { const a = (k * 22.5 - 90) * Math.PI / 180, q = k % 2 ? r : R; d += (k ? "L" : "M") + (c + q * Math.cos(a)).toFixed(2) + " " + (c + q * Math.sin(a)).toFixed(2); } return d + "Z"; };
 const P = {
   today: '<path d="M3 18h18M6 18a6 6 0 0 1 12 0M12 5v3M4.5 9.5l2 2M19.5 9.5l-2 2"/>',
+  stories: '<path d="M5 4.5h11.5A1.5 1.5 0 0 1 18 6v14H6.5A1.5 1.5 0 0 1 5 18.5z"/><path d="M5 18.5A1.5 1.5 0 0 1 6.5 17H18"/><path d="M8.5 8h6M8.5 11h4"/>',
   quran: '<path d="M12 6.5c-2-1.5-5-2-8-1.5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5zM12 6.5V20"/>',
   duas: '<path d="M19.5 14.5A8 8 0 1 1 9.5 4.5a6.5 6.5 0 0 0 10 10z"/>',
   more: '<rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/>',
@@ -70,6 +75,8 @@ const P = {
   calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   zakat: '<ellipse cx="12" cy="6.5" rx="7" ry="2.8"/><path d="M5 6.5v5c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8v-5M5 11.5v5c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8v-5"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.4"/>',
+  lock: '<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14.5v2.5"/>',
+  doc: '<path d="M7 3.5h7l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 19V5A1.5 1.5 0 0 1 7.5 3.5z"/><path d="M14 3.5V8h4M9 12.5h6M9 16h6"/>',
   search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
   back: '<path d="M15 5l-7 7 7 7"/>',
   chev: '<path d="M9 5l7 7-7 7"/>',
@@ -87,24 +94,37 @@ const P = {
 const ic = (n, cls) => `<svg viewBox="0 0 24 24" aria-hidden="true"${cls ? ` class="${cls}"` : ""}>${P[n]}</svg>`;
 
 /* ---------------- theme ---------------- */
-/* Appearance (Phase 5.3): the mode (System, Light, Dark) and the colour palette are separate settings. Every palette
-   has a light and a dark appearance; "classic" is the app's primary theme. Phase 5.2's single st.theme is migrated:
-   light/dark/system keep their mode with the classic palette; emerald becomes Emerald (light); indigo becomes
-   Midnight Indigo (dark). assets/theme-boot.js applies the same rules before first paint. */
-const MODES = ["system", "light", "dark"], PALETTES = ["classic", "emerald", "sandstone", "burgundy", "indigo"];
+/* Appearance (Face 7). The mode (System, Light, Dark) picks the appearance; each appearance has three themes and
+   remembers its own choice: st.lightTheme (classic | emerald | sandstone) and st.darkTheme (jade | indigo | plum).
+   A light theme is only ever shown in the light appearance and a dark theme only in the dark one.
+   Migration, idempotent and non-destructive (st.palette/st.mode are left in place):
+   - Phase 5.2 st.theme: light/dark/system keep that mode; emerald → light + Emerald; indigo → dark + Indigo.
+   - Phase 5.3 st.palette: emerald/sandstone → that light theme; indigo → Indigo Moon; burgundy → Plum Dusk
+     (Burgundy had a light variant; it is no longer offered as a light theme, so light falls back to Classic Teal).
+   assets/theme-boot.js applies the same rules before first paint. st.glass, st.motion and st.scene are new. */
+const MODES = ["system", "light", "dark"], LIGHT_TH = ["classic", "emerald", "sandstone"], DARK_TH = ["jade", "indigo", "plum"];
+const GLASS = ["subtle", "balanced", "high", "solid"], MOTION = ["off", "subtle", "playful"], SCENES = ["landscape", "sky", "mosque"];
 (() => {
   const old = st.theme, raw = (() => { try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { return {}; } })();
   if (!MODES.includes(raw.mode) || !MODES.includes(st.mode)) st.mode = old === "light" || old === "dark" ? old : old === "emerald" ? "light" : old === "indigo" ? "dark" : MODES.includes(raw.mode) ? raw.mode : "system";
-  if (!PALETTES.includes(raw.palette) || !PALETTES.includes(st.palette)) st.palette = old === "emerald" || old === "indigo" ? old : PALETTES.includes(raw.palette) ? raw.palette : "classic";
+  const pal = raw.palette || (old === "emerald" || old === "indigo" ? old : "classic");
+  if (!LIGHT_TH.includes(raw.lightTheme)) st.lightTheme = pal === "emerald" || pal === "sandstone" ? pal : "classic";
+  if (!DARK_TH.includes(raw.darkTheme)) st.darkTheme = pal === "indigo" ? "indigo" : pal === "burgundy" ? "plum" : "jade";
+  if (!GLASS.includes(st.glass)) st.glass = "balanced";
+  if (!MOTION.includes(st.motion)) st.motion = "subtle";
+  if (!SCENES.includes(st.scene)) st.scene = "landscape";
   delete st.theme;
 })();
 const hostTheme = document.documentElement.getAttribute("data-host-theme");
 const darkMq = (() => { try { return matchMedia("(prefers-color-scheme: dark)"); } catch (e) { return { matches: false }; } })();
 const schemeNow = () => st.mode === "system" ? (hostTheme ? hostTheme : (darkMq.matches ? "dark" : "light")) : st.mode;
+const themeNow = () => schemeNow() === "dark" ? st.darkTheme : st.lightTheme;
 function applyTheme() {
-  const r = document.documentElement, sc = schemeNow();
+  const r = document.documentElement, sc = schemeNow(), th = themeNow();
   r.setAttribute("data-theme", sc);
-  if (st.palette !== "classic") r.setAttribute("data-palette", st.palette); else r.removeAttribute("data-palette");
+  if (th !== "classic" && th !== "jade") r.setAttribute("data-palette", th); else r.removeAttribute("data-palette");
+  r.setAttribute("data-glass", st.glass);
+  r.setAttribute("data-motion", st.motion);
   r.style.colorScheme = sc;
   r.lang = bn() ? "bn" : LOC.variant(st.loc);
   r.style.setProperty("--ar-scale", st.ar);
@@ -112,7 +132,7 @@ function applyTheme() {
   if (m) m.content = getComputedStyle(r).getPropertyValue("--ground").trim() || "#EEF3F1";
 }
 // Following the system: redraw when the OS or browser switches between light and dark.
-try { darkMq.addEventListener("change", () => { if (st.mode === "system") applyTheme(); }); } catch (e) {}
+try { darkMq.addEventListener("change", () => { if (st.mode === "system") { applyTheme(); render(false); } }); } catch (e) {}
 
 /* ---------------- location ---------------- */
 const city = () => (st.city === "gps" && st.gps) ? st.gps : (CITIES.find(c => c.id === st.city) || CITIES[0]);
@@ -177,7 +197,7 @@ function skyPeriod(s) {
 }
 function cdLine(s, nx, ok) {
   if (!ok) return `<p class="cd cd-off">${t("cd_off")}</p>`;
-  return `<p class="cd" aria-live="off"><span class="lbl">${t("cd_until").replace("{p}", t(nx.k))}</span> <b class="tnum" id="count-next">${countdown(nx.at - s.now)}</b></p>`;
+  return `<p class="cd" aria-live="off"><span class="lbl">${t("cd_until").replace("{p}", pName(nx.k, isFriD(nx.D)))}</span> <b class="tnum" id="count-next">${countdown(nx.at - s.now)}</b></p>`;
 }
 /* Live countdown to the next prayer's start (Phase 5.3). It never claims an end time for the current prayer:
    the label names the next prayer. Hours are always shown (01:24:35). */
@@ -246,6 +266,13 @@ function clock(h) {
   return num(h12 + ":" + mm) + " " + (H < 12 ? t("am") : t("pm"));
 }
 
+/* Friday (Face 7): on a Friday the Dhuhr row is labelled Jumu'ah. It is a display label only: the time is the same
+   calculated Dhuhr start, and the tracker still stores it under "dhuhr". D is one day's times (dayTimes); the local
+   date's weekday is read at local noon. */
+const isFriD = D => !!D && new Date(D.base + D.tz * 36e5 + 432e5).getUTCDay() === 5;
+const isFriK = k => { const [y, m, d] = XT.parts(k); return new Date(Date.UTC(y, m - 1, d)).getUTCDay() === 5; };
+const pName = (k, fri) => k === "dhuhr" && fri ? t("jumuah") : t(k);
+
 /* ---------------- hijri ---------------- */
 function hijri(date) {
   const dt = new Date(date.getTime() + st.hadj * 864e5);
@@ -292,10 +319,29 @@ function trackDay(s) {
       <button type="button" class="icon-btn" data-act="tday" data-k="next" aria-label="${esc(t("t_next"))}"${ago === 0 ? " disabled" : ""}>${ic("chev")}</button>
     </div>
     <div class="tpick"><label for="t-date">${t("t_pick")}</label><input type="date" id="t-date" class="field" value="${k}" min="${min}" max="${s.key}">${ago ? `<button type="button" class="linkish" data-act="tday" data-k="today">${t("t_back")}</button>` : ""}</div>
-    <ul class="tlist">${PRAYERS.map(p => `<li><span>${t(p)}</span><button type="button" class="tick" data-act="trk" data-k="${p}" aria-pressed="${!!o[p]}" aria-label="${esc(t("markp"))}: ${esc(t(p))}, ${esc(longDay(k))}"><i><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></i></button></li>`).join("")}</ul>
+    <ul class="tlist">${PRAYERS.map(p => `<li><span>${pName(p, isFriK(k))}</span><button type="button" class="tick${justTicked === p ? " just" : ""}" data-act="trk" data-k="${p}" aria-pressed="${!!o[p]}" aria-label="${esc(t("markp"))}: ${esc(pName(p, isFriK(k)))}, ${esc(longDay(k))}"><i><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></i></button></li>`).join("")}</ul>
     <p class="note" aria-live="polite">${n ? (bn() ? `${num(5)}-এর মধ্যে ${num(n)} ${t("t_count")}` : `${n} ${t("of")} 5 ${t("t_count")}`) : t("t_empty")}</p>
     <p class="note tkeep">${t("t_keep")}</p>
   </div>`;
+}
+
+/* Prayer tracker history (Face 7.1): a 7-day × 5-prayer grid. The cells are information only (filled square =
+   recorded, hollow = not recorded); the one control for each prayer is the list below. The day headings are date
+   pickers for that list (data-act="tsel"), labelled as such, and show today and the selected day by frame and text. */
+function fardGraph(s) {
+  const tk = trackKey(s), days = lastDays(s, 7).reverse(), fmt = new Intl.DateTimeFormat(LT(), { weekday: "short", timeZone: "UTC" });
+  const dnum = k => num(XT.parts(k)[2]);
+  const head = days.map(k => { const [yy, mm, dd] = XT.parts(k), isT = k === s.key, sel = k === tk, o = st.log[k] || {}, c = PRAYERS.filter(p => o[p]).length;
+    return `<button type="button" class="fg-day${isT ? " today" : ""}${sel ? " sel" : ""}" data-act="tsel" data-k="${k}" aria-pressed="${sel}" aria-label="${esc(t("fg_pick").replace("{d}", longDay(k)))}, ${esc(`${num(c)}/${num(5)}`)}"><span class="fg-wd">${esc(fmt.format(new Date(Date.UTC(yy, mm - 1, dd, 12))))}</span><b>${dnum(k)}</b>${isT ? `<small class="sr">${t("t_today")}</small><i class="fg-tbar" aria-hidden="true"></i>` : ""}</button>`; }).join("");
+  const rows = PRAYERS.map(p => `<span class="fg-p">${t(p)}</span>${days.map(k => { const on = !!(st.log[k] || {})[p]; return `<i class="fg-c${on ? " on" : ""}${k === tk ? " sel" : ""}${k === s.key ? " today" : ""}"></i>`; }).join("")}`).join("");
+  const tot = days.map(k => { const o = st.log[k] || {}; return `<span class="fg-n${k === tk ? " sel" : ""}">${num(PRAYERS.filter(p => o[p]).length)}</span>`; }).join("");
+  const sr = days.map(k => { const o = st.log[k] || {}, got = PRAYERS.filter(p => o[p]); return `${longDay(k)}: ${t("fg_sr").replace("{n}", num(got.length))}${got.length ? " (" + got.map(p => t(p)).join(", ") + ")" : ""}`; }).join(". ");
+  return `<figure class="fg" aria-labelledby="fg-h">
+    <figcaption class="fg-top"><span class="wt-h" id="fg-h">${t("fg_h")}</span><span class="fg-key" aria-hidden="true"><span><i class="fg-c on"></i>${t("fg_on")}</span><span><i class="fg-c"></i>${t("fg_off")}</span><span><i class="fg-tbar"></i>${t("t_today")}</span></span></figcaption>
+    <div class="fg-grid"><span class="fg-corner" aria-hidden="true"></span>${head}<div class="fg-body" aria-hidden="true">${rows}<span class="fg-p fg-tl">${t("fg_total")}</span>${tot}</div></div>
+    <p class="sr">${esc(sr)}.</p>
+    <p class="note fg-hint">${t("fg_hint")}</p>
+  </figure>`;
 }
 
 /* ---------------- extra worship (kept apart from the fard log; see assets/xtrack.js) ---------------- */
@@ -303,49 +349,67 @@ const lastDays = (s, n) => { const out = []; let [y, m, d] = [s.p.year, s.p.mont
 /* Witr is labelled as in the Prayer guide: wajib in the Hanafi school, a confirmed sunnah for the majority. */
 const witrKind = () => t(st.school === "hanafi" ? "x_witr_hanafi" : st.school === "shafii" ? "x_witr_shafii" : "x_witr_any");
 const xCount = (k, s) => k === "fast" ? t("x_fast_s").replace("{n}", num(XT.count(st.xlog, lastDays(s, 30), "fast"))) : t("x_week").replace("{n}", num(XT.count(st.xlog, lastDays(s, 7), k)));
+/* Face 7.1: each practice has its own small history strip, drawn from its own records only: the last 7 days for the
+   voluntary prayers, the last 30 days for voluntary fasting. Oldest on the left, today on the right (outlined).
+   There is no combined score, and nothing here touches the five-prayer count or streak. */
+const xStrip = (k, s) => { const days = lastDays(s, k === "fast" ? 30 : 7).reverse();
+  return `<span class="xs${k === "fast" ? " x30" : ""}" role="img" aria-label="${esc(t(k === "fast" ? "x_fast" : "x_" + k))}: ${esc(xCount(k, s))}">${days.map(d => `<i class="${(st.xlog[d] || {})[k] ? "on" : ""}${d === s.key ? " today" : ""}"></i>`).join("")}</span>`; };
 function xRow(k, s) {
   const on = !!(st.xlog[s.key] || {})[k], label = t(k === "fast" ? "x_fast" : "x_" + k);
-  const kind = k === "witr" ? witrKind() : k === "fast" ? "" : t("x_" + k + "_s");
-  return `<li><span class="nm"><b>${label}</b>${kind ? `<small>${esc(kind)}</small>` : ""}<small class="xc">${xCount(k, s)}</small></span><button type="button" class="tick" data-act="xw" data-k="${k}" aria-pressed="${on}" aria-label="${esc(t("markx"))}: ${esc(label)}"><i><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></i></button></li>`;
+  const kind = k === "witr" ? witrKind() : k === "fast" ? t("x_fast_k") : t("x_" + k + "_s");
+  return `<li class="x-${k}"><span class="nm"><b>${label}</b><small>${esc(kind)}</small><span class="xh">${xStrip(k, s)}<small class="xc">${xCount(k, s)}</small></span></span><button type="button" class="tick xtick" data-act="xw" data-k="${k}" aria-pressed="${on}" aria-label="${esc(t("markx"))}: ${esc(label)}"><i><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></i></button></li>`;
 }
+/* Extra worship (Face 7.1: its own card again, separate from the Prayer tracker; still stored apart in xlog). */
 function vExtra(s) {
   // Fasts are recorded per civil date, so the Hijri date of that day's daytime decides the notes below.
   const h = hijri(localNoon(s.p.year, s.p.month, s.p.day));
   const note = !h ? "" : h.m === 9 ? t("x_ramadan") : (h.m === 10 && h.d === 1) || (h.m === 12 && h.d >= 10 && h.d <= 13) ? t("x_nofast") : "";
   return `<section class="card pad a-extra" aria-labelledby="xw-h">
-    <h3 class="sec-title" id="xw-h">${t("extra")} <span class="badge">${t("t_today")}</span></h3>
-    <p class="note">${t("extra_n")}</p>
+    <div class="row wt-head"><div class="grow"><h3 class="sec-title" id="xw-h">${t("extra")}</h3><p class="note">${t("extra_n")}</p></div><span class="badge cur">${t("t_today")}</span></div>
     ${trackKey(s) !== s.key ? `<p class="note xw-note" role="note">${t("x_today_only")}</p>` : ""}
-    <p class="eyebrow xw-g">${t("x_prayers")}</p>
-    <ul class="xw">${["tahajjud", "duha", "rawatib", "witr"].map(k => xRow(k, s)).join("")}</ul>
-    ${st.school ? "" : `<p class="note"><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="guide">${t("x_school")}</button></p>`}
-    <p class="eyebrow xw-g">${t("x_fasting")}</p>
-    <ul class="xw">${xRow("fast", s)}</ul>
-    ${note ? `<p class="note xw-note">${note}</p>` : ""}
+    <div class="xw-groups">
+      <div class="xw-grp" role="group" aria-labelledby="xwg-p"><p class="wt-h" id="xwg-p">${t("x_prayers")}</p>
+        <ul class="xw">${["tahajjud", "duha", "rawatib", "witr"].map(k => xRow(k, s)).join("")}</ul>
+        ${st.school ? "" : `<p class="note"><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="guide">${t("x_school")}</button></p>`}</div>
+      <div class="xw-grp" role="group" aria-labelledby="xwg-f"><p class="wt-h" id="xwg-f">${t("x_fasting")}</p>
+        <ul class="xw">${xRow("fast", s)}</ul>
+        ${note ? `<p class="note xw-note">${note}</p>` : ""}</div>
+    </div>
+    <p class="note xs-key"><span class="xs" aria-hidden="true"><i class="on"></i></span> ${t("xs_on")} <span class="xs" aria-hidden="true"><i></i></span> ${t("xs_off")} · ${t("xs_sep")}</p>
   </section>`;
 }
 
 /* ---------------- routing ---------------- */
 let R = { tab: TABS.includes(st.tab) ? st.tab : "today", sub: null, surah: 0, ayah: 0 };
-const SUBS = ["guide", "hadith", "names", "calendar", "zakat", "settings", "about"];
+/* Face 7: zakat removed from the UI (route, nav, More, About). st.zk and assets/zakat.js are kept untouched; old #more/zakat links fall back to More. */
+const SUBS = ["guide", "hadith", "names", "calendar", "settings", "about", "terms", "privacy"];
 const hashSub = h => SUBS.includes(h) ? h : (h.startsWith("more/") && SUBS.includes(h.slice(5)) ? h.slice(5) : null);
 const h0 = (location.hash || "").slice(1);
 if (TABS.includes(h0)) R.tab = h0;
+else if (h0 === "quran/all") R = { tab: "quran", sub: "all", surah: 0, ayah: 0 }; // Face 7: link to the full list of 114 surahs
+else if (h0 === "stories" || h0 === "quran/stories") R = { tab: "quran", sub: "stories", surah: 0, ayah: 0 }; // Face 7.1
 else if (hashSub(h0)) R = { tab: "more", sub: hashSub(h0), surah: 0, ayah: 0 };
+else if (h0.startsWith("more/")) R = { tab: "more", sub: null, surah: 0, ayah: 0 }; // unknown or removed page (e.g. more/zakat) → More
 let depth = 0;
 function go(r, push = true) {
-  R = Object.assign({ tab: R.tab, sub: null, surah: 0, ayah: 0 }, r);
+  R = Object.assign({ tab: R.tab, sub: null, surah: 0, ayah: 0, study: 0, story: null }, r);
   st.tab = R.tab; save();
   if (push) { try { history.pushState(R, ""); depth++; } catch (e) {} }
   render(true);
   if (!R.ayah) window.scrollTo(0, 0);
 }
+/* A route for a typed or linked hash (#stories, #more/guide, …), or null. */
+const hashRoute = h => TABS.includes(h) ? { tab: h } : h === "quran/all" ? { tab: "quran", sub: "all" } : (h === "stories" || h === "quran/stories") ? { tab: "quran", sub: "stories" }
+  : hashSub(h) ? { tab: "more", sub: hashSub(h) } : h.startsWith("more/") ? { tab: "more" } : null;
 addEventListener("hashchange", () => {
-  const h = (location.hash || "").slice(1);
-  if (TABS.includes(h)) go({ tab: h }, false);
-  else if (hashSub(h)) go({ tab: "more", sub: hashSub(h) }, false);
+  const r = hashRoute((location.hash || "").slice(1));
+  // Face 7.1 fix: record the route on this history entry, so Back from a page opened after a link returns here.
+  if (r) { go(r, false); try { history.replaceState(R, ""); } catch (e) {} }
 });
-addEventListener("popstate", e => { depth = Math.max(0, depth - 1); if (e.state && e.state.tab) { R = e.state; render(true); } });
+addEventListener("popstate", e => { depth = Math.max(0, depth - 1);
+  if (e.state && e.state.tab) { R = e.state; render(true); return; }
+  // An entry without app state (for example one created by a link to #stories): route from its hash.
+  const r = hashRoute((location.hash || "").slice(1)); go(r || { tab: "today" }, false); });
 try { history.replaceState(R, ""); } catch (e) {}
 
 /* ---------------- shell ---------------- */
@@ -361,7 +425,7 @@ function header() {
 function nav() {
   const i = TABS.indexOf(R.tab);
   $("tabs").innerHTML = `<span class="ind" style="transform:translateX(${i * 100}%)"></span>` +
-    TABS.map(id => `<button type="button" data-act="tab" data-tab="${id}"${id === R.tab ? ' aria-current="page"' : ""}>${ic(id)}<span>${t(id)}</span></button>`).join("");
+    TABS.map(id => `<button type="button" data-act="tab" data-tab="${id}"${id === R.tab ? ' aria-current="page"' : ""}>${ic(id)}<span>${t(id === "quran" ? "study_nav" : id)}</span></button>`).join("");
 }
 let post = [], heroAnim = false;
 function render(anim) {
@@ -372,11 +436,13 @@ function render(anim) {
   v.className = "view v-" + (R.tab === "more" ? (R.sub || "more") : R.tab);
   let f;
   if (R.tab === "today") f = vToday;
-  else if (R.tab === "quran") f = desk() ? vQuranDesk : (R.surah ? vReader : vQuran);
+  // Face 7: the Qur'an tab opens the curated study library; the full reader (all 114 surahs) is R.sub === "all".
+  else if (R.tab === "quran" && R.sub === "stories") f = R.story ? vStory : vStories; // Face 7.1 Qur'an Stories
+  else if (R.tab === "quran") f = R.sub === "all" || R.surah ? (desk() ? vQuranDesk : (R.surah ? vReader : vQuran)) : (desk() ? vStudyDesk : (R.study ? vStudyDetail : vStudy));
   else if (R.tab === "duas") f = vDuas;
   
-  else f = { guide: vGuide, hadith: vHadith, names: vNames, calendar: vCalendar, zakat: vZakat, settings: vSettings, about: vAbout }[R.sub] || vMore;
-  v.innerHTML = f();
+  else f = { guide: vGuide, hadith: vHadith, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy") }[R.sub] || vMore;
+  v.innerHTML = f() + siteFoot();
   if (anim && !reduce) { v.classList.remove("enter"); [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); void v.offsetWidth; v.classList.add("enter"); }
   else v.classList.remove("enter");
   post.forEach(fn => fn());
@@ -445,15 +511,36 @@ const SCENE = (() => {
     `M${mx + 8} ${g - 14}a14 14 0 0 1 28 0Z` + `M${mx + 21} ${g - 28}h2v-6h-2Z` +
     `M${mx + 50} ${g}V${g - 40}h5V${g}Z` + `M${mx + 49} ${g - 40}h7l-3.5 -7Z` +
     `M${mx - 12} ${g}V${g - 8}H${mx}V${g}Z` + `M${mx - 10} ${g - 8}a4 4 0 0 1 8 0Z`;
-  return { far: far.d, mid: mid.d, near: near.d, mosque };
+  // Face 7 "Mosque silhouette" scene: one larger, restrained building on a flat ground, kept to the right so the text
+  // on the left stays clear. Arched door and windows are cut out (even-odd fill).
+  const G = 362, cx = 652;
+  const big = `M${cx - 78} ${G}V${G - 34}H${cx + 78}V${G}Z` +
+    `M${cx - 40} ${G - 34}a40 40 0 0 1 80 0Z` + `M${cx - 6} ${G - 34}v-2h12v2Z` + `M${cx - 1.2} ${G - 74}h2.4v-12h-2.4Z` + `M${cx} ${G - 90}a4 4 0 1 1 0.01 0Z` +
+    `M${cx - 70} ${G - 34}a13 13 0 0 1 26 0Z` + `M${cx + 44} ${G - 34}a13 13 0 0 1 26 0Z` +
+    `M${cx - 104} ${G}V${G - 96}h12V${G}Z` + `M${cx - 106} ${G - 96}h16l-8 -18Z` + `M${cx - 104} ${G - 70}h12v3h-12Z` +
+    `M${cx + 92} ${G}V${G - 96}h12V${G}Z` + `M${cx + 90} ${G - 96}h16l-8 -18Z` + `M${cx + 92} ${G - 70}h12v3h-12Z` +
+    `M${cx - 9} ${G}v-14a9 9 0 0 1 18 0v14Z` + `M${cx - 52} ${G - 8}v-12a5 5 0 0 1 10 0v12Z` + `M${cx + 42} ${G - 8}v-12a5 5 0 0 1 10 0v12Z`;
+  const dunes = ridge(59, 344, 18, 0.45);
+  return { far: far.d, mid: mid.d, near: near.d, mosque, big, dunes: dunes.d, G };
 })();
+/* Prayer scene (Face 7, st.scene): "landscape" is the original scene and the default; "sky" keeps only the sky,
+   clouds and a low horizon so the sun/moon arc leads; "mosque" draws one quiet silhouette. All three use the same
+   time-of-day colours (--s1…--m3) and the same scrim, so the text contrast is unchanged. If the SVG fails to draw,
+   the sky gradient and scrim behind the text remain. */
 function heroScene() {
-  return `<svg class="sky-clouds" viewBox="0 0 800 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+  const sc = SCENES.includes(st.scene) ? st.scene : "landscape";
+  const clouds = `<svg class="sky-clouds" viewBox="0 0 800 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
     <defs><filter id="cl-f" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.0055 0.018" numOctaves="4" seed="5" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.9 0 0 0 -0.78" result="a"/><feFlood class="cl-flood" result="c"/><feComposite in="c" in2="a" operator="in"/><feGaussianBlur stdDeviation="1.2"/></filter>
     <linearGradient id="cl-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset=".75" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
     <mask id="cl-m"><rect width="800" height="300" fill="url(#cl-g)"/></mask></defs>
     <g mask="url(#cl-m)"><rect class="cloud" width="800" height="300" filter="url(#cl-f)"/></g>
-  </svg>
+  </svg>`;
+  const hz = `<defs><linearGradient id="hz-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="hz0"/><stop offset="1" class="hz1"/></linearGradient></defs>`;
+  if (sc === "sky") return clouds + `<svg class="sky-land" viewBox="0 0 800 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">${hz}
+    <rect y="250" width="800" height="150" fill="url(#hz-g)"/><path class="hl-mid sc-low" d="M0 372 Q400 360 800 372V400H0Z"/><path class="sc-hzn" d="M0 372.5 Q400 360.5 800 372.5"/></svg>`;
+  if (sc === "mosque") return clouds + `<svg class="sky-land" viewBox="0 0 800 400" preserveAspectRatio="xMaxYMax slice" aria-hidden="true" focusable="false">${hz}
+    <rect y="240" width="800" height="160" fill="url(#hz-g)"/><path class="hl-far sc-dune" d="${SCENE.dunes}"/><path class="hl-near" fill-rule="evenodd" d="${SCENE.big}"/><rect class="hl-near" y="${SCENE.G - 1}" width="800" height="${401 - SCENE.G}"/></svg>`;
+  return clouds + `
   <svg class="sky-land" viewBox="0 0 800 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
     <defs><linearGradient id="hz-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="hz0"/><stop offset="1" class="hz1"/></linearGradient>
     <filter id="gr-f"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></defs>
@@ -467,7 +554,7 @@ function heroScene() {
 let snap = null;
 function vToday() {
   const s = snap = snapshot(), tm = s.d0.tm, ex = extras(s), done = st.log[s.key] || {};
-  const per = skyPeriod(s), n = PRAYERS.filter(k => done[k]).length, ok = timesOk(s.d0);
+  const per = skyPeriod(s), n = PRAYERS.filter(k => done[k]).length, ok = timesOk(s.d0), fri = isFriD(s.d0);
   const ps = s.ps = prayerState(s), cur = ps.cur, nx = ps.next;
   const hj = hijriNow(s);
   const greg = new Intl.DateTimeFormat(LT(), { timeZone: s.c.zone, weekday: "long", day: "numeric", month: "long" }).format(new Date(s.now));
@@ -481,25 +568,22 @@ function vToday() {
   // At night the orb is the moon, drawn with its phase for the Hijri day (mirrored in the southern hemisphere).
   const moonUp = per === "night" || per === "dusk" || per === "dawn";
   post.push(() => animateArc(f));
-  // week strip
-  let days = "", [y, m, d] = [s.p.year, s.p.month, s.p.day];
-  const wfmt = new Intl.DateTimeFormat(LT(), { weekday: "short", timeZone: "UTC" });
-  const cols = [];
-  const tk = trackKey(s);
-  for (let i = 6; i >= 0; i--) { const [yy, mm, dd] = shiftDay(y, m, d, -i), k = dkey(yy, mm, dd); const o = st.log[k] || {}; cols.push(`<button type="button" class="wd${k === tk ? " sel" : ""}" data-act="tsel" data-k="${k}" aria-pressed="${k === tk}" aria-label="${esc(longDay(k))}: ${num(PRAYERS.filter(p => o[p]).length)}/${num(5)}"><span class="d${i ? "" : " today"}">${wfmt.format(new Date(Date.UTC(yy, mm - 1, dd, 12)))}</span><span class="dots" aria-hidden="true">${PRAYERS.map(p => `<b class="${o[p] ? "on" : ""}"></b>`).join("")}</span></button>`); }
-  days = cols.join("");
+  let [y, m, d] = [s.p.year, s.p.month, s.p.day];
   const nowStr = ex.forb.find(w => s.nowH >= w[1] && s.nowH < w[2]);
   const ev = (() => { for (let i = 0; i < 400; i++) { const [a1, b1, c1] = shiftDay(y, m, d, i); const h = hijri(localNoon(a1, b1, c1)); const e = eventsOn(h).filter(x => !x.minor); if (e.length) return { e: e[0], i }; } return null; })();
-  const v = votdPick = VOTD.entryFor(s.p.year, s.p.month, s.p.day);
+  // Face 7: Thursday/Friday may use a reviewed day entry (assets/votd-day.js); otherwise the normal schedule.
+  const wdNow = new Date(Date.UTC(s.p.year, s.p.month - 1, s.p.day)).getUTCDay();
+  const dayV = window.IE_VOTD_DAY ? window.IE_VOTD_DAY.pick(wdNow) : null;
+  const v = votdPick = dayV ? Object.assign({ day: wdNow }, dayV) : VOTD.entryFor(s.p.year, s.p.month, s.p.day);
   return `
-  <section class="sky a-hero" data-p="${per}" aria-label="${esc(t("curp"))}">
+  <section class="sky a-hero" data-p="${per}" data-scene="${st.scene}" aria-label="${esc(t("curp"))}">
     ${heroScene()}
     ${stars}
     <svg class="arc" viewBox="0 0 340 160" aria-hidden="true"><defs><radialGradient id="glow-g"><stop offset="0" class="gl0"/><stop offset="1" class="gl1"/></radialGradient></defs><path class="horizon" d="M0 150H340" stroke-width="1" fill="none"/><path id="arcpath" class="track" d="${ARC}" fill="none" stroke-width="1.5"/><path id="trail" class="trail" d="${ARC}" pathLength="100" stroke-dasharray="0 100" fill="none" stroke-width="2" stroke-linecap="round"/><circle id="glow" cx="178" cy="150" r="58" fill="url(#glow-g)"/><circle id="orb" class="orb${moonUp ? " hide" : ""}" cx="178" cy="150" r="9"/>${moonUp ? `<g id="moonG" class="moong" transform="translate(178 150)">${moonPhase(hj ? hj.d : 1, s.c.lat, 9)}</g>` : ""}</svg>
     <div class="sky-scrim" aria-hidden="true"></div>
     <div class="sky-body">
       <p class="eyebrow">${t("curp")}</p>
-      ${cur ? `<h1 id="cur-name">${t(cur.k)}</h1>
+      ${cur ? `<h1 id="cur-name">${pName(cur.k, isFriD(cur.D))}</h1>
       <p class="at" id="cur-start"><span class="lbl">${t("began")}</span> <b class="tnum">${clock(hOf(cur.start, cur.D))}</b>${cur.D === s.dm ? ` <span class="rel">${t("yday")}</span>` : ""}</p>
       ${cdLine(s, nx, ok)}`
       : `<h1 class="h1-sm" id="cur-name">${t("nocur")}</h1>
@@ -507,7 +591,7 @@ function vToday() {
       ${cdLine(s, nx, ok)}`}
       ${forbiddenLine(s)}
       <div class="next-pill" id="next-pill">
-        <span class="np-l"><span class="np-k">${t("next")}</span><b>${t(nx.k)}</b></span>
+        <span class="np-l"><span class="np-k">${t("next")}</span><b>${pName(nx.k, isFriD(nx.D))}</b></span>
         <span class="np-r"><span class="np-k">${t("startsat")}</span><b class="tnum">${clock(hOf(nx.at, nx.D))}</b><span class="np-day">${nx.tomorrow ? t("tomorrow_c") : t("t_today")}</span></span>
       </div>
       <p class="dates">${esc(greg)}<br>${esc(hText(hj))}</p>
@@ -521,7 +605,10 @@ function vToday() {
     <ol class="times">${ROWS.map(k => { const isC = cur && cur.k === k, isN = nx.k === k; let when = "", hrs = tm[k];
       if (isC && cur.D === s.dm) { hrs = hOf(cur.start, s.dm); when = t("yday"); }
       else if (isN && nx.tomorrow) { hrs = hOf(nx.at, s.d1); when = t("tomorrow"); }
-      return `<li class="${k === "sunrise" ? "minor" : ""}${isC ? " is-cur" : ""}${isN ? " is-next" : ""}"${isC ? ' aria-current="time"' : ""}><span class="nm">${t(k)}${isC ? `<span class="badge cur">${t("curb")}</span>` : ""}${isN ? `<span class="badge nxt">${t("nextb")}</span>` : ""}</span><span class="tm">${clock(hrs)}${when ? `<small class="when">${when}</small>` : ""}</span>${k === "sunrise" ? '<span class="gap44"></span>' : `<button type="button" class="tick${justTicked === k ? " just" : ""}" data-act="pray" data-k="${k}" aria-pressed="${!!done[k]}" aria-label="${esc(t("markp"))}: ${esc(t(k))}"><i><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></i></button>`}</li>`; }).join("")}</ol>
+      // Face 7.1: the rows are information only (name, time, current/next). Completion lives in the Prayer tracker alone.
+      return `<li class="${k === "sunrise" ? "minor" : ""}${isC ? " is-cur" : ""}${isN ? " is-next" : ""}"${isC ? ' aria-current="time"' : ""}><span class="nm">${pName(k, fri)}${isC ? `<span class="badge cur">${t("curb")}</span>` : ""}${isN ? `<span class="badge nxt">${t("nextb")}</span>` : ""}</span><span class="tm">${clock(hrs)}${when ? `<small class="when">${when}</small>` : ""}</span></li>`; }).join("")}</ol>
+    ${fri ? `<p class="note jum-note" role="note">${t("jum_note")}</p>` : ""}
+    <p class="note times-foot">${t("pm_hint")} <a href="#trk-h" class="linkish">${t("pm_go")}</a></p>
   </section>
 
   <section class="card verse a-verse" aria-labelledby="votd-h">
@@ -530,11 +617,12 @@ function vToday() {
   </section>
 
   <section class="card pad a-track" aria-labelledby="trk-h">
-    <div class="row"><div class="grow"><h3 class="sec-title" id="trk-h">${t("tracker")}</h3><p class="note">${bn() ? `${num(5)}-এর মধ্যে ${num(n)} ${t("prayedtoday")}` : `${n} ${t("of")} 5 ${t("prayedtoday")}`}</p></div>
+    <div class="row wt-head"><div class="grow"><h3 class="sec-title" id="trk-h">${t("wtracker")}</h3><p class="note">${bn() ? `${num(5)}-এর মধ্যে ${num(n)} ${t("prayedtoday")}` : `${n} ${t("of")} 5 ${t("prayedtoday")}`}</p></div>
     <div class="streak"><strong>${num(streak(s))}</strong><span class="note">${t("daystreak")}</span></div></div>
-    <div class="week" style="margin-top:14px">${days}</div>
+    ${fardGraph(s)}
     ${trackDay(s)}
   </section>
+
   ${vExtra(s)}
 
   <section class="card pad a-forb">
@@ -574,23 +662,23 @@ function sunAlt(s, h) {
   return deg(Math.asin(Math.sin(rad(c.lat)) * Math.sin(rad(sp.decl)) + Math.cos(rad(c.lat)) * Math.cos(rad(sp.decl)) * Math.cos(H)));
 }
 function dayViz(s) {
-  const tm = s.d0.tm, order = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
+  const tm = s.d0.tm, order = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"], fri = isFriD(s.d0), pn = k => pName(k, fri);
   const pts = []; for (let i = 0; i <= 96; i++) { const h = i / 4; pts.push([h, sunAlt(s, h)]); }
   const hi = Math.max(...pts.map(p => p[1])), lo = Math.min(...pts.map(p => p[1]));
   const okTimes = order.every(k => Number.isFinite(tm[k]) && tm[k] >= 0 && tm[k] <= 24) && order.every((k, i) => !i || tm[k] > tm[order[i - 1]]);
   const polar = hi < -0.833 || lo > -0.833 || !okTimes || (tm.isha - tm.maghrib) > 8;
-  const sched = `${t("sunrise")} ${clock(tm.sunrise)}, ${t("sunset")} ${clock(tm.maghrib)}. ${PRAYERS.map(k => `${t(k)} ${clock(tm[k])}`).join(", ")}`;
+  const sched = `${t("sunrise")} ${clock(tm.sunrise)}, ${t("sunset")} ${clock(tm.maghrib)}. ${PRAYERS.map(k => `${pn(k)} ${clock(tm[k])}`).join(", ")}`;
   if (polar) return `<p class="viz-polar note" role="note">${t("viz_polar")}</p>`;
   const W = 300, X0 = 8, X1 = 292, Y0 = 34, Y1 = 124, top = Math.max(hi, 20), bot = Math.min(lo, -20);
   const x = h => X0 + (X1 - X0) * h / 24, y = a => Y0 + (Y1 - Y0) * (top - a) / (top - bot), yH = y(0);
   const path = pts.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1]).toFixed(1)).join("");
   // Prayer labels: one row, in time order, each placed as close as possible to its own time (assets/dayviz.js);
   // a leader line joins the label to its dot when the label had to move.
-  const fs = bn() ? 11.5 : 10.5, wants = PRAYERS.map(k => ({ k, x: x(tm[k]), w: DV.textW(t(k), fs) }));
+  const fs = bn() ? 11.5 : 10.5, wants = PRAYERS.map(k => ({ k, x: x(tm[k]), w: DV.textW(pn(k), fs) }));
   const lx = DV.layoutLabels(wants, X0, X1, 4), lab = wants.map((o, i) => ({ k: o.k, cx: o.x, lx: lx[i] }));
   const nowX = x(s.nowH), nowA = sunAlt(s, s.nowH);
   const LY = 16;
-  const marks = lab.map(o => { const cy = y(sunAlt(s, tm[o.k])); return `<g class="pr${(s.ps && s.ps.cur && s.ps.cur.k === o.k && s.ps.cur.D === s.d0) ? " cur" : ""}" data-k="${o.k}"><path class="lead" d="M${o.lx.toFixed(1)} ${LY + 4}L${o.lx.toFixed(1)} ${LY + 9}L${o.cx.toFixed(1)} ${Y0 - 2}L${o.cx.toFixed(1)} ${(cy - 4).toFixed(1)}"/><circle cx="${o.cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.6"/><text x="${o.lx.toFixed(1)}" y="${LY}" text-anchor="middle">${esc(t(o.k))}</text></g>`; }).join("");
+  const marks = lab.map(o => { const cy = y(sunAlt(s, tm[o.k])); return `<g class="pr${(s.ps && s.ps.cur && s.ps.cur.k === o.k && s.ps.cur.D === s.d0) ? " cur" : ""}" data-k="${o.k}"><path class="lead" d="M${o.lx.toFixed(1)} ${LY + 4}L${o.lx.toFixed(1)} ${LY + 9}L${o.cx.toFixed(1)} ${Y0 - 2}L${o.cx.toFixed(1)} ${(cy - 4).toFixed(1)}"/><circle cx="${o.cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.6"/><text x="${o.lx.toFixed(1)}" y="${LY}" text-anchor="middle">${esc(pn(o.k))}</text></g>`; }).join("");
   const evs = [["sunrise", tm.sunrise], ["sunset", tm.maghrib]].map(([k, h]) => ({ k, x: x(h), w: DV.textW(t(k), fs - 1) })), elx = DV.layoutLabels(evs, X0, X1, 6);
   const ev = evs.map((o, i) => `<g class="evm" data-k="${o.k}"><path d="M${o.x.toFixed(1)} ${(yH - 4).toFixed(1)}l4 4l-4 4l-4 -4z"/><text x="${elx[i].toFixed(1)}" y="${(Y1 + 13).toFixed(1)}" text-anchor="middle">${esc(t(o.k))}</text></g>`).join("");
   const ticks = [6, 12, 18].map(h => `<line class="tl" x1="${x(h).toFixed(1)}" x2="${x(h).toFixed(1)}" y1="${Y1}" y2="${Y1 + 3}"/><text class="tk" x="${x(h).toFixed(1)}" y="${(Y1 + 27).toFixed(1)}" text-anchor="middle">${clock(h)}</text>`).join("");
@@ -618,7 +706,8 @@ function votdBody(e) {
   // e: one entry of the 180-day schedule (assets/votd.js). The texts come from the Qur'an data files for its verses.
   const i = e.s, ks = []; for (let k = e.a; k <= e.b; k++) ks.push(k);
   const th = VOTD.themeOf(e), range = e.b > e.a ? `${num(e.a)}–${num(e.b)}` : num(e.a);
-  const head = `<p class="votd-day">${t("vd_day").replace("{n}", num(e.seq)).replace("{t}", num(VOTD.CYCLE))} · ${esc(th[st.lang])}</p>`;
+  const head = e.day != null ? `<p class="votd-day">${t(e.day === 5 ? "vd_fri" : "vd_thu")} · ${esc(th[st.lang])}</p><p class="note votd-daynote">${t("vd_daynote")}</p>`
+    : `<p class="votd-day">${t("vd_day").replace("{n}", num(e.seq)).replace("{t}", num(VOTD.CYCLE))} · ${esc(th[st.lang])}</p>`;
   const ref = `<span class="verse-ref">${esc(sname(i))} · ${num(i)}:${range}</span>`;
   const foot = `<div class="verse-foot">${ref}<button type="button" class="btn soft" data-act="surah" data-s="${i}" data-a="${e.a}">${t("readsurah")}</button></div>`;
   if (!qReady(i)) {
@@ -629,14 +718,20 @@ function votdBody(e) {
   const tr = QS[st.lang + ":" + i], ar = QS["ar:" + i], many = ks.length > 1;
   const arN = k => String(k).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
   const arText = ks.map(k => ar[k - 1] + (many ? ` <span class="ayah-n">﴿${arN(k)}﴾</span>` : "")).join(" ");
-  const trText = ks.map(k => (many ? `<sup class="vn">${num(k)}</sup>` : "") + esc(tr.t[k - 1])).join(" ");
+  // Face 7.1: in English the Verse for today uses the Rowwad Translation Center's plain modern English (QuranEnc,
+  // assets/en-rwwad.js), shown exactly as published with its own footnotes; the reader keeps Pickthall.
+  const RW = window.IE_RWWAD, rw = !bn() && RW && ks.every(k => RW.get(i, k)) ? ks.map(k => RW.get(i, k)) : null;
+  const fnSup = x => esc(x).replace(/\[(\d+)\]/g, '<sup class="rw-fn">[$1]</sup>');
+  const trText = rw ? rw.map(([x], j) => (many ? `<sup class="vn">${num(ks[j])}</sup>` : "") + fnSup(x)).join(" ")
+    : ks.map(k => (many ? `<sup class="vn">${num(k)}</sup>` : "") + esc(tr.t[k - 1])).join(" ");
+  const rwNotes = rw ? rw.map(([, f], j) => f ? (many ? `<b>${num(i)}:${num(ks[j])}</b><br>` : "") + esc(f).replace(/\n\s*/g, "<br>") : "").filter(Boolean) : [];
   // Short tafsir: the publisher sometimes explains a group of verses together, so identical texts are shown once.
   const tfs = []; if (bn() && QS["bnt:" + i]) ks.forEach(k => { const x = QS["bnt:" + i][k - 1]; if (x && !tfs.includes(x)) tfs.push(x); });
   const fns = tr.f ? ks.map(k => tr.f[k - 1] ? (many ? `<b>${num(i)}:${num(k)}</b><br>` : "") + richText(tr.f[k - 1]) : "").filter(Boolean) : [];
   return `${head}
     <p class="ar verse-ar" lang="ar" dir="rtl">${arText}</p>
     <p class="verse-tr" lang="${st.lang}">${trText}</p>
-    ${glossLine(ks.map(k => tr.t[k - 1]).join(" "))}
+    ${rw ? `<p class="note rw-src">${t("rw_src").replace("{v}", esc(RW.META.version))}</p>${rwNotes.length ? `<details class="fn rw-notes"><summary>${t("rw_notes")}</summary><div lang="en">${rwNotes.join("<br><br>")}</div></details>` : ""}` : glossLine(ks.map(k => tr.t[k - 1]).join(" "))}
     ${tfs.length ? `<aside class="tafsir" lang="bn" aria-label="${esc(t("tafsir"))}"><p class="tf-h"><b>${t("tafsir")}</b> <span>${t("tf_label")}</span></p>${tfs.map(x => `<p>${esc(FIX.repair(x))}</p>`).join("")}</aside>` : ""}
     ${votdExpl(e, many)}
     ${e.ctx ? `<p class="votd-ctx"><b>${t("vd_ctx")}</b> ${esc(e.ctx[st.lang]).replace(/ﷺ/g, '<span class="saw" lang="ar">ﷺ</span>')}</p>` : ""}
@@ -758,7 +853,8 @@ function vQuran() {
   const last = st.last && st.last.s ? st.last : null;
   const bms = st.bm.slice(-6).reverse();
   return `
-  <div class="page-head"><h2>${t("quran")}</h2></div>
+  <div class="page-head">${desk() ? "" : back(t("study_nav"))}<h2>${t("allsurahs")}</h2></div>
+  ${desk() ? `<button type="button" class="btn ghost sm st-backlib" data-act="go" data-tab="quran">${ic("back")} ${t("st_lib")}</button>` : ""}
   <section class="card pad row">${ring(st.read.length, 114)}<div class="grow"><b>${bn() ? `${num(114)}টির মধ্যে ${num(st.read.length)}টি সূরা পড়া হয়েছে` : `${st.read.length} of 114 surahs read`}</b><p class="note">${t("khatmnote")}</p></div></section>
   ${!NATIVE && offlineStale() ? `<p class="note card pad" role="note">${t("q_resave")} <button type="button" class="linkish" data-act="go" data-tab="more" data-sub="settings">${t("settings")}</button></p>` : ""}
   ${last ? `<button type="button" class="card pad row" style="text-align:left;width:100%" data-act="surah" data-s="${last.s}" data-a="${last.a}"><span class="grow"><span class="eyebrow">${t("cont")}</span><br><b>${esc(sname(last.s))}</b> <span class="note">${num(last.s)}:${num(last.a)}</span></span>${ic("chev", "chev")}</button>` : ""}
@@ -800,6 +896,141 @@ function aaSheet() {
     <p class="ar" lang="ar" style="margin-top:8px">${QM.starter[112][0]}</p>`);
 }
 
+/* ---------------- QUR'AN STUDY (Face 7) ----------------
+   A curated learning collection (assets/study.js): Juz 'Amma and eight other widely studied surahs. The notes are
+   draft editorial study aids, labelled as such; the Qur'an text itself is read in the full reader, which keeps the
+   existing progress (st.read), last position (st.last) and bookmarks (st.bm) unchanged. */
+let stQuery = "", stGroup = "all", stTheme = "all";
+const stName = n => sname(n);
+const stThemeName = id => { const x = SD.THEMES.find(z => z[0] === id); return x ? (bn() ? x[2] : x[1]) : id; };
+const stList = () => { const q = stQuery.trim().toLowerCase(), qa = stQuery.trim(); return SD.SURAHS.filter(x => (stGroup === "all" || x.group === stGroup) && (stTheme === "all" || x.themes.includes(stTheme)) &&
+  (!q || [QM.meta[x.n - 1][1], QM.meta[x.n - 1][2], x.meaning, String(x.n), num(x.n)].join(" ").toLowerCase().includes(q) || QM.meta[x.n - 1][0].includes(qa))); };
+function studyRows(sel) {
+  const l = stList();
+  return l.length ? l.map(x => { const m = QM.meta[x.n - 1]; return `<li><button type="button" class="rowlink" data-act="study" data-s="${x.n}"${sel === x.n ? ' aria-current="true"' : ""}><span class="no"><span>${num(x.n)}</span></span><span class="nm">${esc(stName(x.n))}<small>${num(m[3])} ${t("verses")} · ${t(m[4])}${st.read.includes(x.n) ? ` · <span class="done">✓ ${t("readmark")}</span>` : ""}</small>${window.IE_STUDY_NOTES && IE_STUDY_NOTES.get(x.n) ? `<small class="st-short">${esc(IE_STUDY_NOTES.get(x.n).short[st.lang] || IE_STUDY_NOTES.get(x.n).short.en)}</small>` : ""}<small class="st-th">${x.themes.map(stThemeName).map(esc).join(" · ")}</small></span><span class="an" lang="ar">${m[0]}</span></button></li>`; }).join("")
+    : `<li class="note" style="padding:16px 0">${t("none")}</li>`;
+}
+function studyList(sel) {
+  const last = st.last && st.last.s ? st.last : null, bms = st.bm.slice(-6).reverse();
+  const g = [["all", t("all") + " (" + num(SD.SURAHS.length) + ")"]].concat(SD.GROUPS.map(x => [x[0], (bn() ? x[2] : x[1]) + " (" + num(SD.SURAHS.filter(s => s.group === x[0]).length) + ")"]));
+  return `<div class="page-head"><h2>${t("study_nav")}</h2></div>
+  ${quranSwitch("study")}
+  <section class="card pad st-intro"><p><b>${t("st_title")}</b></p><p class="note">${t("st_intro")}</p><p class="note st-draft" role="note">${t("st_draft")}</p></section>
+  <div class="st-actions">
+    ${last ? `<button type="button" class="card pad row st-cont" data-act="surah" data-s="${last.s}" data-a="${last.a}"><span class="grow"><span class="eyebrow">${t("cont")}</span><br><b>${esc(sname(last.s))}</b> <span class="note">${num(last.s)}:${num(last.a)}</span></span>${ic("chev", "chev")}</button>` : ""}
+    <button type="button" class="btn ghost st-all" data-act="go" data-tab="quran" data-sub="all">${ic("quran")} ${t("st_all")}</button>
+  </div>
+  ${bms.length ? `<section><p class="eyebrow" style="margin-bottom:8px">${t("bookmarks")}</p><div class="chips">${bms.map(b => { const [s1, a1] = b.split(":"); return `<button type="button" class="chip" data-act="surah" data-s="${s1}" data-a="${a1}">${esc(sname(+s1))} ${num(s1)}:${num(a1)}</button>`; }).join("")}</div></section>` : ""}
+  <div class="search">${ic("search")}<input id="st-search" class="field" type="search" inputmode="search" autocomplete="off" placeholder="${esc(t("st_search"))}" aria-label="${esc(t("st_search"))}" aria-controls="study-list" value="${esc(stQuery)}"></div>
+  <div class="chips" role="group" aria-label="${esc(t("st_coll"))}">${g.map(([k, l]) => `<button type="button" class="chip" data-act="stg" data-k="${k}" aria-pressed="${stGroup === k}">${esc(l)}</button>`).join("")}</div>
+  <div class="chips st-themes" role="group" aria-label="${esc(t("st_themes"))}">${[["all", t("st_anytheme")]].concat(SD.THEMES.map(x => [x[0], bn() ? x[2] : x[1]])).map(([k, l]) => `<button type="button" class="chip" data-act="stt" data-k="${k}" aria-pressed="${stTheme === k}">${esc(l)}</button>`).join("")}</div>
+  <p class="note" id="study-count" aria-live="polite">${t("st_count").replace("{n}", num(stList().length))}</p>
+  <ul id="study-list">${studyRows(sel)}</ul>`;
+}
+function refreshStudy() {
+  document.querySelectorAll('[data-act="stg"]').forEach(x => x.setAttribute("aria-pressed", x.dataset.k === stGroup));
+  document.querySelectorAll('[data-act="stt"]').forEach(x => x.setAttribute("aria-pressed", x.dataset.k === stTheme));
+  const l = $("study-list"); if (l) l.innerHTML = studyRows(R.study || (desk() ? stDeskSel() : 0));
+  const c = $("study-count"); if (c) c.textContent = t("st_count").replace("{n}", num(stList().length));
+}
+/* ---------------- Qur'an Stories (Face 7.1) ----------------
+   A separate section next to Qur'an study (assets/stories.js). Every part of a story is labelled by source type, Qur'an
+   references open the reader, hadith references link to sunnah.com with their grading, and each story says what the
+   sources do not tell us. All of it is a draft awaiting qualified review, and says so. */
+const ST = window.IE_STORIES;
+let sgGroup = "all", sgQuery = "";
+const quranSwitch = cur => `<div class="seg q-switch" role="group" aria-label="${esc(t("q_switch"))}">${[["study", t("study_nav"), "quran", ""], ["stories", t("stories_nav"), "quran", "stories"]].map(([k, l, tab, sub]) => `<button type="button" data-act="go" data-tab="${tab}"${sub ? ` data-sub="${sub}"` : ""} aria-pressed="${cur === k}">${l}</button>`).join("")}</div>`;
+const srcLabel = k => `<span class="sk sk-${k}">${t("sk_" + k)}</span>`;
+function storyList() {
+  if (!ST) return "";
+  const L2 = o => o[st.lang] || o.en, q = sgQuery.trim().toLowerCase();
+  const l = ST.STORIES.filter(x => (sgGroup === "all" || x.group === sgGroup) && (!q || (x.title.en + " " + x.title.bn + " " + x.short.en + " " + x.short.bn).toLowerCase().includes(q)));
+  return l.length ? l.map(x => `<li><button type="button" class="card sg-card" data-act="story" data-k="${x.id}"><span class="sg-kinds">${[...new Set(x.parts.map(p => p.kind))].map(srcLabel).join("")}</span><b class="sg-t">${escS(L2(x.title))}</b><span class="sg-s">${escS(L2(x.short))}</span><span class="sg-go">${t("sg_read")} ${ic("chev", "chev")}</span></button></li>`).join("")
+    : `<li class="note" style="padding:16px 0">${t("none")}</li>`;
+}
+function refreshStories() { const el = $("sg-list"); if (el) el.innerHTML = storyList(); document.querySelectorAll('[data-act="sgrp"]').forEach(b => b.setAttribute("aria-pressed", b.dataset.k === sgGroup)); const c = $("sg-count"); if (c) c.textContent = t("sg_count").replace("{n}", num(document.querySelectorAll("#sg-list .sg-card").length)); }
+function vStories() {
+  if (!ST) return `<p class="note">${t("none")}</p>`;
+  const g = [["all", t("all") + " (" + num(ST.STORIES.length) + ")"]].concat(ST.GROUPS.map(x => [x[0], (bn() ? x[2] : x[1]) + " (" + num(ST.STORIES.filter(s => s.group === x[0]).length) + ")"]));
+  post.push(() => refreshStories());
+  return `<div class="page-head"><h2>${t("stories_nav")}</h2></div>
+  ${quranSwitch("stories")}
+  <section class="card pad st-intro"><p><b>${t("sg_title")}</b></p><p class="note">${sawS(t("sg_intro"))}</p>
+    <ul class="sg-legend">${[["quran", "sg_lq"], ["hadith", "sg_lh"], ["tafsir", "sg_lt"]].map(([k, l]) => `<li>${srcLabel(k)} <span>${t(l)}</span></li>`).join("")}</ul>
+    <p class="note st-draft" role="note">${t("sg_draft")}</p></section>
+  <div class="search">${ic("search")}<input id="sg-search" class="field" type="search" inputmode="search" autocomplete="off" placeholder="${esc(t("sg_search"))}" aria-label="${esc(t("sg_search"))}" aria-controls="sg-list" value="${esc(sgQuery)}"></div>
+  <div class="chips" role="group" aria-label="${esc(t("st_coll"))}">${g.map(([k, l]) => `<button type="button" class="chip" data-act="sgrp" data-k="${k}" aria-pressed="${sgGroup === k}">${escS(l)}</button>`).join("")}</div>
+  <p class="note" id="sg-count" aria-live="polite"></p>
+  <ul class="sg-list" id="sg-list">${storyList()}</ul>`;
+}
+function vStory() {
+  const x = ST && ST.get(R.story); if (!x) return vStories();
+  const L2 = o => o[st.lang] || o.en;
+  const qref = r => { const m = String(r).match(/^(\d+):(\d+)/); return m ? `<button type="button" class="st-ref" data-act="surah" data-s="${m[1]}" data-a="${m[2]}" aria-label="${esc(t("st_open").replace("{r}", r))}">${esc(num(r))}</button>` : esc(r); };
+  const hl = x.hadith || [];
+  const href = r => { const h = hl.find(z => z.label === r); return h ? `<a class="st-ref" href="${h.url}" target="_blank" rel="noopener noreferrer">${esc(h.label)}</a> <span class="note sg-grade">${t("sg_grade")}: ${esc(h.grade)}</span>` : esc(r); };
+  return `<div class="page-head">${back()}<h2>${escS(L2(x.title))}</h2></div>
+  <article class="card pad sg-detail" aria-labelledby="sg-h">
+    <h3 class="sr" id="sg-h">${escS(L2(x.title))}</h3>
+    <p class="sg-lead">${escS(L2(x.short))}</p>
+    <p class="st-draft" role="note">${t("sg_draftnote")}</p>
+    ${x.parts.map(p => `<section class="sg-part sg-${p.kind}"><p class="sg-ph">${srcLabel(p.kind)} <span class="sg-refs">${p.refs.map(p.kind === "hadith" ? href : qref).join(" ")}</span></p><p>${escS(L2(p.text))}</p></section>`).join("")}
+    <section class="sg-unknown"><h4 class="st-sub">${t("sg_unknown")}</h4><p>${escS(L2(x.unknown))}</p></section>
+    <section><h4 class="st-sub">${t("sg_why")}</h4><p>${escS(L2(x.why))}</p><p class="note">${t("sg_why_n")}</p></section>
+    <section class="st-example"><h4 class="st-sub">${t("sg_ex")}</h4><p class="st-exlab">${t("sg_ex_n")}</p><p>${escS(L2(x.example))}</p></section>
+    <details class="fn st-src"><summary>${t("st_src")}</summary><div><p>${t("sg_src1")}</p><p>${t("st_src3")}</p><p>${t("st_src4")}</p></div></details>
+  </article>`;
+}
+
+function studyDetail(n) {
+  const x = SD.SURAHS.find(z => z.n === n); if (!x) return `<p class="note">${t("none")}</p>`;
+  const m = QM.meta[n - 1], L2 = o => o[st.lang] || o.en, isRead = st.read.includes(n), bmc = st.bm.filter(b => +b.split(":")[0] === n).length;
+  const N = window.IE_STUDY_NOTES ? window.IE_STUDY_NOTES.get(n) : null;
+  // Verse references open the full reader at that verse; they are links to the text, never the text itself.
+  const refBtn = r => { const mm = String(r).match(/^(\d+):(\d+)/); return mm ? `<button type="button" class="st-ref" data-act="surah" data-s="${mm[1]}" data-a="${mm[2]}" aria-label="${esc(t("st_open").replace("{r}", r))}">${esc(num(r))}</button>` : esc(r); };
+  const srcTag = k => `<span class="st-srctag st-src-${k}">${t(k === "t" ? "st_src_t" : "st_src_q")}</span>`;
+  return `<article class="card pad st-detail" aria-labelledby="st-h-${n}">
+    <header class="st-head"><span class="st-no" aria-hidden="true">${num(n)}</span><div class="grow"><h3 id="st-h-${n}" class="st-name" tabindex="-1">${esc(stName(n))} <span class="an" lang="ar">${m[0]}</span></h3>
+      <p class="note">${st.lang === "en" ? `“${esc(x.meaning)}” · ` : ""}${t("surah")} ${num(n)} · ${num(m[3])} ${t("verses")} · <span class="badge st-type">${t(x.type)}</span>${isRead ? ` · <span class="done">✓ ${t("readmark")}</span>` : ""}</p></div></header>
+    <p class="st-draft" role="note">${t("st_draftnote")}</p>
+    <section><h4 class="st-sub">${t("st_ov")}</h4><p>${escS(L2(N ? N.ov : x.ov))}</p>
+      <ul class="st-chips" aria-label="${esc(t("st_learn"))}">${x.themes.map(k => `<li>${esc(stThemeName(k))}</li>`).join("")}</ul></section>
+    ${N ? `<section><h4 class="st-sub">${t("st_flow")}</h4><p class="note">${t("st_flow_n")}</p>
+      <ol class="st-flow">${N.flow.map(([a, b2, d]) => `<li>${refBtn(a === b2 ? `${n}:${a}` : `${n}:${a}–${b2}`)}<span>${escS(L2(d))}</span></li>`).join("")}</ol></section>
+    <section><h4 class="st-sub">${t("st_concepts")}</h4><dl class="st-concepts">${N.concepts.map(c => `<div><dt>${escS(L2(c.term))}</dt><dd>${escS(L2(c.text))}<span class="st-cmeta">${srcTag(c.src)} ${String(c.ref).split(/[;,]\s*/).map(refBtn).join(" ")}</span></dd></div>`).join("")}</dl></section>
+    <section><h4 class="st-sub">${t("st_take")}</h4><ul class="st-learn">${L2(N.take).map(z => `<li>${esc(z)}</li>`).join("")}</ul></section>
+    <section class="st-example" aria-labelledby="st-ex-${n}"><h4 class="st-sub" id="st-ex-${n}">${t("st_ex")}</h4><p class="st-exlab">${t("st_ex_n")}</p><p>${escS(L2(N.example))}</p></section>` : ""}
+    <section class="st-reflect"><h4 class="st-sub">${t("st_reflect")}</h4><p>${escS(L2(x.reflect))}</p><p class="note">${t("st_reflect_n")}</p></section>
+    <section><h4 class="st-sub">${t("st_ctx")}</h4><p class="note">${esc(SD.context(x, st.lang))}</p></section>
+    <div class="st-go"><button type="button" class="btn" data-act="surah" data-s="${n}" data-a="0">${t("st_read")}</button>${bmc ? `<span class="note">${t("st_bms").replace("{n}", num(bmc))}</span>` : ""}</div>
+    <details class="fn st-src"><summary>${t("st_src")}</summary><div>
+      <p>${t("st_src1")} <a href="${SD.SOURCE.classification.url}" target="_blank" rel="noopener noreferrer">Tanzil Quran Metadata 1.0</a> (<a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">CC BY 3.0</a>).</p>
+      <p>${t("st_src2")}</p>
+      <p>${t("st_src3")}</p>
+      <p>${t("st_src4")}</p>
+    </div></details>
+  </article>`;
+}
+function vStudy() { return studyList(0); }
+function vStudyDetail() {
+  return `<div class="page-head">${back(t("st_lib"))}<h2>${esc(stName(R.study))}</h2></div>${studyDetail(R.study)}`;
+}
+const stDeskSel = () => R.study || (st.last && SD.SURAHS.some(z => z.n === st.last.s) ? st.last.s : 1);
+function vStudyDesk() {
+  const n = stDeskSel();
+  return `<div class="split"><aside class="pane-list" id="pane-list" aria-label="${esc(t("study_nav"))}">${studyList(n)}</aside><section class="pane-read" id="read-pane">${studyDetail(n)}</section></div>`;
+}
+function openStudyDesk(n) {
+  R = Object.assign({}, R, { study: n });
+  try { history.pushState(R, ""); depth++; } catch (e) {}
+  const p = $("read-pane"); if (!p) { render(false); return; }
+  p.innerHTML = studyDetail(n);
+  if (!reduce) { p.classList.remove("enter-pane"); void p.offsetWidth; p.classList.add("enter-pane"); }
+  document.querySelectorAll("#study-list .rowlink").forEach(b => { if (+b.dataset.s === n) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current"); });
+  const h = $("st-h-" + n); if (h) h.focus({ preventScroll: true });
+  const top = p.getBoundingClientRect().top + scrollY - 90; if (scrollY > top) scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });
+}
+
 /* ---------------- DUAS ---------------- */
 let dQuery = "", dCat = "all";
 /* Dua cards show an equal-height preview. A dua that does not fit gets a "Read more" button that opens the
@@ -807,11 +1038,15 @@ let dQuery = "", dCat = "all";
 const dOpen = new Set();
 function duaList() {
   const q = dQuery.trim().toLowerCase();
+  // Core remembrance (Face 7) is listed first; each dua keeps its position in DUAS, which is what favourites store.
   const list = DUAS.map((d, i) => [d, i]).filter(([d, i]) => (dCat === "all" || (dCat === "fav" ? st.fav.includes(i) : d.c === dCat)) &&
-    (!q || [d.te, d.tb, d.en, d.bn, d.tl, d.bt].join(" ").toLowerCase().includes(q)));
+    (!q || [d.te, d.tb, d.en, d.bn, d.tl, d.bt].join(" ").toLowerCase().includes(q))).sort((x, y) => (y[0].c === "core") - (x[0].c === "core"));
   if (!list.length) return `<p class="note">${dCat === "fav" ? t("nofav") : t("none")}</p>`;
-  return list.map(([d, i]) => { const fav = st.fav.includes(i); const open = dOpen.has(i); return `<article class="card dua${open ? " open" : ""}" data-i="${i}"><div class="dua-head"><h3>${esc(bn() ? d.tb : d.te)}</h3><button type="button" class="mini" data-act="fav" data-i="${i}" aria-pressed="${fav}" aria-label="${esc(t("save"))}">${ic("heart")}</button><button type="button" class="mini" data-act="copydua" data-i="${i}" aria-label="${esc(t("copy"))}">${ic("copy")}</button></div><div class="dua-body" id="dua-b-${i}"><p class="ar" lang="ar">${d.ar}</p>${st.tl ? `<p class="tl">${esc(bn() ? d.bt : d.tl)}</p>` : ""}<p>${esc(bn() ? d.bn : d.en)}</p></div><button type="button" class="linkish dua-more" data-act="duamore" data-i="${i}" aria-expanded="${open}" aria-controls="dua-b-${i}">${t(open ? "readless" : "readmore")}</button><p class="ref">${esc(bn() ? d.rb : d.re)}</p></article>`; }).join("");
+  return list.map(([d, i]) => { const fav = st.fav.includes(i); const open = dOpen.has(i); return `<article class="card dua${open ? " open" : ""}" data-i="${i}"><div class="dua-head"><h3>${esc(bn() ? d.tb : d.te)}${d.k ? `<span class="badge dk dk-${d.k}">${t(d.k === "quran" ? "dk_quran" : "dk_decl")}</span>` : ""}</h3><button type="button" class="mini" data-act="fav" data-i="${i}" aria-pressed="${fav}" aria-label="${esc(t("save"))}">${ic("heart")}</button><button type="button" class="mini" data-act="copydua" data-i="${i}" aria-label="${esc(t("copy"))}">${ic("copy")}</button></div><div class="dua-body" id="dua-b-${i}"><p class="ar" lang="ar">${d.ar}</p>${st.tl ? `<p class="tl">${esc(bn() ? d.bt : d.tl)}</p>` : ""}<p>${esc(bn() ? d.bn : d.en)}</p></div><button type="button" class="linkish dua-more" data-act="duamore" data-i="${i}" aria-expanded="${open}" aria-controls="dua-b-${i}">${t(open ? "readless" : "readmore")}</button><p class="ref">${esc(bn() ? d.rb : d.re)}</p>${duaExtra(d)}</article>`; }).join("");
 }
+/* Face 7 core remembrance: a short sourced note, links to the sources, and (for a Qur'an verse) the way to read it in
+   the reader with the translator's notes; marked as not yet reviewed by a qualified scholar. */
+const duaExtra = d => !d.k ? "" : `<div class="dua-x">${d.fe && !bn() ? `<details class="fn rw-notes"><summary>${t("rw_notes")}</summary><div lang="en">${esc(d.fe).replace(/\n\s*/g, "<br>")}</div></details>` : ""}${d.ne ? `<p class="note">${esc(bn() ? d.nb : d.ne)}</p>` : ""}<p class="note">${(d.links || []).map(([e, b2, u]) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${esc(bn() ? b2 : e)}</a>`).join(" · ")}${d.read ? ` · <button type="button" class="linkish" data-act="surah" data-s="${d.read[0]}" data-a="${d.read[1]}">${t("dk_read")}</button>` : ""}</p><p class="note dua-rev">${t("dk_review")}</p></div>`;
 /* Marks cards whose content (nearly) fits the preview, so they show in full with no "Read more" button. Re-run after any change. */
 function fitDuas() {
   document.querySelectorAll("#dua-list .dua").forEach(c => {
@@ -932,7 +1167,7 @@ function nwGo(n) {
 /* ---------------- MORE + sub pages ---------------- */
 function vMore() {
   const s = snap || snapshot(), hj = hijriNow(s);
-  const items = [["guide", "guide", t("guide_s")], ["hadith", "hadith", t("hadith_s")], ["names", "names", t("names_s")], ["calendar", "calendar", hText(hj)], ["zakat", "zakat", t("zakat_s")], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")]];
+  const items = [["guide", "guide", t("guide_s")], ["hadith", "hadith", t("hadith_s")], ["names", "names", t("names_s")], ["calendar", "calendar", hText(hj)], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
   return `<div class="page-head"><h2>${t("more")}</h2></div>
   <ul class="card menu">${items.map(([k, icn, sub]) => `<li><button type="button" data-act="go" data-tab="more" data-sub="${k}"><span class="ic">${ic(icn)}</span><span class="grow"><b>${t(k === "names" ? "names99" : k)}</b><small>${esc(sub)}</small></span>${ic("chev", "chev")}</button></li>`).join("")}</ul>`;
 }
@@ -1105,7 +1340,7 @@ function vCalendar() {
     <div class="cal-tools"><button type="button" class="btn ghost sm" data-act="caltoday">${t("cal_today")}</button><p class="note cal-hint">${t("cal_hint")}</p></div>
     <div class="cal" role="group" aria-labelledby="cal-title" aria-describedby="cal-method">${head}${cells}</div>
     <div id="cal-pop" class="cal-pop" role="tooltip" hidden></div>
-    <p class="cal-legend"><span><i class="lg-td" aria-hidden="true"></i>${t("t_today")}</span><span><i class="lg-wh" aria-hidden="true"></i>${t("whitedays")}</span><span><i class="lg-ev" aria-hidden="true"></i>${t("events")}</span><span><i class="lg-fp" aria-hidden="true"></i>${t("fp_planned")}</span></p>
+    <p class="cal-legend"><span><i class="lg-td" aria-hidden="true"></i>${t("t_today")}</span><span><i class="lg-sel" aria-hidden="true"></i>${t("cal_sel")}</span><span><i class="lg-wh" aria-hidden="true"></i>${t("whitedays")}</span><span><i class="lg-ev" aria-hidden="true"></i>${t("events")}</span><span><i class="lg-fp" aria-hidden="true"></i>${t("fp_planned")}</span></p>
     <p class="note" id="cal-method">${calMethod()}</p>
   </section>
   <div class="cal-side">
@@ -1157,7 +1392,7 @@ document.addEventListener("pointerout", e => { const c = e.target.closest && e.t
 document.addEventListener("focusin", e => { const c = e.target.closest && e.target.closest(".cal .c[data-k]"); if (c && popPointer !== "touch" && c.matches(":focus-visible")) showPop(c); else if (!c) hidePop(); });
 document.addEventListener("focusout", e => { const c = e.target.closest && e.target.closest(".cal .c[data-k]"); if (c && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".cal .c[data-k]"))) hidePop(); });
 
-/* Zakat (Phase 5.3): the calculation lives in assets/zakat.js (unchanged formula, see there); this draws it. */
+/* Zakat (Phase 5.3) — dormant since Face 7: no route reaches this view (see SUBS). Kept, with assets/zakat.js and st.zk, so it can be restored without data loss. */
 const ZK = window.IE_ZAKAT;
 function zakatCalc() {
   const r = ZK.calc({ v: st.zk.v, basis: st.zk.basis, weights: st.zk.w, price: st.zk.price }), cur = st.zk.cur;
@@ -1205,13 +1440,40 @@ function vZakat() {
     <p class="note">${t("zk_checked")}</p>
   </section>`;
 }
+/* Face 7 settings previews. Theme cards draw a miniature of the real tokens (ground, card, ink, accent, gold);
+   the selected card is marked with a check and the word "Chosen", not colour alone. */
+const TH_PREV = { classic: ["#EEF3F1", "#FFFFFF", "#0F2420", "#0E6B5C", "#996010"], emerald: ["#F6F1E4", "#FFFDF7", "#12261E", "#0A6247", "#835308"], sandstone: ["#F3EADB", "#FCF7EE", "#2A2118", "#0F5C66", "#874C12"],
+  jade: ["#08120F", "#101C18", "#F1EADB", "#5DCAAE", "#E6BA62"], indigo: ["#0A0D1E", "#12172F", "#E9EAF3", "#AEB6FF", "#E3BF6E"], plum: ["#140D14", "#1E141E", "#F3E8E3", "#E7A3B4", "#E2AE78"] };
+const CHECK = '<svg class="ck" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+function themeCards() {
+  const now = themeNow();
+  const card = (k, grp) => { const [g, sf, ink, ac, gd] = TH_PREV[k], on = (grp === "light" ? st.lightTheme : st.darkTheme) === k;
+    return `<button type="button" class="th-card" data-act="setth" data-g="${grp}" data-k="${k}" aria-pressed="${on}">
+      <span class="th-prev" aria-hidden="true" style="--p-g:${g};--p-s:${sf};--p-i:${ink};--p-a:${ac};--p-o:${gd}"><i class="p-bar"></i><span class="p-card"><b>${t("th_sample")}</b><i class="p-l"></i><i class="p-l s"></i><span class="p-row"><i class="p-btn"></i><i class="p-dot"></i></span></span></span>
+      <span class="th-name">${t("pl_" + k)}</span>
+      <span class="th-state">${on ? CHECK + t("th_chosen") : ""}${now === k ? `<em>${t("th_now")}</em>` : ""}</span></button>`; };
+  return `<div class="th-groups">${[["light", LIGHT_TH], ["dark", DARK_TH]].map(([grp, ks]) => `<div class="th-group" role="group" aria-labelledby="thg-${grp}"><p class="th-h" id="thg-${grp}">${t("th_" + grp)}</p><div class="th-grid">${ks.map(k => card(k, grp)).join("")}</div></div>`).join("")}</div>`;
+}
+const SC_PREV = {
+  landscape: '<path d="M0 46 L14 38 L26 42 L40 32 L54 40 L66 34 L80 41 V60 H0Z" class="f1"/><path d="M0 52 L18 46 L34 50 L50 44 L66 49 L80 46 V60 H0Z" class="f2"/><path d="M0 56 L30 53 L56 55 L80 52 V60 H0Z" class="f3"/>',
+  sky: '<path d="M14 50 Q40 6 66 50" class="arcp"/><circle cx="52" cy="24" r="4" class="sun"/><path d="M0 50 H80" class="hzn"/><rect y="50" width="80" height="10" class="f3"/>',
+  mosque: '<rect y="54" width="80" height="6" class="f3"/><path d="M42 54 V46 H66 V54Z M44 46 a10 10 0 0 1 20 0Z M53.5 36 h1 v-3 h-1Z M38 54 V30 h3 V54Z M37.5 30 h4 l-2 -4Z M68 54 V34 h3 V54Z M67.5 34 h4 l-2 -4Z" class="f3"/>'
+};
+function sceneCards() {
+  return `<div class="sc-grid" role="group" aria-label="${esc(t("scene"))}">${SCENES.map(k => `<button type="button" class="sc-card" data-act="setscene" data-k="${k}" aria-pressed="${st.scene === k}">
+    <svg class="sc-prev" viewBox="0 0 80 60" aria-hidden="true" focusable="false"><rect width="80" height="60" class="skyb"/>${SC_PREV[k]}</svg>
+    <span class="th-name">${t("sc_" + k)}</span><span class="th-state">${st.scene === k ? CHECK + t("th_chosen") : ""}</span></button>`).join("")}</div>`;
+}
 function vSettings() {
   const segb = (act, cur, opts) => `<div class="seg">${opts.map(([k, l]) => `<button type="button" data-act="${act}" data-k="${k}" aria-pressed="${String(cur) === String(k)}">${l}</button>`).join("")}</div>`;
   return `<div class="page-head">${back()}<h2>${t("settings")}</h2></div>
   <ul class="card set">
     <li><span class="lb">${t("language")}<small>${t("lang_h")}</small></span><div style="width:100%">${segb("setlang", bn() ? "bn" : LOC.variant(st.loc), LOC.VARIANTS.map(x => [x.id, `<span lang="${x.lang === "bn" ? "bn" : x.id}">${esc(x.label)}</span>`]))}</div></li>
     <li><span class="lb">${t("appearance")}<small>${t("appearance_h")}</small></span><div style="width:100%">${segb("setmode", st.mode, MODES.map(k => [k, t("md_" + k)]))}</div></li>
-    <li><span class="lb">${t("theme")}<small>${t("theme_h")}</small></span><div class="themes" role="group" aria-label="${esc(t("theme"))}">${PALETTES.map(k => `<button type="button" data-act="setpalette" data-k="${k}" aria-pressed="${st.palette === k}"><span class="sw sw-${k}" aria-hidden="true"></span>${t("pl_" + k)}</button>`).join("")}</div></li>
+    <li class="set-block"><span class="lb">${t("theme")}<small>${t("theme_h")}</small></span>${themeCards()}</li>
+    <li class="set-block"><span class="lb">${t("scene")}<small>${t("scene_h")}</small></span>${sceneCards()}</li>
+    <li><span class="lb">${t("glass")}<small>${t("glass_h")}</small></span><div style="width:100%">${segb("setglass", st.glass, GLASS.map(k => [k, t("gl_" + k)]))}</div></li>
+    <li><span class="lb">${t("motion")}<small>${t("motion_h")}</small></span><div style="width:100%">${segb("setmotion", st.motion, MOTION.map(k => [k, t("mo_" + k)]))}</div></li>
     <li><span class="lb">${t("location")}<small>${esc(cname(city()))}</small></span><button type="button" class="btn ghost" data-act="loc">${t("change")}</button></li>
   </ul>
   <p class="eyebrow">${t("ptimes")}</p>
@@ -1233,6 +1495,8 @@ function vAbout() {
   const E = bn() ? [
     ["আরবি পাঠ", "উসমানি লিপি, নোবেল কুরআন এনসাইক্লোপিডিয়া (quranenc.com), quran-json প্যাকেজের মাধ্যমে (CC BY-SA 4.0)।"],
     ["বাংলা অনুবাদ", "ড. আবু বকর মুহাম্মাদ যাকারিয়া, সংস্করণ ১.১.১ (২২ মে ২০২১), প্রকাশক QuranEnc.com। অনুবাদ ও টীকা অপরিবর্তিতভাবে দেওয়া হয়েছে। QuranEnc-এর শর্ত: বিষয়বস্তুতে কোনো পরিবর্তন নয়; প্রকাশক ও উৎস উল্লেখ; সংস্করণ নম্বর উল্লেখ; সর্বশেষ সংস্করণে হালনাগাদ; অনুপযুক্ত বিজ্ঞাপন নয়।"],
+    ["ইংরেজি অনুবাদ (আজকের আয়াত, আয়াতুল কুরসি)", "রুওয়াদ ট্রান্সলেশন সেন্টার (রাবওয়াহ দাওয়াহ অ্যাসোসিয়েশন, ইসলামিক কনটেন্ট সার্ভিস অ্যাসোসিয়েশন ইন ল্যাঙ্গুয়েজেস ও IslamHouse.com-এর সহযোগিতায়), ইংরেজি অনুবাদ, সংস্করণ ১.০.২০, প্রকাশক QuranEnc.com। সহজ আধুনিক ইংরেজি; আজকের আয়াত ও আয়াতুল কুরসিতে ব্যবহৃত, পাঠ ও অনুবাদকের টীকা QuranEnc-এর শর্ত অনুযায়ী অপরিবর্তিত। কুরআন পাঠকে পিকথল ব্যবহৃত হয়।"],
+    ["কুরআন অধ্যয়ন ও কুরআনের কাহিনি", "এআই সহকারীর সাহায্যে এই অ্যাপের জন্য লেখা খসড়া টীকা ও পুনর্কথন, যে আয়াত থেকে এসেছে তার সঙ্গে যুক্ত; মাক্কি/মাদানি শ্রেণিবিন্যাস Tanzil Quran Metadata 1.0 (CC BY 3.0) থেকে; কাহিনির হাদিস সহীহ বুখারী ও সহীহ মুসলিম থেকে, sunnah.com-এ যাচাই করা। এখনো কোনো যোগ্য আলেম পর্যালোচনা করেননি।"],
     ["ইংরেজি ব্যাখ্যা (আজকের আয়াত)", "আল-মুখতাসার ফি তাফসিরিল কুরআনিল কারিম, তাফসির সেন্টার ফর কুরআনিক স্টাডিজ, ইংরেজি সংস্করণ, প্রকাশক QuranEnc.com। এই সংস্করণের কোনো সংস্করণ নম্বর QuranEnc দেয়নি; আজকের আয়াতের ২৬৭টি আয়াতের ব্যাখ্যা ১৮ অক্টোবর ২০২৬ তারিখে সংগ্রহ করে অপরিবর্তিতভাবে দেখানো হয় (শুরুর আয়াত নম্বর লুকানো)। এটি প্রকাশিত তাফসির—এআই-লিখিত নয়, কুরআনের অনুবাদও নয়। সংবেদনশীল বিষয়ের কয়েকটি ব্যাখ্যার সঙ্গে এই অ্যাপের লেখা ছোট সম্পাদকীয় টীকা আছে। ইংরেজি ভাষা বেছে নিলে দেখা যায়। এই অ্যাপের জন্য কোনো যোগ্য আলেম স্বতন্ত্রভাবে পর্যালোচনা করেননি। একই QuranEnc শর্ত প্রযোজ্য।"],
     ["বাংলা সংক্ষিপ্ত তাফসির", "আল-মুখতাসার ফি তাফসিরিল কুরআনিল কারিম, তাফসির সেন্টার ফর কুরআনিক স্টাডিজ, বাংলা সংস্করণ ১.০.০ (১৫ অক্টোবর ২০২০), প্রকাশক QuranEnc.com। এটি ব্যাখ্যা, কুরআনের অনুবাদ নয়; প্রকাশিত রূপেই দেওয়া হয়েছে। পুরোনো বাংলা ফন্ট-এনকোডিংয়ের কিছু অক্ষর শুধু দেখানোর সময় ঠিক করা হয়। একই শর্ত প্রযোজ্য।"],
     ["ইংরেজি অনুবাদ", "মারমাডিউক পিকথল, The Meaning of the Glorious Koran, ১৯৩০ সালের প্রথম সংস্করণ, পাবলিক ডোমেইন। ডিজিটাল ভিত্তি-পাঠ Tanzil (tanzil.net) থেকে, fawazahmed0/quran-api-এর মাধ্যমে; ৩৯৩টি আয়াত প্রথম সংস্করণের তিনটি কপির সঙ্গে মিলিয়ে ১৯৩০ সালের শব্দে ফেরানো হয়েছে (data/quran/en-corrections.json, docs/translation-audit.md)। আধুনিক বানান ও ডিজিটাল পাঠের যতিচিহ্ন রাখা হয়েছে।"],
@@ -1240,7 +1504,6 @@ function vAbout() {
     ["হাদীস", "৪০টি হাদীস, সবগুলো সহীহ বুখারী বা সহীহ মুসলিম থেকে। আরবি পাঠ, ইংরেজি ও বাংলা অনুবাদ, মান ও সূত্রনির্দেশ HadeethEnc.com (Encyclopedia of Translated Prophetic Hadiths) থেকে অপরিবর্তিতভাবে নেওয়া; প্রতিটি সূত্র sunnah.com-এ মিলিয়ে দেখা হয়েছে। HadeethEnc-এর শর্ত: বিষয়বস্তুতে কোনো পরিবর্তন নয়; প্রকাশক ও উৎস উল্লেখ; সর্বশেষ সংস্করণে হালনাগাদ; অনুপযুক্ত বিজ্ঞাপন নয়। বিভাগগুলো এই অ্যাপের বাছাই।"],
     ["ইমাম নববীর চল্লিশ হাদীস", "ইমাম নববীর ৪২টি হাদীস, তাঁর নিজের ক্রমানুসারে, সাধারণ সংগ্রহ থেকে আলাদা। আরবি পাঠ, অনুবাদ, তাখরীজ ও মান HadeethEnc.com থেকে অপরিবর্তিত (১৮ অক্টোবর ২০২৬ সংগৃহীত); নম্বর ও আরবি পাঠ sunnah.com/nawawi40-এর সাথে মিলিয়ে দেখা হয়েছে। হাসান বা শুধু ইমাম নববীর দেওয়া মানের ৯টি হাদীস পর্যালোচনার জন্য চিহ্নিত। কোনো যোগ্য আলেম পর্যালোচনা করেননি।"],
     ["নিষিদ্ধ সময়ের সতর্কতা", "সহীহ মুসলিম ৮৩১, সহীহ বুখারী ৫৮৬ এবং শাইখ ইবনে বাযের ফতোয়া ১৮৪৯৫ (binbaz.org.sa) অনুযায়ী; সূর্যোদয়, মধ্যাহ্ন ও সূর্যাস্তের সময় এই অ্যাপ আপনার অবস্থান থেকে হিসাব করে। মিনিটের সীমাগুলো আনুমানিক।"],
-    ["যাকাত", "শিক্ষামূলক অনুমান, ফতোয়া নয়। সূত্র: সহীহ বুখারী ৮ এবং Islamic Relief Australia-র যাকাত নির্দেশিকা (দাতব্য সংস্থার উপকরণ, হাদীস নয়)। কোনো দাম অ্যাপে আগে থেকে দেওয়া নেই।"],
     ["আজকের আয়াত", "১৮০ দিনের একটি নির্দিষ্ট তালিকা (১ জানুয়ারি ২০২৬ থেকে গণনা), প্রতিটি আয়াত আগের আয়াত ও আল-মুখতাসার তাফসিরের সঙ্গে মিলিয়ে বাছাই করা; প্রয়োজনে প্রেক্ষাপট টীকা দেওয়া আছে। কোনো যোগ্য আলেম এখনো পর্যালোচনা করেননি।"],
     ["নামাজ শিক্ষা", "sunnah.com-এ যাচাই করা হাদিস এবং হানাফি ও শাফিই ফতোয়া উত্তর (IslamQA.org), ইসলামওয়েব ও ইসলামকিউএ থেকে সংক্ষেপিত। এটি ফতোয়া নয়, এবং এখনো কোনো যোগ্য আলেম স্বতন্ত্রভাবে পর্যালোচনা করেননি।"],
     ["লোগো", "মিহরাব-আকৃতির খোলা দরজায় উদীয়মান সূর্য—এই অ্যাপের জন্য আঁকা মৌলিক ভেক্টর ছবি (brand/ ফোল্ডার)।"],
@@ -1249,13 +1512,14 @@ function vAbout() {
     ["Arabic text", "Uthmani script from the Noble Qur'an Encyclopedia (quranenc.com), via the quran-json package (CC BY-SA 4.0)."],
     ["Bangla translation", "Dr. Abu Bakr Muhammad Zakaria, version 1.1.1 (22 May 2021), published by QuranEnc.com. Translation and footnotes are included unchanged. QuranEnc's terms: no change to the content; credit the publisher and source; state the version; update to the latest version; no inappropriate advertising."],
     ["English translation", "Marmaduke Pickthall, The Meaning of the Glorious Koran, 1930 first edition, public domain. Digital base text from Tanzil (tanzil.net) via fawazahmed0/quran-api; 393 verses are restored to the 1930 wording, checked against three copies of the first edition (data/quran/en-corrections.json, docs/translation-audit.md). Modern spellings and the digital text's punctuation are kept. Older words can be explained with Settings → Explain older English words; the explanations are not part of the translation."],
+    ["English translation (Verse for today, Ayat al-Kursi)", "Rowwad Translation Center (with the Rabwah Dawah Association, the Islamic Content Service Association in Languages and IslamHouse.com), English Translation, version 1.0.20, published by QuranEnc.com (quranenc.com/en/browse/english_rwwad). Plain modern English, used for the Verse for today and Ayat al-Kursi; text and translators' notes shown unchanged under QuranEnc's terms. The Qur'an reader uses Pickthall."],
+    ["Qur'an study and Qur'an Stories", "Draft notes and retellings written for this app with an AI assistant, tied to the verses they come from; Meccan/Medinan from Tanzil Quran Metadata 1.0 (CC BY 3.0); story narrations from Sahih al-Bukhari and Sahih Muslim, checked on sunnah.com. Not yet reviewed by a qualified scholar."],
     ["English explanation (Verse for today)", "Al-Mukhtasar in Interpreting the Noble Quran, Tafsir Center for Quranic Studies, English edition, published by QuranEnc.com. QuranEnc lists no version number for this edition; the texts for the 267 verses of the Verse for today were retrieved on 18 October 2026 and are shown unchanged (the leading verse number is hidden). It is published commentary, not AI-generated and not a translation of the Qur'an. A few explanations that touch on sensitive matters carry a short editorial note written for this app. Not independently reviewed by a qualified scholar for this app. The same QuranEnc terms apply."],
     ["Bangla short explanation", "Al-Mukhtasar in Interpreting the Noble Quran, Tafsir Center for Quranic Studies, Bengali version 1.0.0 (15 October 2020), published by QuranEnc.com. It is an explanation, not a translation of the Qur'an, and is shown as published; some characters left over from an old Bangla font encoding are repaired on display only. The same QuranEnc terms apply."],
     ["99 Names", "From Tafsir al-Sa'di, Tafsir Ibn Kathir (abridged English), Sahih al-Bukhari, Sahih Muslim, at-Tirmidhi, Abu Dawud, Ibn Majah and one journal article. Each explanation ends with the sources it used and its review status. None has yet been independently reviewed by a qualified scholar."],
     ["Hadith", "40 narrations, all from Sahih al-Bukhari or Sahih Muslim. Arabic text, English and Bangla translations, grading and attribution are reproduced unchanged from HadeethEnc.com (Encyclopedia of Translated Prophetic Hadiths); every reference was checked on sunnah.com. HadeethEnc's terms: no change to the content; credit the publisher and source; update to the latest version; no inappropriate advertising. The categories were chosen for this app."],
     ["An-Nawawi's Forty Hadith", "All 42 narrations of Imam an-Nawawi's collection, in his own numbering and kept apart from the general library. Arabic text, translations, takhrij and grades are reproduced unchanged from HadeethEnc.com (retrieved 18 October 2026); numbers and Arabic were checked against sunnah.com/nawawi40. Nine narrations with a Hasan grade or an-Nawawi's own grade are flagged for review. Not reviewed by a qualified scholar."],
     ["Prohibited-time notes", "Based on Sahih Muslim 831, Sahih al-Bukhari 586 and Shaykh Ibn Baz's fatwa 18495 (binbaz.org.sa); sunrise, solar noon and sunset are calculated by the app for your location. The minute margins are approximations."],
-    ["Zakat", "An educational estimate, not a ruling. Sources: Sahih al-Bukhari 8, and Islamic Relief Australia's zakat guide (charity guidance, not hadith). No prices are built in."],
     ["Verse for today", "A fixed 180-day schedule (counted from 1 January 2026). Each passage was read with the verses before it and the Al-Mukhtasar tafsir, and a context note is shown where the passage needs one. Not yet reviewed by a qualified scholar."],
     ["Prayer guide", "Summarised from hadith checked on sunnah.com and from Hanafi and Shafi'i fatwa answers (IslamQA.org), IslamWeb and IslamQA.info. It is not a fatwa and has not yet been independently reviewed by a qualified scholar."],
     ["Logo", "A mihrab-shaped open doorway framing a rising sun: original vector artwork drawn for this app (brand/ folder)."],
@@ -1266,6 +1530,17 @@ function vAbout() {
   <section class="card pad"><h3 class="sec-title">${t("qcredit")}</h3><dl class="credits">${E.map(([k, v]) => `<div><dt>${esc(sp(k))}</dt><dd>${esc(sp(v))}</dd></div>`).join("")}</dl>
   <p class="note" style="margin-top:8px"><a href="data/quran/editions.json" target="_blank" rel="noopener">editions.json</a> · <a href="https://quranenc.com/en/browse/bengali_zakaria" target="_blank" rel="noopener noreferrer">QuranEnc.com</a> · <a href="https://quranenc.com/en/browse/bengali_mokhtasar" target="_blank" rel="noopener noreferrer">Al-Mukhtasar</a> · <a href="https://tanzil.net/trans/" target="_blank" rel="noopener noreferrer">Tanzil</a></p></section>
   <p class="note">Islam Everyday · ${t("version")} ${num("1.0.0")}</p>`;
+}
+/* Terms of Use and Privacy Policy (assets/legal.js). Plain sections; the contact link is the public GitHub Issues page. */
+const LG = window.IE_LEGAL || null;
+/* Footer on every page: copyright and the legal links, so the policies are always one tap away. */
+const siteFoot = () => `<footer class="site-foot"><span>© ${num(2026)} ${bn() ? "সামিউর রহমান" : "Samiur Rahman"}</span><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="privacy">${t("privacy")}</button><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="terms">${t("terms")}</button><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="about">${t("about")}</button></footer>`;
+function vLegal(kind) {
+  const l = st.lang === "bn" ? "bn" : "en", secs = LG ? (kind === "terms" ? LG.TERMS : LG.PRIVACY)[l] : [];
+  return `<div class="page-head">${back()}<h2>${t(kind)}</h2></div>
+  <section class="card pad legal"><p class="note">${esc(t("lg_updated").replace("{d}", LG ? LG.UPDATED[l] : ""))} · ${t("lg_by")}</p>
+  ${secs.map(([h, ps]) => `<h3 class="sec-title">${esc(h)}</h3>${ps.map(p => `<p>${esc(p)}</p>`).join("")}`).join("")}
+  <p><a href="${LG ? LG.CONTACT : "#"}" target="_blank" rel="noopener noreferrer">${t("lg_contact")}</a><br><small class="note">${t("lg_public")}</small></p></section>`;
 }
 /* Offline-saved flag: versioned with the service worker's DATA cache (sw.js), so a data update is never reported as saved.
    An older flag means the user had saved an earlier copy that the update replaced. */
@@ -1318,8 +1593,8 @@ function locate() {
 
 /* ---------------- desktop ---------------- */
 let sideNext = null;
-const SIDE = [["today", "today", "today"], ["quran", "quran", "quran"], ["duas", "duas", "duas"], null,
-  ["guide", "guide", "more/guide"], ["hadith", "hadith", "more/hadith"], ["calendar", "calendar", "more/calendar"], ["names99", "names", "more/names"], ["zakat", "zakat", "more/zakat"], null,
+const SIDE = [["today", "today", "today"], ["study_nav", "quran", "quran"], ["stories_nav", "stories", "quran/stories"], ["duas", "duas", "duas"], null,
+  ["guide", "guide", "more/guide"], ["hadith", "hadith", "more/hadith"], ["calendar", "calendar", "more/calendar"], ["names99", "names", "more/names"], null,
   ["settings", "gear", "more/settings"], ["about", "info", "more/about"]];
 function side() {
   const el = $("side"); if (!el) return;
@@ -1327,8 +1602,9 @@ function side() {
   if (!desk()) { el.innerHTML = ""; sideNext = null; return; }
   const s = snapshot(); sideNext = Object.assign({ day: s.p.day }, s.next);
   el.innerHTML = `<button type="button" class="brand" data-act="home" aria-label="${esc(t("brand"))}">${LOGO}<b>${t("brand")}</b></button>
-  <nav class="side-nav" aria-label="${esc(t("sections"))}">${SIDE.map(x => { if (!x) return "<hr>"; const [tab, sub] = x[2].split("/"); const on = R.tab === tab && (R.sub || null) === (sub || null); return `<button type="button" data-act="go" data-tab="${tab}"${sub ? ` data-sub="${sub}"` : ""}${on ? ' aria-current="page"' : ""}>${ic(x[1])}<span>${t(x[0])}</span></button>`; }).join("")}</nav>
-  <div class="side-next"><p class="eyebrow">${t("next")}</p><b>${t(s.next.k)}</b><span class="tnum" id="side-count">${clock((s.next.at - (s.next.tomorrow ? s.d1 : s.d0).base) / 36e5)} · ${s.next.tomorrow ? t("tomorrow") : t("todayl")}</span><small class="note">${esc(cname(s.c))}</small></div>`;
+  <nav class="side-nav" aria-label="${esc(t("sections"))}">${SIDE.map(x => { if (!x) return "<hr>"; const [tab, sub] = x[2].split("/"); const on = R.tab === tab && (tab === "more" ? (R.sub || null) === (sub || null) : tab === "quran" ? (R.sub === "stories") === (sub === "stories") : true); return `<button type="button" data-act="go" data-tab="${tab}"${sub ? ` data-sub="${sub}"` : ""}${on ? ' aria-current="page"' : ""}>${ic(x[1])}<span>${t(x[0])}</span></button>`; }).join("")}</nav>
+  <div class="side-next"><p class="eyebrow">${t("next")}</p><b>${pName(s.next.k, isFriD(s.next.tomorrow ? s.d1 : s.d0))}</b><span class="tnum" id="side-count">${clock((s.next.at - (s.next.tomorrow ? s.d1 : s.d0).base) / 36e5)} · ${s.next.tomorrow ? t("tomorrow") : t("todayl")}</span><small class="note">${esc(cname(s.c))}</small></div>
+  <p class="side-legal"><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="privacy">${t("privacy")}</button> · <button type="button" class="linkish" data-act="go" data-tab="more" data-sub="terms">${t("terms")}</button></p>`;
 }
 function dateLine() {
   const s = snapshot();
@@ -1389,14 +1665,23 @@ document.addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b) { return; }
   const a = b.dataset.act, d = b.dataset;
   switch (a) {
-    case "tab": if (d.tab === R.tab && !R.sub && !R.surah) { window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); break; } go({ tab: d.tab }); break;
+    case "tab": if (d.tab === R.tab && !R.sub && !R.surah && !R.study) { window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); break; } go({ tab: d.tab }); break;
     case "go": go({ tab: d.tab, sub: d.sub || null }); break;
     case "home": go({ tab: "today" }); break;
-    case "back": if (depth > 0) { try { history.back(); break; } catch (x) {} } go({ tab: R.tab }, false); break;
+    case "back": if (depth > 0) { try { history.back(); break; } catch (x) {} } go(R.story ? { tab: "quran", sub: "stories" } : { tab: R.tab }, false); break;
     case "lang": switchLang(() => { st.lang = bn() ? "en" : "bn"; }); break;
     case "setlang": switchLang(() => { if (d.k === "bn") st.lang = "bn"; else { st.lang = "en"; st.loc = LOC.variant(d.k); } }); break;
     case "setmode": if (MODES.includes(d.k)) { st.mode = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
-    case "setpalette": if (PALETTES.includes(d.k)) { st.palette = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "setth": {
+      const lightG = d.g === "light", ok = lightG ? LIGHT_TH.includes(d.k) : DARK_TH.includes(d.k);
+      if (!ok) break;
+      if (lightG) st.lightTheme = d.k; else st.darkTheme = d.k;
+      // Picking from the other group switches the appearance so the choice is visible at once.
+      if (schemeNow() !== (lightG ? "light" : "dark")) st.mode = lightG ? "light" : "dark";
+      save(); const y = scrollY; render(false); scrollTo(0, y); break; }
+    case "setglass": if (GLASS.includes(d.k)) { st.glass = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "setmotion": if (MOTION.includes(d.k)) { st.motion = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "setscene": if (SCENES.includes(d.k)) { st.scene = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
     case "setasr": st.asr = +d.k; save(); render(false); break;
     case "hadj": st.hadj = Math.max(-2, Math.min(2, st.hadj + +d.d)); save(); render(false); break;
     case "gloss": st.gloss = !st.gloss; save(); b.setAttribute("aria-checked", st.gloss); if (R.tab === "quran" || R.tab === "today") { const y = scrollY; render(false); scrollTo(0, y); } break;
@@ -1408,19 +1693,13 @@ document.addEventListener("click", e => {
     case "loc": openLoc(); break;
     case "gps": locate(); break;
     case "city": { st.city = d.id; const c = city(); if (c.g === "bd") { st.method = "KAR"; st.asr = 2; } else if (c.g === "au") { st.method = "MWL"; st.asr = 1; } save(); closeSheet(); render(true); break; }
-    case "pray": {
-      if (!snap) break; const k = d.k, o = Object.assign({}, st.log[snap.key]); o[k] = !o[k]; st.log[snap.key] = o; pruneLog(snap); save();
-      justTicked = o[k] ? k : null; const rc = b.getBoundingClientRect(); const y = scrollY; render(false); scrollTo(0, y); justTicked = null;
-      if (o[k]) { buzz(15); if (PRAYERS.every(p => o[p])) { burst(rc.left + rc.width / 2, rc.top + rc.height / 2); toast(t("alldone")); buzz([30, 50, 30]); } }
-      break;
-    }
     case "trk": {
       if (!snap) break;
       const k = trackKey(snap);
       if (k !== trackKey(snapshot()) && !tSel) { render(false); break; }   // the day changed under an open page: redraw first
       const r = XT.togglePrayer(st.log, k, d.k); st.log = r.log; pruneLog(snap); save();
-      const y = scrollY; render(false); scrollTo(0, y);
-      if (r.done) { buzz(15); const o = st.log[k]; if (k === snap.key && PRAYERS.every(p => o[p])) { toast(t("alldone")); } else if (k !== snap.key) toast(t("t_saved").replace("{d}", longDay(k))); }
+      const rc = b.getBoundingClientRect(), y = scrollY; justTicked = r.done ? d.k : null; render(false); scrollTo(0, y); justTicked = null;
+      if (r.done) { buzz(15); const o = st.log[k]; if (k === snap.key && PRAYERS.every(p => o[p])) { burst(rc.left + rc.width / 2, rc.top + rc.height / 2); toast(t("alldone")); buzz([30, 50, 30]); } else if (k !== snap.key) toast(t("t_saved").replace("{d}", longDay(k))); }
       break;
     }
     case "tday": { if (!snap) break; const cur = trackKey(snap); tSel = d.k === "today" ? null : XT.shift(cur, d.k === "prev" ? -1 : 1); if (tSel && XT.clamp(tSel, XT.shift(snap.key, -(KEEP_DAYS - 1)), snap.key) === snap.key) tSel = null; const y = scrollY; render(false); scrollTo(0, y); break; }
@@ -1432,14 +1711,19 @@ document.addEventListener("click", e => {
       const k = d.k, r = XT.toggle(st.xlog, snap.key, k);
       st.xlog = XT.prune(r.log, new Set(lastDays(snap, 120))); save();
       // Update the row in place so keyboard focus stays on the button; the effect runs only after the state is saved.
-      const li = b.closest("li"), c = li && li.querySelector(".xc");
-      b.setAttribute("aria-pressed", r.done); if (c) c.textContent = xCount(k, snap);
+      const li = b.closest("li"), c = li && li.querySelector(".xc"), xs = li && li.querySelector(".xs");
+      b.setAttribute("aria-pressed", r.done); if (c) c.textContent = xCount(k, snap); if (xs) xs.outerHTML = xStrip(k, snap);
       b.classList.remove("just"); if (li) li.classList.remove("just");
       if (r.done) { void b.offsetWidth; b.classList.add("just"); if (li) li.classList.add("just"); buzz(15); toast(t("x_done")); }
       else toast(t("x_undone"));
       break;
     }
-    case "surah": closeSheet(); if (desk() && R.tab === "quran") { openSurahDesk(+d.s, +d.a || 0); break; } go({ tab: "quran", surah: +d.s, ayah: +d.a || 0 }); break;
+    case "surah": closeSheet(); if (desk() && R.tab === "quran" && R.sub === "all") { openSurahDesk(+d.s, +d.a || 0); break; } go({ tab: "quran", sub: "all", surah: +d.s, ayah: +d.a || 0 }); break;
+    case "story": go({ tab: "quran", sub: "stories", story: d.k }); break;
+    case "sgrp": sgGroup = d.k; refreshStories(); break;
+    case "study": if (desk() && R.tab === "quran" && R.sub !== "all") { openStudyDesk(+d.s); break; } go({ tab: "quran", study: +d.s }); break;
+    case "stg": stGroup = d.k; stTheme = "all"; refreshStudy(); break;
+    case "stt": stTheme = d.k; refreshStudy(); break;
     case "qf": qFilter = d.k; document.querySelectorAll('[data-act="qf"]').forEach(x => x.setAttribute("aria-pressed", x.dataset.k === qFilter)); $("surah-list").innerHTML = listRows(); break;
     case "retry": { const i = R.surah || (votdPick && votdPick.s); if (i) { delete QERR["ar:" + i]; delete QERR[st.lang + ":" + i]; delete QERR["bnt:" + i]; } render(false); break; }
     case "markread": { const i = R.surah; const was = st.read.includes(i); st.read = was ? st.read.filter(x => x !== i) : st.read.concat(i); save(); if (!was) { const rc = b.getBoundingClientRect(); burst(rc.left + rc.width / 2, rc.top); buzz(20); } b.classList.toggle("soft", !was); b.textContent = !was ? "✓ " + t("readmark") : t("markread"); break; }
@@ -1510,6 +1794,8 @@ setInterval(() => {
 document.addEventListener("input", e => {
   const el = e.target;
   if (el.id === "q-search") { qQuery = el.value; $("surah-list").innerHTML = listRows(); }
+  if (el.id === "st-search") { stQuery = el.value; refreshStudy(); }
+  else if (el.id === "sg-search") { sgQuery = el.value; refreshStories(); }
   else if (el.id === "d-search") { dQuery = el.value; $("dua-list").innerHTML = duaList(); fitDuas(); }
   else if (el.id === "n-search") { nQuery = el.value; $("names-list").innerHTML = namesList(); }
   else if (el.id === "c-search") { $("city-list").innerHTML = locSheet(el.value); }

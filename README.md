@@ -4,13 +4,13 @@ Islam Everyday is a daily Muslim companion for phone and desktop, in English and
 
 - prayer times, sehri and iftar, a prayer tracker you can fill in for today or any of the last 120 days, and a separate **Extra worship** record (Witr, voluntary prayers, voluntary fasts)
 - a **Prayer guide** to the rak'ahs of the five prayers, by school
-- the full Qur'an in Arabic, with English and Bangla translations, and a short Bangla explanation (Al-Mukhtasar) for every ayah
+- the full Qur'an in Arabic, with English and Bangla translations, and a short Bangla explanation (Al-Mukhtasar) for every ayah, opened from a curated **Qur'an study** library of 45 surahs
 - a **Verse for today** from a reviewed 180-day schedule in six themes
 - a **Hadith** library: 24 authentic narrations from Sahih al-Bukhari and Sahih Muslim, in 12 categories, in English and Bangla
-- duas
+- duas, led by a **Core remembrance** group (Ayat al-Kursi and the Shahada)
 - the Hijri calendar
 - the 99 Names of Allah, with the sources for each explanation
-- a zakat calculator
+- six colour themes (three for light, three for dark), adjustable glass and interaction motion, and three prayer scenes
 
 It has no ads, no accounts and no analytics. All content ships with the site: the Qur'an, its translations, the fonts and the icons. At runtime it only loads its own files. It installs to a phone's home screen as an offline-capable app (a PWA).
 
@@ -240,13 +240,28 @@ index     = ((dayNumber mod 180) + 180) mod 180                       (0 = sched
 - The method is stated under the month: Umm al-Qura via the browser's Intl calendar plus the adjustment. All dates are calculated, never sighting reports.
 - Layout (Phase 5.3): on wide screens the month sits on the left with a side column on the right holding the selected day (with the fasting plan and its note, unchanged) and a compact **Fasting planner and upcoming dates** panel: your next planned fasts (shortcuts to those days) and the next four Islamic dates. Both columns start and end level; the month's cells grow to fill the height. White Days and its four evidence cards span the full width below, in two aligned rows. On phones the order is month, selected day, planner, White Days. The old separate "Upcoming" card and its long note were folded into the planner; the note's content is already in the method line and the day details. No saved data changed.
 
-### Zakat calculator (More → Zakat, Phase 5.3)
+### Face 7.1 (October 2026)
 
-- The page opens with the disclaimer, shown verbatim in English and translated into Bangla: an educational estimate, not a ruling or financial advice.
-- Inputs in three groups: **Nisab and prices** (currency, silver or gold basis, nisab weights, today's price per gram), **What you own** (cash and bank, gold, silver, investments, business stock, money owed to you, each with a hint), **What you owe now** (debts due now). Nothing is built in for prices: the app never shows a nisab until you enter one.
-- The formula is shown: zakat = 2.5% × (assets − debts due now), when that is at least the nisab (weight × price). A breakdown lists each line once; net wealth below zero is shown as zero with a note. Blank fields count as zero; negative, non-numeric or absurdly large entries are not counted and are named in a warning.
-- Nisab weights: 87.48 g gold / 612.36 g silver (7.5 and 52.5 tola, the app's earlier values and the default) or 85 g / 595 g (the weights Islamic Relief Australia uses). Silver is the default basis.
-- **Learn** sections in English and Bangla: what zakat is, nisab, the lunar year (hawl), why this is an estimate, gold or silver, and where scholars differ. References: Sahih al-Bukhari 8 (hadith) and Islamic Relief Australia's zakat guide (charity guidance), labelled apart.
+- **Trackers:** Prayer tracker and Extra worship are separate cards. The prayer-times rows are information only. The Prayer tracker shows a 7-day × 5-prayer history grid above the one set of prayer controls; Extra worship shows a small strip per practice (7 days, fasting 30 days) from that practice's own records. Voluntary records never affect the fard count or streak.
+- **Qur'an study** pages have an overview, how the surah unfolds, key ideas and terms with their source, takeaways and an everyday example (`assets/study-notes.js`; source files in `tools/study-notes/`, rebuild with `python3 tools/study-notes/build.py`).
+- **Qur'an Stories** (`assets/stories.js`; sources in `tools/stories/`, rebuild with `python3 tools/stories/build.py`): 28 source-labelled stories from the Qur'an and from Sahih al-Bukhari / Sahih Muslim. Add a story by adding an entry to a `tools/stories/stories_*.py` file and rebuilding.
+- **Verse for today (English)** uses the Rowwad Translation Center translation (QuranEnc.com, v1.0.20) — plain modern English — exactly as published with its notes (`assets/en-rwwad.js`; rebuild with `python3 tools/import-rwwad-subset.py <english_rwwad.sqlite>` when QuranEnc publishes a new version). The reader keeps Pickthall, with the "Word guide" for older words.
+- **Quotation convention** in study notes and stories: double quotation marks = exact words of a named published translation; single quotation marks = the app's own wording.
+
+### Face 7 facelift (October 2026)
+
+- **Worship tracker:** one card on Today. The five fard prayers are ticked only there (the prayer-times list shows a read-only mark and links to the tracker); Witr, voluntary prayers and voluntary fasts are a separate group in the same card and are never counted as fard. Saved data (`log`, `xlog`) is unchanged.
+- **Qur'an study:** the Qur'an tab opens a curated library: the 37 surahs of Juz 'Amma plus Al-Fatihah, Al-Kahf, As-Sajdah, Ya-Sin, Ar-Rahman, Al-Waqi'ah, Al-Mulk and Al-Insan (45 in all, `assets/study.js`), with search, collections and learning-theme filters. Each surah has an overview, learning themes and a "What this surah invites us to reflect on" note — draft editorial notes, labelled as such, not Qur'an text or tafsir. Meccan/Medinan and the English meaning of the name come from Tanzil Quran Metadata 1.0 (CC BY 3.0). "All 114 surahs" (`#quran/all`) opens the full reader; reading progress, bookmarks and the last position are unchanged.
+- **Core remembrance:** Ayat al-Kursi (Qur'an 2:255, labelled "Qur'an verse · not a hadith dua", text from the app's Qur'an data, with Sahih Muslim 810) and the Shahada (labelled "Declaration of faith", wording as in Sahih Muslim 403a, with 8a). The two are appended to the dua list, so existing favourites keep their indexes.
+- **Zakat** is removed from the interface (menu, sidebar, route, About). `assets/zakat.js` and the saved `zk` values are kept, so nothing is lost; an old `#more/zakat` link opens More.
+- **Themes:** Light — Classic Teal, Emerald Ivory, Sandstone Teal; Dark — Midnight Jade, Indigo Moon, Plum Dusk. Settings shows them as preview cards in two groups ("Recommended for light/dark appearance"). Each appearance keeps its own theme (`lightTheme`, `darkTheme`); System still follows the device. Choosing a card from the other group switches the appearance to match. Older settings migrate (Phase 5.3 Burgundy → Plum Dusk; Emerald/Sandstone → the same light theme; Indigo → Indigo Moon). No theme is shown in the other appearance, so there is no low-contrast combination.
+- **Glass:** Subtle / Balanced (default, the earlier look) / High / Solid, applied only to the header, tab bar and floating controls. Reduced transparency, more contrast and browsers without `backdrop-filter` get solid surfaces.
+- **Interaction motion:** Off / Subtle (default: a 1px lift and a light press) / Playful (the Phase 5.3 spring). Reduced motion always turns movement off; state is always shown by borders, fills and marks, never by motion or hover alone.
+- **Prayer scene:** Scenic landscape (default, unchanged), Open sky, or Mosque silhouette, as preview cards. All three use the time-of-day colours and the same text scrim.
+- **Hijri calendar:** today is a filled tile, the selected day has a 2px frame on a raised tile, keyboard focus is an outer ink outline, hover is a dashed frame, events are gold diamonds and White Days a gold-edged tile; today stays legible when selected.
+- **Header:** the sticky top bar is a rounded, translucent strip (20px, like the cards) with 14px-radius controls. The Prayer guide has clearer cards, badges and table rows in dark themes.
+- **Friday:** the Dhuhr row and hero read "Jumu'ah" on Fridays, with a note that the calculated Dhuhr time is not necessarily the khutbah or congregation time. The calculation, the saved key (`dhuhr`) and other days are unchanged.
+- **Thursday/Friday verse:** `assets/votd-day.js` can feature a passage chosen for the day, but only once a qualified reviewer has marked it reviewed; otherwise the normal Verse for today is shown. It holds one draft (62:9–10 for Friday), so nothing changes yet.
 
 ### Today card and day chart (Phase 5.2, 5.3)
 
@@ -261,7 +276,7 @@ index     = ((dayNumber mod 180) + 180) mod 180                       (0 = sched
 ### Language and themes (Phase 5.2, 5.3)
 
 - Settings → Language: **English (India)** (default), **English (US)** and **বাংলা**. The English variants share the same content; they change date and number formats (Intl `en-IN` or `en-US`), "am/pm" or "AM/PM", and US spelling of interface strings. Religious texts are never respelled. Switching keeps the page, filters, the selected date and the card or verse being read. The header button still switches between English and Bangla, keeping the chosen English variant.
-- Phase 5.3: **Appearance** (System, Light, Dark) and **Theme** (colour palette) are separate settings. Palettes: Classic (the app's own), Emerald & Ivory, **Sandstone & Deep Teal**, **Burgundy & Warm Parchment**, and Midnight Indigo & Gold; each has a light and a dark set built from the same tokens. System follows the device and changes live when the device switches. `assets/theme-boot.js` runs in `<head>` before the stylesheet, so the saved choice is applied before the first paint (no flash) on every page. A Phase 5.2 setting is migrated (Emerald → Emerald palette in Light, Midnight Indigo → Indigo palette in Dark). All 10 sets are contrast-checked: body text at least 7:1, muted text and accents at least 4.5:1, focus ring at least 3:1.
+- Phase 5.3: **Appearance** (System, Light, Dark) and **Theme** (colour palette) are separate settings. Palettes: Classic (the app's own), Emerald & Ivory, **Sandstone & Deep Teal**, **Burgundy & Warm Parchment**, and Midnight Indigo & Gold; each has a light and a dark set built from the same tokens. System follows the device and changes live when the device switches. `assets/theme-boot.js` runs in `<head>` before the stylesheet, so the saved choice is applied before the first paint (no flash) on every page. A Phase 5.2 setting is migrated (Emerald → Emerald palette in Light, Midnight Indigo → Indigo palette in Dark). All 10 sets are contrast-checked: body text at least 7:1, muted text and accents at least 4.5:1, focus ring at least 3:1. *(Face 7 replaced these palettes with three themes per appearance; see "Face 7 facelift" above. The six sets are checked the same way.)*
 - A restrained glass effect (translucent blur) is used only for the header, its buttons, the tab bar, segmented controls, the tracker date control, the sidebar's next-prayer box and the calendar popover. Cards and all reading surfaces stay opaque. Without `backdrop-filter` support, or with "reduce transparency" or "more contrast", these fall back to solid surfaces.
 
 ## Interaction and motion
@@ -272,6 +287,7 @@ index     = ((dayNumber mod 180) + 180) mod 180                       (0 = sched
 - Hover effects only apply under `(hover: hover) and (pointer: fine)`, so touch screens never keep a stuck hover state.
 - With `prefers-reduced-motion: reduce`, transforms and transitions are removed.
 - Focus outlines (gold) appear on every control.
+- Face 7: these movements now follow Settings → Interaction motion (Off, Subtle by default, Playful = the Phase 5.3 spring below).
 - Phase 5.3: buttons, chips, segmented controls, the theme picker and the hadith number list get a small spring lift on hover (pointer devices) and on keyboard focus, and scale down briefly when pressed, which is the feedback on touch screens. Cards use the same spring. Only controls and card shells move: Qur'an, hadith and dua texts are never animated. All of it is off with reduced motion.
 
 ## Logo and brand assets
@@ -384,9 +400,15 @@ assets/bnfix.js            Display-time repair of legacy Bangla font characters 
 assets/xtrack.js           Extra worship record, plus per-date fard toggling and calendar-date arithmetic for the tracker
 assets/hadith.js           Hadith general library: 40 narrations, 12 categories, references, grades, source terms
 assets/nawawi.js           An-Nawawi's Forty Hadith (42): texts, takhrij, grades, review flags, sunnah.com links
-assets/zakat.js            Zakat calculation (formula, nisab weights, validation)
+assets/zakat.js            Zakat calculation (kept, not shown since Face 7)
+assets/study.js            Qur'an study library: 45 surahs, collections, themes, draft study notes, classification source
+assets/votd-day.js         Thursday/Friday verse entries (shown only when reviewed)
+assets/en-rwwad.js         Rowwad English for the Verse for today and Ayat al-Kursi (generated)
+assets/study-notes.js      Qur'an study notes for the 45 surahs (generated from tools/study-notes/)
+assets/stories.js          Qur'an Stories catalogue (generated from tools/stories/)
+assets/legal.js            Terms of Use and Privacy Policy (English and Bangla)
 assets/dayviz.js           Day-chart label layout
-assets/theme-boot.js       Applies appearance mode and palette before first paint
+assets/theme-boot.js       Applies appearance, theme, glass and motion before first paint
 assets/glossary.js         Word help for older English words (shown outside the translation)
 data/quran/                Per-surah Arabic, English, Bangla and Bangla short tafsir (bnt), editions.json, coverage.json, en-corrections.json
 docs/translation-audit.md  English translation audit: edition decision, evidence, corrections, review items
@@ -429,7 +451,9 @@ Prohibited times (Phase 5.3) use the same solar formulas: sunrise and sunset at 
 - **English translation:** Pickthall's 1930 English is archaic (word help explains the older words). The text follows the 1930 first edition; in 13 verses that edition leaves an element of the Arabic untranslated, and 11 more readings are interpretive or differ in person or number from the Arabic. These 24 verses, and two 1930 readings held back (2:57, 82:9), are listed for a qualified reviewer in `docs/scholar-review.md`. The comparison used OCR text of three scans, not a human proofread of page images; punctuation was not compared.
 - **Hadith:** 40 general narrations and an-Nawawi's 42, checked against sunnah.com and HadeethEnc (re-checked 17 October 2026: texts identical, all links resolve) but not reviewed by a scholar. No HadeethEnc version number is available. Translation notes have not been sent to HadeethEnc (including the "our brothers" slip in an-Nawawi no. 35). The nine flagged an-Nawawi grades have not been verified independently.
 - **Prohibited times:** the minute margins (15/10/15) are approximations chosen for this app; schools and scholars differ on the durations and the exceptions. At high latitudes no warning is shown.
-- **Zakat:** an educational estimate. It does not handle mixed-basis portfolios, separate hawl dates per asset, agricultural produce, livestock or retirement funds; the user enters metal prices.
+- **Zakat:** removed from the interface in Face 7; the calculation file and saved values are kept unused.
+- **Qur'an Stories** retellings, "why this matters" notes and modern examples, and the expanded **Qur'an study** notes, are drafts written for this app with an AI assistant and are not yet reviewed by a qualified scholar.
+- **Qur'an study notes, Ayat al-Kursi and Shahada transliterations, the app's Shahada translation and the Friday verse draft** are drafts written for this app (with an AI assistant) and have not been reviewed by a qualified scholar. The app labels them so.
 - **Verse for today:** the selection, themes and context notes are editorial and have not been reviewed by a scholar. The English explanation is published commentary (Al-Mukhtasar) reproduced unchanged, not reviewed by a scholar for this app; QuranEnc gives no version number for its English edition. A few publisher typing slips are shown as published (listed in `docs/scholar-review.md`). Only the 267 scheduled verses are bundled, so the Qur'an reader has no English explanation.
 - **Day chart and high latitudes:** above about 48° in summer, or in polar day and night, the standard formulas give unreliable Fajr/Isha times; the chart is then hidden with a note, but the Today card and list still show the formula times (for example Fajr about 1:04 am and Isha about 1:02 am in London on 21 June). On those days the countdown and the prohibited-time notes are also switched off, even though sunrise, noon and sunset are still valid. A high-latitude rule (for example one-seventh of the night or the nearest latitude) is a method decision for the owner and a scholar.
 - **English (India) dates** follow the Unicode CLDR data in the browser (for example "Sunday 18 October, 2026"), which can differ slightly between browsers.
@@ -443,3 +467,5 @@ Prohibited times (Phase 5.3) use the same solar formulas: sunrise and sunset at 
 ## Privacy
 
 Your prayer log, bookmarks, school choice and settings stay in this browser's local storage on this device. There are no accounts and no analytics, and nothing is sent anywhere. Source links open external pages only when you click them.
+
+The in-app **Privacy Policy** (`#more/privacy`) and **Terms of Use** (`#more/terms`), in English and Bangla, live in `assets/legal.js` and are linked from the footer on every page, the desktop sidebar and the More menu. They name the operator (Samiur Rahman, an individual in New South Wales, Australia), use the public GitHub Issues page as the contact, and describe GitHub Pages hosting logs, the Australian Privacy Principles, Australian Consumer Law and NSW governing law. **If the app ever adds accounts, analytics, a server, advertising or any other data collection, update `assets/legal.js` (and its date) before releasing that change.** The texts were drafted with an AI assistant and are not legal advice; have them reviewed by a lawyer if you can.

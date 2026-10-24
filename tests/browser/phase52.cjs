@@ -89,7 +89,7 @@ const toMin = s => { const m = s.match(/(\d+):(\d+)\s*(am|pm|AM|PM)/); let h = +
   await ctx.close();
 
   // Qur'an reader keeps the verse in view across a language switch (the other translation loads first).
-  ({ p, ctx } = await open(b, { state: { lang: "en" }, hash: "#quran" }));
+  ({ p, ctx } = await open(b, { state: { lang: "en" }, hash: "#quran/all" })); /* Face 7: #quran opens the study library; the full surah list is #quran/all */
   await p.click('[data-act="surah"][data-s="2"]'); await p.waitForSelector("#a-40"); await p.waitForTimeout(300);
   await p.evaluate(() => { const el = document.getElementById("a-40"); scrollTo(0, el.getBoundingClientRect().top + scrollY - 150); }); await p.waitForTimeout(300);
   await p.click('.top [data-act="lang"]'); await p.waitForSelector('#a-40 [lang="bn"], #a-40 .tr', { timeout: 8000 }).catch(() => {}); await p.waitForTimeout(800);
@@ -134,15 +134,16 @@ const toMin = s => { const m = s.match(/(\d+):(\d+)\s*(am|pm|AM|PM)/); let h = +
 
   /* 5. Themes: persistence across reload and pages, all pages render.
      Phase 5.3: the Phase 5.2 themes are now palettes (data-palette) with a separate appearance mode (data-theme light|dark);
-     Emerald is checked in light mode and Midnight Indigo in dark mode, as they were shown before. */
+     Emerald is checked in light mode and Midnight Indigo in dark mode, as they were shown before.
+     Face 7 (intentional): themes are chosen per appearance (setth, saved as lightTheme/darkTheme); zakat left the UI. */
   ({ p, ctx } = await open(b, { state: { lang: "en" }, hash: "#more/settings" }));
   for (const [th, mode] of [["emerald", "light"], ["indigo", "dark"]]) {
     await p.click(`[data-act="setmode"][data-k="${mode}"]`); await p.waitForTimeout(100);
-    await p.click(`[data-act="setpalette"][data-k="${th}"]`); await p.waitForTimeout(150);
+    await p.click(`[data-act="setth"][data-k="${th}"]`); await p.waitForTimeout(150);
     await p.reload(); await p.waitForTimeout(800);
     const saved = JSON.parse(await p.evaluate(k => localStorage.getItem(k), KEY));
-    ok(`theme ${th} persists after reload`, await p.evaluate(() => document.documentElement.getAttribute("data-palette")) === th && await p.evaluate(() => document.documentElement.getAttribute("data-theme")) === mode && saved.palette === th && saved.mode === mode);
-    for (const hh of ["#today", "#quran", "#duas", "#more/hadith", "#more/calendar", "#more/names", "#more/guide", "#more/zakat", "#more/about"]) {
+    ok(`theme ${th} persists after reload`, await p.evaluate(() => document.documentElement.getAttribute("data-palette")) === th && await p.evaluate(() => document.documentElement.getAttribute("data-theme")) === mode && saved[mode === "light" ? "lightTheme" : "darkTheme"] === th && saved.mode === mode);
+    for (const hh of ["#today", "#quran", "#duas", "#more/hadith", "#more/calendar", "#more/names", "#more/guide", "#more/about"]) {
       await p.goto(base + hh); await p.waitForTimeout(500);
       const bg = await p.evaluate(() => getComputedStyle(document.body).backgroundColor);
       if (hh === "#today") ok(`theme ${th}: page background follows the theme`, th === "emerald" ? bg === "rgb(246, 241, 228)" : bg === "rgb(10, 13, 30)", bg);
@@ -153,7 +154,7 @@ const toMin = s => { const m = s.match(/(\d+):(\d+)\s*(am|pm|AM|PM)/); let h = +
     ok(`theme ${th}: reading cards stay opaque`, card === "none", card);
     await p.goto(base + "#more/settings"); await p.waitForTimeout(400);
   }
-  await p.click('[data-act="setmode"][data-k="system"]'); await p.click('[data-act="setpalette"][data-k="classic"]'); await ctx.close();
+  await p.click('[data-act="setmode"][data-k="system"]'); await p.click('[data-act="setth"][data-k="classic"]'); await ctx.close();
 
   /* 6. Calendar: popover, details, keyboard, touch, White Days, Hijri/Gregorian month change */
   ({ p, ctx } = await open(b, { time: "2026-10-18T10:00:00+11:00", state: { lang: "en" }, hash: "#more/calendar", desk: true }));

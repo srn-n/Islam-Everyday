@@ -62,7 +62,7 @@ async function foreignCaches(p) {
   await p.evaluate(async () => { const c = await caches.open("other-app-cache"); await c.put("/other/thing", new Response("keep me")); const d = await caches.open("my-islam-everyday-notes"); await d.put("/x", new Response("keep")); });
 }
 const foreignKept = async p => { const k = await keys(p); return k.includes("other-app-cache") && k.includes("my-islam-everyday-notes") && await p.evaluate(async () => (await (await caches.match("/other/thing")).text()) === "keep me"); };
-const openSurahOffline = async (p, s, a) => { await p.goto(BASE + "#quran"); await sleep(500); await p.click(`[data-act="surah"][data-s="${s}"] >> nth=0`); await sleep(1200); return p.evaluate(a => document.querySelector(`#a-${a} .tr`)?.textContent || "", a); };
+const openSurahOffline = async (p, s, a) => { await p.goto(BASE + "#quran/all"); await sleep(500); await p.click(`[data-act="surah"][data-s="${s}"] >> nth=0`); await sleep(1200); return p.evaluate(a => document.querySelector(`#a-${a} .tr`)?.textContent || "", a); };
 
 /* Update from an older release with its own cache names (v4, v5): the Qur'an data changed, so the user must save again. */
 async function updateFromOld(b, v, langs) {
@@ -107,9 +107,10 @@ async function updateFromOld(b, v, langs) {
   ok("fresh, offline: Hadith opens", await p.locator(".hadith").count() === 40);
   await p.click('[data-act="hcol"][data-k="nawawi"]'); await sleep(300);
   ok("fresh, offline: An-Nawawi's Forty opens", await p.locator(".hadith.nw").count() === 42);
-  await p.goto(BASE + "#more/zakat"); await sleep(400);
-  ok("fresh, offline: Zakat and theme boot work", await p.locator("#zk-result").count() === 1 && !!(await p.evaluate(() => document.documentElement.dataset.theme)));
-  await p.goto(BASE + "#quran"); await sleep(300); await p.click('[data-act="surah"][data-s="50"] >> nth=0'); await sleep(1500);
+  // Face 7 (intentional): zakat left the UI; the Qur'an study library (assets/study.js) is checked offline instead.
+  await p.goto(BASE + "#quran"); await sleep(400);
+  ok("fresh, offline: the study library and theme boot work", await p.locator("#study-list li").count() === 45 && !!(await p.evaluate(() => document.documentElement.dataset.theme)));
+  await p.goto(BASE + "#quran/all"); await sleep(300); await p.click('[data-act="surah"][data-s="50"] >> nth=0'); await sleep(1500);
   ok("fresh, offline: an unsaved surah shows a message, not a crash", await p.locator(".ayah").count() === 0 && /offline|connection|load/i.test(await p.textContent("#view")));
   await ctx.close();
 
@@ -168,7 +169,7 @@ async function updateFromOld(b, v, langs) {
   await p.goto(BASE + "#more/settings"); await controlled(p); await sleep(300); await p.click('[data-act="savequran"]');
   for (let i = 0; i < 200; i++) { if (await p.evaluate(KEY => localStorage.getItem(KEY + ".offline.v6") === "1", KEY)) break; await sleep(200); }
   await down();
-  await p.goto(BASE + "#quran"); await sleep(400); await p.click('[data-act="surah"][data-s="2"] >> nth=0'); await sleep(1200);
+  await p.goto(BASE + "#quran/all"); await sleep(400); await p.click('[data-act="surah"][data-s="2"] >> nth=0'); await sleep(1200);
   await p.click('[data-act="lang"]'); await sleep(1500);
   ok("returning, offline: the reader switches to Bangla from the saved copy", /[ঀ-৿]/.test(await p.evaluate(() => document.querySelector("#a-255 .tr")?.textContent || "")));
   await ctx.close();

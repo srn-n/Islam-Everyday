@@ -47,7 +47,8 @@ test("countdown: HH:MM:SS, rounds down, never negative, past 24 h", () => {
 
 test("countdown targets the next prayer's start, labelled as such, with a safe fallback", () => {
   const f = fn("cdLine");
-  assert.match(f, /t\("cd_until"\)\.replace\("\{p\}", t\(nx\.k\)\)/);
+  // Face 7 (intentional): the label goes through pName so Friday shows "Jumu'ah" for Dhuhr; the key is unchanged.
+  assert.match(f, /t\("cd_until"\)\.replace\("\{p\}", pName\(nx\.k, isFriD\(nx\.D\)\)\)/);
   assert.match(f, /id="count-next"/); assert.match(f, /cd_off/);
   assert.match(I18N.en.cd_until, /begins in/); assert.ok(I18N.bn.cd_until);
   assert.doesNotMatch(app, /t\("endsin"\)|t\("endsat"\)/, "no invented end time");
@@ -158,12 +159,17 @@ const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) 
 const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
 const block = sel => { const i = css.indexOf(sel + "{"); assert.ok(i >= 0, sel); const b = css.slice(i, css.indexOf("}", i)); return Object.fromEntries([...b.matchAll(/--([a-z0-9-]+):\s*(#[0-9A-Fa-f]{6})/g)].map(m => [m[1], m[2]])); };
 const SETS = { "classic-light": block(":root"), "classic-dark": block(':root[data-theme="dark"]') };
-for (const p of ["emerald", "sandstone", "burgundy", "indigo"]) { SETS[p + "-light"] = block(`:root[data-palette="${p}"]`); SETS[p + "-dark"] = block(`:root[data-palette="${p}"][data-theme="dark"]`); }
+// Face 7 (intentional): three light themes and three dark themes; no theme has a set for the other appearance.
+for (const p of ["emerald", "sandstone"]) SETS[p + "-light"] = block(`:root[data-palette="${p}"]`);
+for (const p of ["indigo", "plum"]) SETS[p + "-dark"] = block(`:root[data-palette="${p}"][data-theme="dark"]`);
 
-test("palettes: Sandstone & deep teal and Burgundy & parchment are added; Midnight Indigo & Gold kept", () => {
-  for (const k of ["pl_classic", "pl_emerald", "pl_sandstone", "pl_burgundy", "pl_indigo", "md_system", "md_light", "md_dark", "appearance"]) { assert.ok(I18N.en[k], k); assert.ok(I18N.bn[k], "bn " + k); }
-  assert.match(I18N.en.pl_sandstone, /Sandstone/i); assert.match(I18N.en.pl_burgundy, /Burgundy/i); assert.match(I18N.en.pl_indigo, /Indigo/i);
-  assert.equal(Object.keys(SETS).length, 10);
+test("themes (Face 7): Classic Teal, Emerald Ivory, Sandstone Teal for light; Midnight Jade, Indigo Moon, Plum Dusk for dark", () => {
+  for (const k of ["pl_classic", "pl_emerald", "pl_sandstone", "pl_jade", "pl_indigo", "pl_plum", "th_light", "th_dark", "md_system", "md_light", "md_dark", "appearance"]) { assert.ok(I18N.en[k], k); assert.ok(I18N.bn[k], "bn " + k); }
+  assert.equal(I18N.en.pl_classic, "Classic Teal"); assert.equal(I18N.en.pl_emerald, "Emerald Ivory"); assert.equal(I18N.en.pl_sandstone, "Sandstone Teal");
+  assert.equal(I18N.en.pl_jade, "Midnight Jade"); assert.equal(I18N.en.pl_indigo, "Indigo Moon"); assert.equal(I18N.en.pl_plum, "Plum Dusk");
+  assert.match(I18N.en.th_light, /Recommended for light appearance/); assert.match(I18N.en.th_dark, /Recommended for dark appearance/);
+  assert.ok(!I18N.en.pl_burgundy, "Burgundy is no longer offered as a light theme");
+  assert.equal(Object.keys(SETS).length, 6);
 });
 
 test("palettes: focus ring, controls and text keep contrast in every palette and mode", () => {
@@ -181,13 +187,21 @@ function boot(saved, { prefersDark = false, host = null } = {}) {
   const r = { style: {}, getAttribute: k => (k in attrs ? attrs[k] : null), setAttribute: (k, v) => { attrs[k] = String(v); }, removeAttribute: k => { delete attrs[k]; } };
   const c = { document: { documentElement: r }, localStorage: { getItem: () => (saved == null ? null : JSON.stringify(saved)) }, matchMedia: q => ({ matches: /dark/.test(q) && prefersDark }) };
   c.window = c; vm.createContext(c); vm.runInContext(read("assets/theme-boot.js"), c);
-  return { theme: attrs["data-theme"], palette: attrs["data-palette"] || "classic", scheme: r.style.colorScheme, host: attrs["data-host-theme"] };
+  return { theme: attrs["data-theme"], palette: attrs["data-palette"] || "classic", scheme: r.style.colorScheme, host: attrs["data-host-theme"], glass: attrs["data-glass"], motion: attrs["data-motion"] };
 }
 test("theme boot: mode and palette applied before paint, system preference followed, old settings migrated", () => {
-  assert.deepEqual(boot(null), { theme: "light", palette: "classic", scheme: "light", host: undefined });
+  // Face 7 (intentional): boot also sets data-glass and data-motion; their defaults are balanced and subtle.
+  assert.deepEqual(boot(null), { theme: "light", palette: "classic", scheme: "light", host: undefined, glass: "balanced", motion: "subtle" });
   assert.equal(boot(null, { prefersDark: true }).theme, "dark");
   assert.equal(boot({ mode: "light" }, { prefersDark: true }).theme, "light", "explicit light beats the system");
-  assert.equal(boot({ mode: "dark", palette: "burgundy" }).palette, "burgundy");
+  // Face 7 migration (intentional): Phase 5.3 burgundy becomes Plum Dusk in dark; light falls back to Classic Teal.
+  assert.equal(boot({ mode: "dark", palette: "burgundy" }).palette, "plum");
+  assert.equal(boot({ mode: "light", palette: "burgundy" }).palette, "classic");
+  assert.equal(boot({ mode: "dark", palette: "emerald" }).palette, "classic", "emerald has no dark set: dark uses Midnight Jade (base tokens)");
+  assert.equal(boot({ mode: "light", palette: "sandstone" }).palette, "sandstone");
+  assert.equal(boot({ mode: "dark", lightTheme: "emerald", darkTheme: "indigo" }).palette, "indigo");
+  assert.equal(boot({ mode: "light", lightTheme: "emerald", darkTheme: "indigo", palette: "burgundy" }).palette, "emerald", "saved Face 7 themes win over the old palette");
+  assert.equal(boot({ glass: "solid", motion: "off" }).glass, "solid"); assert.equal(boot({ glass: "x", motion: "off" }).motion, "off");
   assert.equal(boot({ mode: "dark", palette: "burgundy" }).theme, "dark");
   assert.deepEqual([boot({ theme: "emerald" }).theme, boot({ theme: "emerald" }).palette], ["light", "emerald"]);
   assert.deepEqual([boot({ theme: "indigo" }).theme, boot({ theme: "indigo" }).palette], ["dark", "indigo"]);
@@ -203,7 +217,7 @@ test("theme boot runs in <head> before the stylesheets, and the app follows syst
   assert.ok(b > 0 && c > 0 && b < c, "boot script before CSS");
   assert.match(head, /<meta name="color-scheme" content="light dark">/);
   assert.match(app, /addEventListener\("change"/); assert.match(app, /prefers-color-scheme: dark/);
-  assert.match(app, /case "setmode"/); assert.match(app, /case "setpalette"/);
+  assert.match(app, /case "setmode"/); assert.match(app, /case "setth"/); // Face 7: setpalette → setth
 });
 
 /* ---------- zakat ---------- */
@@ -351,21 +365,28 @@ test("new scripts load before app.js and are precached", () => {
   }
 });
 
-test("interactions: spring lift for hover and keyboard, press for touch, all off for reduced motion, never on texts", () => {
-  const i = css.indexOf("/* Interaction (Phase 5.3)"), blk = css.slice(i);
+test("interactions: subtle lift by default, Playful spring kept, Off and reduced motion stop movement, never on texts", () => {
+  // Face 7 (intentional): the Phase 5.3 spring became the "Playful" level of the new Interaction motion setting;
+  // the default "Subtle" level lifts by 1px without the spring. Reduced motion still turns all movement off.
+  const i = css.indexOf("/* Interaction motion (Face 7"), blk = css.slice(i);
   assert.ok(i > 0);
   assert.match(blk, /@media \(hover:hover\) and \(pointer:fine\)/);
-  assert.match(blk, /:focus-visible\{transform:translateY\(-1px\) scale\(1\.03\)\}/);
-  assert.match(blk, /:active\{transform:scale\(\.95\);transition-duration:\.08s\}/);
+  assert.match(blk, /:focus-visible\{transform:translateY\(-1px\)\}/);
+  assert.match(blk, /:root\[data-motion="playful"\] :is\([^)]*\):focus-visible\{transform:translateY\(-1px\) scale\(1\.03\)\}/);
+  assert.match(blk, /:root\[data-motion="playful"\] :is\([^)]*\):active\{transform:scale\(\.95\)\}/);
   assert.match(blk, /var\(--spring\)/);
+  assert.match(blk, /:root\[data-motion="off"\]/);
   const rm = blk.slice(blk.indexOf("@media (prefers-reduced-motion:reduce)"));
-  for (const sel of [".btn:hover", ".chip:active", ".icon-btn:focus-visible", ".nw-jump button:active"]) assert.ok(rm.includes(sel), sel);
-  for (const text of [".ar", ".hd-ar", ".hd-tr", ".dua", ".ayah", ".verse"]) assert.ok(!new RegExp(`(^|[,\\s])\\${text}[,:{\\s]`).test(blk.slice(0, blk.indexOf("@media (prefers-reduced-motion"))), `no animation on ${text}`);
+  for (const sel of [".btn", ".chip", ".icon-btn", ".nw-jump button", ".th-card"]) assert.ok(rm.includes(sel), sel);
+  assert.match(rm, /transform:none!important/);
+  for (const text of [".ar", ".hd-ar", ".hd-tr", ".dua", ".ayah", ".verse"]) assert.ok(!new RegExp(`(^|[,\\s(])\\${text}[,:{\\s)]`).test(blk.slice(0, blk.indexOf("@media (prefers-reduced-motion"))), `no animation on ${text}`);
 });
 
 test("credits list the new sources and every credit row is its own array entry", () => {
   const f = fn("vAbout");
   assert.doesNotMatch(f, /"\]\s*\n\s*\[/, "a missing comma would turn the next row into an index lookup");
-  for (const k of ["An-Nawawi's Forty Hadith", "Prohibited-time notes", "Zakat", "40 narrations"]) assert.ok(f.includes(k), k);
+  // Face 7 (intentional): zakat was removed from the UI, so its credit row is gone.
+  for (const k of ["An-Nawawi's Forty Hadith", "Prohibited-time notes", "40 narrations"]) assert.ok(f.includes(k), k);
+  assert.ok(!f.includes('["Zakat",'), "no zakat credit row");
   for (const k of ["ইমাম নববীর চল্লিশ হাদীস", "নিষিদ্ধ সময়ের সতর্কতা", "৪০টি হাদীস"]) assert.ok(f.includes(k), k);
 });

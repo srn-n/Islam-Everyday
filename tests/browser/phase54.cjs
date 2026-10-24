@@ -66,9 +66,8 @@ const card = p => p.evaluate(() => ({ cur: document.querySelector("#cur-name")?.
   /* 3. Bangla: numbers in Bangla digits on the main pages (source codes and URLs excepted) */
   ({ p, ctx } = await open(b, { time: "2026-10-19T16:40:00+11:00", state: { lang: "bn", city: "syd", fplan: { "2026-10-24": { f: true } } }, desk: true }));
   const latin = [];
-  for (const h of ["#today", "#more/hadith", "#more/calendar", "#more/zakat", "#more/settings"]) {
+  for (const h of ["#today", "#more/hadith", "#more/calendar", "#quran", "#more/settings"] /* Face 7: zakat left the UI; the study library takes its place in this sweep */) {
     await p.goto(base + h); await p.clock.runFor(1200);
-    if (h === "#more/zakat") { await p.fill("#zk-price", "1.5"); await p.fill("#zk-cash", "5000"); await p.clock.runFor(300); }
     const hits = await p.evaluate(() => { const out = []; const w = document.createTreeWalker(document.querySelector("#view"), NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { const el = n.parentElement; if (!el || el.closest('[lang="ar"],[dir="rtl"],a[href^="http"],input,select') || !el.offsetParent) continue; const t = n.textContent.replace(/https?:\S+|[a-z0-9.-]+\.(com|org|sa|au|net)\S*/gi, ""); if (/[0-9]/.test(t)) out.push(t.trim().slice(0, 50)); } return out; });
     if (hits.length) latin.push(h + ": " + hits.slice(0, 3).join(" | "));
   }
@@ -79,7 +78,7 @@ const card = p => p.evaluate(() => ({ cur: document.querySelector("#cur-name")?.
   ({ p, ctx } = await open(b, { state: { lang: "en", hcol: "nawawi" }, hash: "#more/hadith", desk: true }));
   let rtl = await p.evaluate(() => [...document.querySelectorAll(".hd-ar")].every(e => getComputedStyle(e).direction === "rtl" && e.lang === "ar"));
   ok("An-Nawawi cards: Arabic is right-to-left and marked lang=ar", rtl);
-  await p.goto(base + "#quran"); await p.waitForTimeout(600); await p.click('[data-act="surah"][data-s="1"] >> nth=0'); await p.waitForTimeout(1500);
+  await p.goto(base + "#quran/all"); await p.waitForTimeout(600); await p.click('[data-act="surah"][data-s="1"] >> nth=0'); await p.waitForTimeout(1500);
   rtl = await p.evaluate(() => { const a = [...document.querySelectorAll(".ayah [lang=ar], .ayah .ar")]; return a.length > 0 && a.every(e => getComputedStyle(e).direction === "rtl"); });
   ok("Qur'an reader: Arabic is right-to-left", rtl);
   await ctx.close();
@@ -87,7 +86,7 @@ const card = p => p.evaluate(() => ({ cur: document.querySelector("#cur-name")?.
   /* 5. Keyboard: every page's controls are reachable, and focus is always visible */
   ({ p, ctx } = await open(b, { state: { lang: "en" }, desk: true }));
   const nofocus = [];
-  for (const h of ["#today", "#more/hadith", "#more/calendar", "#more/zakat", "#more/settings"]) {
+  for (const h of ["#today", "#more/hadith", "#more/calendar", "#quran", "#more/settings"] /* Face 7: zakat left the UI; the study library takes its place in this sweep */) {
     await p.goto(base + h); await p.waitForTimeout(700); await p.evaluate(() => document.activeElement && document.activeElement.blur());
     for (let i = 0; i < 25; i++) {
       await p.keyboard.press("Tab");

@@ -94,31 +94,30 @@ const card = p => p.evaluate(() => ({ cur: document.querySelector("#cur-name")?.
   ok("System mode follows a dark OS setting from the first paint", await p.evaluate(() => window.__firstTheme) === "dark" && await p.evaluate(() => document.documentElement.dataset.theme) === "dark");
   await p.emulateMedia({ colorScheme: "light" }); await p.waitForTimeout(200);
   ok("System mode follows an OS change without reload", await p.evaluate(() => document.documentElement.dataset.theme) === "light");
-  await p.click('[data-act="setmode"][data-k="dark"]'); await p.click('[data-act="setpalette"][data-k="burgundy"]'); await p.waitForTimeout(300);
+  // Face 7 (intentional): Burgundy became the dark-only Plum Dusk; themes are chosen per appearance with setth.
+  await p.click('[data-act="setmode"][data-k="dark"]'); await p.click('[data-act="setth"][data-k="plum"]'); await p.waitForTimeout(300);
   await p.reload({ waitUntil: "domcontentloaded" });
-  ok("chosen mode and palette are applied before first paint after reload", await p.evaluate(() => [window.__firstTheme, window.__firstPal].join()) === "dark,burgundy");
+  ok("chosen mode and palette are applied before first paint after reload", await p.evaluate(() => [window.__firstTheme, window.__firstPal].join()) === "dark,plum");
   await p.waitForTimeout(600);
   await p.emulateMedia({ colorScheme: "light" }); await p.waitForTimeout(200);
   ok("an explicit Dark mode ignores the OS setting", await p.evaluate(() => document.documentElement.dataset.theme) === "dark");
-  for (const hh of ["#today", "#more/hadith", "#more/zakat", "#more/calendar"]) { await p.goto(base + hh); await p.waitForTimeout(300); }
-  ok("palette kept on every page", await p.evaluate(() => document.documentElement.dataset.palette) === "burgundy");
+  for (const hh of ["#today", "#more/hadith", "#more/calendar"]) { await p.goto(base + hh); await p.waitForTimeout(300); }
+  ok("palette kept on every page", await p.evaluate(() => document.documentElement.dataset.palette) === "plum");
   await p.goto(base + "#more/settings"); await p.waitForTimeout(300);
-  ok("settings show the separate Appearance and Theme controls, pressed state correct", await p.getAttribute('[data-act="setmode"][data-k="dark"]', "aria-pressed") === "true" && await p.getAttribute('[data-act="setpalette"][data-k="burgundy"]', "aria-pressed") === "true");
+  ok("settings show the separate Appearance and Theme controls, pressed state correct", await p.getAttribute('[data-act="setmode"][data-k="dark"]', "aria-pressed") === "true" && await p.getAttribute('[data-act="setth"][data-k="plum"]', "aria-pressed") === "true");
   await ctx.close();
   ({ p, ctx } = await open(b, { state: { lang: "en", theme: "indigo" }, hash: "#today", firstPaint: true }));
   ok("Phase 5.2 setting 'indigo' migrates to Indigo palette in dark mode", await p.evaluate(() => [window.__firstTheme, window.__firstPal].join()) === "dark,indigo");
   await ctx.close();
 
-  /* 5. Zakat: grouped inputs, live result, validation, weights */
-  ({ p, ctx } = await open(b, { state: { lang: "en" }, hash: "#more/zakat", desk: true }));
-  await p.fill("#zk-price", "1.5"); await p.fill("#zk-cash", "5000"); await p.fill("#zk-debt", "1000"); await p.waitForTimeout(300);
-  let zr = await p.textContent("#zk-result");
-  ok("zakat: 2.5% of net above nisab, shown with the currency", /AUD\s*100(\.00)?\b/.test(zr) && /4,000/.test(zr), zr.slice(0, 200));
-  await p.fill("#zk-gold", "-20"); await p.waitForTimeout(300); zr = await p.textContent("#zk-result");
-  ok("zakat: a negative value is flagged, not counted", /4,000/.test(zr) && await p.locator("#zk-result .zk-warn, #zk-result [role=alert], #zk-result .warn").count() >= 1, zr.slice(0, 240));
-  await p.fill("#zk-gold", ""); await p.fill("#zk-cash", "500"); await p.waitForTimeout(300); zr = await p.textContent("#zk-result");
-  ok("zakat: below nisab, nothing due", !/AUD\s*12\.5\b/.test(zr) && /below|not due|No zakat/i.test(zr), zr.slice(0, 200));
-  ok("zakat: formula, disclaimer and sources visible", /2\.5/.test(await p.textContent(".v-zakat")) && await p.locator(".zk-disclaimer").count() === 1 && await p.locator('a[href="https://sunnah.com/bukhari:8"]').count() >= 1);
+  /* 5. Zakat. Face 7 (intentional): zakat was removed from the UI. The old link falls back to More, nothing links to it,
+     and saved zakat values (st.zk) are kept untouched. */
+  ({ p, ctx } = await open(b, { state: { lang: "en", zk: { cur: "GBP", basis: "gold", w: "g85", price: "70", v: { cash: "1234" } } }, hash: "#more/zakat", desk: true }));
+  ok("zakat: old #more/zakat link opens More, not a calculator", await p.locator(".v-more").count() === 1 && await p.locator("#zk-result").count() === 0);
+  ok("zakat: no menu or sidebar link remains", await p.locator('[data-sub="zakat"], a[href*="zakat"]').count() === 0);
+  await p.goto(base + "#more/settings"); await p.waitForTimeout(400);
+  const zs = JSON.parse(await p.evaluate(k => localStorage.getItem(k), KEY) || "{}").zk || {};
+  ok("zakat: saved values are kept", zs.cur === "GBP" && zs.v && zs.v.cash === "1234", JSON.stringify(zs));
   await ctx.close();
 
   /* 6. Calendar layout */
@@ -189,7 +188,7 @@ const card = p => p.evaluate(() => ({ cur: document.querySelector("#cur-name")?.
   /* 9. About page renders the new credits */
   ({ p, ctx } = await open(b, { state: { lang: "en" }, hash: "#more/about" }));
   const cr = await p.textContent(".credits");
-  ok("credits name an-Nawawi's Forty, the prohibited-time sources and zakat", /An-Nawawi's Forty Hadith/.test(cr) && /Ibn Baz/.test(cr) && /Islamic Relief Australia/.test(cr));
+  ok("credits name an-Nawawi's Forty and the prohibited-time sources; no zakat row (Face 7)", /An-Nawawi's Forty Hadith/.test(cr) && /Ibn Baz/.test(cr) && !/Islamic Relief Australia/.test(cr));
   await ctx.close();
 
   ok("no page errors", !errs.length, errs.join(" | "));

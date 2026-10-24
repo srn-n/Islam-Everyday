@@ -138,16 +138,19 @@ test("Hadith cards use the shared Read more shell and keep the whole text in the
 const block = sel => { const i = css.indexOf(sel + "{"); assert.ok(i >= 0, sel); const b = css.slice(i, css.indexOf("}", i)); return Object.fromEntries([...b.matchAll(/--([a-z0-9-]+):\s*(#[0-9A-Fa-f]{6})/g)].map(m => [m[1], m[2]])); };
 const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
 const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
-/* Phase 5.3 split the Phase 5.2 themes into an appearance mode (System/Light/Dark: data-theme="light"|"dark") and a
-   colour palette (data-palette), so every palette now has a light and a dark set. The checks below cover all of them. */
+/* Phase 5.3 split the Phase 5.2 themes into an appearance mode and a colour palette. Face 7 changed this to three
+   themes per appearance (changed intentionally): Classic Teal / Emerald Ivory / Sandstone Teal are light only;
+   Midnight Jade (the base dark tokens) / Indigo Moon / Plum Dusk are dark only. The same contrast checks cover all six. */
 const THEMES = { light: block(":root"), dark: block(':root[data-theme="dark"]') };
-for (const p of ["emerald", "sandstone", "burgundy", "indigo"]) { THEMES[p] = block(`:root[data-palette="${p}"]`); THEMES[p + "-dark"] = block(`:root[data-palette="${p}"][data-theme="dark"]`); }
+for (const p of ["emerald", "sandstone"]) THEMES[p] = block(`:root[data-palette="${p}"]`);
+for (const p of ["indigo", "plum"]) THEMES[p + "-dark"] = block(`:root[data-palette="${p}"][data-theme="dark"]`);
 
 test("every palette, light and dark, defines every colour token the primary theme defines", () => {
   const need = Object.keys(THEMES.dark);
   for (const n of Object.keys(THEMES).filter(n => n !== "light" && n !== "dark")) for (const k of need) assert.ok(THEMES[n][k], `${n}: --${k}`);
   assert.match(app, /const MODES = \["system", "light", "dark"\]/);
-  assert.match(app, /PALETTES = \["classic", "emerald", "sandstone", "burgundy", "indigo"\]/);
+  assert.match(app, /LIGHT_TH = \["classic", "emerald", "sandstone"\], DARK_TH = \["jade", "indigo", "plum"\]/); // Face 7 (was PALETTES)
+  assert.ok(!css.includes('[data-palette="burgundy"]') && !css.includes('[data-palette="emerald"][data-theme="dark"]'), "no light/dark crossover sets remain");
   assert.match(css, /:root:not\(\[data-theme\]\)\{/, "the system dark fallback applies only when no mode has been set");
 });
 

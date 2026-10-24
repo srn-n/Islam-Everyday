@@ -13,23 +13,24 @@
   --ar-scale:1; --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.34,1.56,.64,1);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme]){
-  --ground:#09130F; --surface:#111E1B; --surface-2:#162622; --ink:#E4EEEA; --muted:#8EA59E; --line:#22382F;
-  --accent:#58C8AD; --accent-2:#163932; --on-accent:#05201A; --gold:#E7B65A; --gold-soft:#30271A;
-  --danger:#E58A7B; --ok:#62C89D;
+  --ground:#08120F; --surface:#101C18; --surface-2:#16251F; --ink:#F1EADB; --muted:#A9B1A4; --line:#24382F;
+  --accent:#5DCAAE; --accent-2:#173A31; --on-accent:#04201A; --gold:#E6BA62; --gold-soft:#2F2819;
+  --danger:#EE9483; --ok:#6CCDA0;
   --r-night:#1B3238; --r-twi:#B97B36; --r-day:#3F8F97; --r-day2:#3A8072; --r-late:#B8943F;
   --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.25); --shadow-up:0 2px 6px rgba(0,0,0,.45),0 16px 36px rgba(0,0,0,.42);
   color-scheme:dark}}
+/* Face 7 themes. Three themes for each appearance; the mode (System, Light, Dark) picks the appearance and each
+   appearance remembers its own theme (st.lightTheme, st.darkTheme). Classic Teal (light) and Midnight Jade (dark)
+   are the base tokens: :root and :root[data-theme="dark"]. The others set data-palette, and only ever in their own
+   appearance, so there is no low-contrast light/dark crossover (e.g. no light Burgundy, no dark Sandstone). */
 :root[data-theme="dark"]{
-  --ground:#09130F; --surface:#111E1B; --surface-2:#162622; --ink:#E4EEEA; --muted:#8EA59E; --line:#22382F;
-  --accent:#58C8AD; --accent-2:#163932; --on-accent:#05201A; --gold:#E7B65A; --gold-soft:#30271A;
-  --danger:#E58A7B; --ok:#62C89D;
+  --ground:#08120F; --surface:#101C18; --surface-2:#16251F; --ink:#F1EADB; --muted:#A9B1A4; --line:#24382F;
+  --accent:#5DCAAE; --accent-2:#173A31; --on-accent:#04201A; --gold:#E6BA62; --gold-soft:#2F2819;
+  --danger:#EE9483; --ok:#6CCDA0;
   --r-night:#1B3238; --r-twi:#B97B36; --r-day:#3F8F97; --r-day2:#3A8072; --r-late:#B8943F;
   --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.25); --shadow-up:0 2px 6px rgba(0,0,0,.45),0 16px 36px rgba(0,0,0,.42);
   color-scheme:dark}
-
-/* Colour palettes (Phase 5.3). Each palette has a light and a dark appearance; the appearance mode (System, Light,
-   Dark) is chosen separately and resolved to data-theme by assets/theme-boot.js and app.js. Classic = the primary
-   theme (:root and :root[data-theme="dark"] above), unchanged. */
+/* Emerald Ivory (light) */
 :root[data-palette="emerald"]{
   --ground:#F6F1E4; --surface:#FFFDF7; --surface-2:#F0EADA; --ink:#12261E; --muted:#56655B; --line:#E2D9C4;
   --accent:#0A6247; --accent-2:#DCEDE3; --on-accent:#FFFFFF; --gold:#835308; --gold-soft:#F5E8CC;
@@ -37,13 +38,7 @@
   --r-night:#24423A; --r-twi:#D3964B; --r-day:#93C9B5; --r-day2:#BBDCC9; --r-late:#E7C46E;
   --shadow:0 1px 2px rgba(20,20,30,.05),0 8px 24px rgba(20,20,30,.07); --shadow-up:0 2px 4px rgba(20,20,30,.08),0 14px 32px rgba(20,20,30,.14);
   color-scheme:light}
-:root[data-palette="emerald"][data-theme="dark"]{
-  --ground:#08140F; --surface:#0F1F18; --surface-2:#15291F; --ink:#E6F0EA; --muted:#93AE9F; --line:#21392D;
-  --accent:#5FD0A2; --accent-2:#153A2B; --on-accent:#04170F; --gold:#E3BC6A; --gold-soft:#2E2817;
-  --danger:#E8907F; --ok:#6FD3A2;
-  --r-night:#183229; --r-twi:#B07E3A; --r-day:#3C8C6E; --r-day2:#357560; --r-late:#B4924A;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
-  color-scheme:dark}
+/* Sandstone Teal (light) */
 :root[data-palette="sandstone"]{
   --ground:#F3EADB; --surface:#FCF7EE; --surface-2:#EEE3D0; --ink:#2A2118; --muted:#665746; --line:#E0D3BD;
   --accent:#0F5C66; --accent-2:#D8EBEC; --on-accent:#FFFFFF; --gold:#874C12; --gold-soft:#F3E2C8;
@@ -51,39 +46,20 @@
   --r-night:#2A3E44; --r-twi:#D49052; --r-day:#8FC4C6; --r-day2:#B9D7D2; --r-late:#E5C27A;
   --shadow:0 1px 2px rgba(20,20,30,.05),0 8px 24px rgba(20,20,30,.07); --shadow-up:0 2px 4px rgba(20,20,30,.08),0 14px 32px rgba(20,20,30,.14);
   color-scheme:light}
-:root[data-palette="sandstone"][data-theme="dark"]{
-  --ground:#0D1416; --surface:#142023; --surface-2:#1A2A2E; --ink:#EEE6DA; --muted:#A99D8C; --line:#263A3E;
-  --accent:#6BC4CC; --accent-2:#163B40; --on-accent:#062226; --gold:#E0A867; --gold-soft:#33281C;
-  --danger:#EE9584; --ok:#74C99A;
-  --r-night:#1A2E33; --r-twi:#B47A3E; --r-day:#3D8A90; --r-day2:#367670; --r-late:#B49248;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
-  color-scheme:dark}
-:root[data-palette="burgundy"]{
-  --ground:#F4ECDD; --surface:#FDF8EF; --surface-2:#F0E6D4; --ink:#2B1A1A; --muted:#6B5352; --line:#E3D5C0;
-  --accent:#7A1F33; --accent-2:#F3DDE0; --on-accent:#FFFFFF; --gold:#80541A; --gold-soft:#F2E3C6;
-  --danger:#A63A2A; --ok:#2E6B4B;
-  --r-night:#3E2A30; --r-twi:#CF8E52; --r-day:#C9B3A4; --r-day2:#DCCBB6; --r-late:#E3C07A;
-  --shadow:0 1px 2px rgba(20,20,30,.05),0 8px 24px rgba(20,20,30,.07); --shadow-up:0 2px 4px rgba(20,20,30,.08),0 14px 32px rgba(20,20,30,.14);
-  color-scheme:light}
-:root[data-palette="burgundy"][data-theme="dark"]{
-  --ground:#140C0E; --surface:#1E1316; --surface-2:#27191D; --ink:#F1E6DA; --muted:#B39F98; --line:#3A262B;
-  --accent:#E58BA0; --accent-2:#3D1B24; --on-accent:#2A0710; --gold:#E2B76B; --gold-soft:#33271A;
-  --danger:#F09A8A; --ok:#7FCB9C;
-  --r-night:#2E1A20; --r-twi:#B07A3E; --r-day:#7E5A63; --r-day2:#6B4F55; --r-late:#B4924A;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
-  color-scheme:dark}
-:root[data-palette="indigo"]{
-  --ground:#EEF0FA; --surface:#FFFFFF; --surface-2:#F1F2FB; --ink:#141833; --muted:#535980; --line:#DCDFF0;
-  --accent:#3B3FA8; --accent-2:#E3E5FA; --on-accent:#FFFFFF; --gold:#87590D; --gold-soft:#F6EACB;
-  --danger:#A93B33; --ok:#2C6E50;
-  --r-night:#283060; --r-twi:#D39A4E; --r-day:#9AA5E0; --r-day2:#BCC3EC; --r-late:#E7C46E;
-  --shadow:0 1px 2px rgba(20,20,30,.05),0 8px 24px rgba(20,20,30,.07); --shadow-up:0 2px 4px rgba(20,20,30,.08),0 14px 32px rgba(20,20,30,.14);
-  color-scheme:light}
+/* Indigo Moon (dark): ink-indigo surfaces, soft blue-violet accent, pale neutral text, restrained gold */
 :root[data-palette="indigo"][data-theme="dark"]{
-  --ground:#0A0D1E; --surface:#12172F; --surface-2:#191F3E; --ink:#E9EAF6; --muted:#A2A7CB; --line:#262D57;
-  --accent:#AEB8FF; --accent-2:#23295A; --on-accent:#0A0D26; --gold:#EBC266; --gold-soft:#2C2740;
+  --ground:#0A0D1E; --surface:#12172F; --surface-2:#191F3E; --ink:#E9EAF3; --muted:#A4A8C6; --line:#272E56;
+  --accent:#AEB6FF; --accent-2:#23295A; --on-accent:#0A0D26; --gold:#E3BF6E; --gold-soft:#2C2740;
   --danger:#F09A8A; --ok:#7FD3A8;
   --r-night:#1C2350; --r-twi:#B9853C; --r-day:#5462A8; --r-day2:#46508E; --r-late:#B9963F;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
+  color-scheme:dark}
+/* Plum Dusk (dark): deep aubergine surfaces, muted rose/copper accents, warm pale text */
+:root[data-palette="plum"][data-theme="dark"]{
+  --ground:#140D14; --surface:#1E141E; --surface-2:#271B27; --ink:#F3E8E3; --muted:#BBA5AE; --line:#3B2939;
+  --accent:#E7A3B4; --accent-2:#40202F; --on-accent:#2A0B17; --gold:#E2AE78; --gold-soft:#36261F;
+  --danger:#F29C8C; --ok:#86CFA2;
+  --r-night:#2C1A2A; --r-twi:#B27748; --r-day:#7C5A70; --r-day2:#6A4E62; --r-late:#B48A50;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
   color-scheme:dark}
 
@@ -182,7 +158,7 @@ h3{font-size:1rem;font-weight:600}
 .ribbon .night{background:var(--r-night)}.ribbon .twi{background:var(--r-twi)}.ribbon .day{background:var(--r-day)}.ribbon .day2{background:var(--r-day2)}.ribbon .late{background:var(--r-late)}
 .ribbon i{position:absolute;top:-5px;bottom:-5px;width:3px;margin-left:-1.5px;background:var(--ink);border-radius:2px;box-shadow:0 0 0 2px var(--surface)}
 .scale{display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted);padding:0 16px 6px}
-.times li{display:flex;align-items:center;gap:12px;min-height:54px;padding:0 12px 0 16px;border-top:1px solid var(--line)}
+.times li{display:flex;align-items:center;gap:12px;min-height:54px;padding:0 16px;border-top:1px solid var(--line)}
 .times .nm{flex:1;min-width:0;font-weight:500}
 .times .tm{font-variant-numeric:tabular-nums}
 .times li.is-cur{background:var(--accent-2);box-shadow:inset 4px 0 0 var(--accent)}
@@ -207,6 +183,20 @@ h3{font-size:1rem;font-weight:600}
 @keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
 @keyframes draw{from{stroke-dashoffset:16}to{stroke-dashoffset:0}}
 .gap44{width:44px}
+/* Face 7: completion in the Prayer times list is read-only; the Worship tracker is the one control. */
+.times-foot,.jum-note{padding:8px 16px 14px;font-size:.8rem}
+.jum-note{margin:6px 12px 0;padding:8px 12px;border-radius:12px;background:var(--surface-2)}
+.times-foot{padding-top:10px}
+/* Worship tracker: one card, two groups (five fard prayers; extra worship kept separate in counts). */
+.wt-bar{height:6px;border-radius:99px;background:var(--surface-2);margin:12px 0 4px;overflow:hidden}
+.wt-bar i{display:block;height:100%;border-radius:inherit;background:var(--accent);transition:width .4s var(--ease)}
+.wt-group{display:grid;gap:10px;padding-top:14px;margin-top:14px;border-top:1px solid var(--line)}
+.wt-fard{border-top:0;margin-top:4px;padding-top:6px}
+.wt-h{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+:lang(bn) .wt-h{text-transform:none;letter-spacing:0;font-size:.9rem}
+.wt-extra{background:color-mix(in srgb,var(--surface-2) 70%,transparent);margin-inline:-6px;padding:14px 12px 6px;border-radius:16px;border-top:0}
+.wt-extra .xw-g{margin-top:8px}
+@media (prefers-reduced-motion:reduce){.wt-bar i{transition:none}}
 
 /* tracker */
 .week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}
@@ -461,7 +451,6 @@ nav.tabs .ind::before{content:"";width:56px;height:32px;border-radius:99px;backg
   .a-times{grid-area:times}.a-track{grid-area:track;align-self:stretch}.a-fast{grid-area:fast}
   .a-fast .duo{grid-template-columns:1fr;gap:14px}
   .a-forb{grid-area:forb}.a-verse{grid-area:verse;align-self:stretch}
-  .a-extra{grid-area:extra}
   .a-tiles{grid-area:tiles}
 
   /* qur'an: list + reader side by side */
@@ -776,16 +765,23 @@ details.fn>div{font-size:.9rem;line-height:1.7;padding-bottom:12px;color:var(--i
    popovers and sheets. Reading surfaces (cards, verses, hadith, duas) stay opaque.
    Without backdrop-filter support, or when the system asks for less transparency or more contrast, the
    same elements fall back to solid surfaces. */
-:root{--glass:color-mix(in srgb,var(--surface) 70%,transparent);--glass-strong:color-mix(in srgb,var(--surface) 84%,transparent);--glass-edge:color-mix(in srgb,var(--line) 70%,rgba(255,255,255,.55));--glass-hi:inset 0 1px 0 rgba(255,255,255,.45);--glass-blur:saturate(160%) blur(16px)}
+:root{--gl-a:70%;--gl-b:84%;--gl-top:62%;--glass:color-mix(in srgb,var(--surface) var(--gl-a),transparent);--glass-strong:color-mix(in srgb,var(--surface) var(--gl-b),transparent);--glass-edge:color-mix(in srgb,var(--line) 70%,rgba(255,255,255,.55));--glass-hi:inset 0 1px 0 rgba(255,255,255,.45);--glass-blur:saturate(160%) blur(16px)}
 :root[data-theme="dark"]{--glass-edge:color-mix(in srgb,var(--line) 70%,rgba(255,255,255,.12));--glass-hi:inset 0 1px 0 rgba(255,255,255,.07)}
 @media (prefers-color-scheme:dark){:root:not([data-theme]){--glass-edge:color-mix(in srgb,var(--line) 70%,rgba(255,255,255,.12));--glass-hi:inset 0 1px 0 rgba(255,255,255,.07)}}
 @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
   .top .chip-btn,.top .icon-btn,.seg,.tnav,.tpick .field,.cal-pop,.side-next{background:var(--glass-strong);border-color:var(--glass-edge);box-shadow:var(--glass-hi),var(--shadow);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
-  .top{background:color-mix(in srgb,var(--ground) 62%,transparent);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+  .top{background:color-mix(in srgb,var(--ground) var(--gl-top),transparent);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
   nav.tabs{background:var(--glass);box-shadow:var(--glass-hi);border-top-color:var(--glass-edge);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
   .seg button[aria-pressed="true"]{background:var(--surface);box-shadow:var(--glass-hi),var(--shadow)}
   .tnav{border:1px solid var(--glass-edge);border-radius:16px;padding:6px}
 }
+/* Glass level (Face 7): st.glass → :root[data-glass]. Balanced is the Phase 5.2 look and the default. Only the
+   floating chrome above uses these values; reading surfaces stay opaque at every level. Solid, reduced transparency,
+   more contrast and browsers without backdrop-filter all get solid surfaces. */
+:root[data-glass="subtle"]{--gl-a:86%;--gl-b:92%;--gl-top:82%;--glass-blur:saturate(130%) blur(10px)}
+:root[data-glass="high"]{--gl-a:54%;--gl-b:72%;--gl-top:44%;--glass-blur:saturate(180%) blur(22px)}
+:root[data-glass="solid"] :is(.top .chip-btn,.top .icon-btn,.seg,.tnav,.tpick .field,.cal-pop,.side-next,nav.tabs){background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:var(--shadow)}
+:root[data-glass="solid"] .top{background:var(--ground);-webkit-backdrop-filter:none;backdrop-filter:none}
 @media (prefers-reduced-transparency:reduce),(prefers-contrast:more){
   .top .chip-btn,.top .icon-btn,.seg,.tnav,.tpick .field,.cal-pop,.side-next,nav.tabs{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:var(--shadow)}
   .top{background:var(--ground);-webkit-backdrop-filter:none;backdrop-filter:none}
@@ -917,21 +913,265 @@ button.c{font:inherit;color:inherit;cursor:pointer;transition:transform .15s var
 .zk-q{border-top:1px solid var(--line);padding:8px 0}
 .zk-q summary{cursor:pointer;font-weight:600;min-height:32px;display:flex;align-items:center}
 .zk-q p{margin-top:6px;line-height:1.6;font-size:.93rem}
-/* Interaction (Phase 5.3): a small spring on controls and cards. Hover only on devices that can hover; keyboard focus gets
-   the same lift; a press scales down briefly for touch. Only controls and card shells move: the Qur'an, hadith and dua
-   texts themselves are never animated. Everything is switched off for prefers-reduced-motion. */
-.btn,.chip,.chip-btn,.icon-btn,.seg button,.nw-jump button,.themes button,.wd-next .chip{transition:transform .32s var(--spring),box-shadow .2s var(--ease),background-color .2s,border-color .2s,color .2s,opacity .2s}
-.name,.tile,button.card,.v-more .menu li,.hcal,.g-det{transition:transform .34s var(--spring),box-shadow .2s var(--ease),border-color .2s var(--ease)}
+/* Interaction motion (Face 7; Phase 5.3 spring kept as "Playful"). st.motion → :root[data-motion]: "subtle" (default)
+   lifts controls by 1px with a gentle ease and a slight press; "playful" adds the small spring and scale; "off" keeps
+   only immediate colour/border feedback. Only controls and card shells move: Qur'an, hadith and dua texts never do.
+   prefers-reduced-motion always wins over the setting. State never depends on hover: pressed/selected/checked use
+   borders, fills and marks. */
+.btn,.chip,.chip-btn,.icon-btn,.seg button,.nw-jump button,.themes button,.wd-next .chip,.th-card,.sc-card{transition:transform .22s var(--ease),box-shadow .2s var(--ease),background-color .2s,border-color .2s,color .2s,opacity .2s}
+.name,.tile,button.card,.v-more .menu li,.hcal,.g-det{transition:transform .25s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease)}
 @media (hover:hover) and (pointer:fine){
-  .btn:hover,.chip:hover,.chip-btn:hover,.icon-btn:hover,.nw-jump button:hover,.themes button:hover{transform:translateY(-1px) scale(1.03)}
-  .chip:hover,.chip-btn:hover,.icon-btn:hover,.nw-jump button:hover,.themes button:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+  :is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card):hover{transform:translateY(-1px)}
+  :is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card):hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
   .seg button:not([aria-pressed="true"]):hover{background:color-mix(in srgb,var(--surface) 60%,transparent)}
+  :root[data-motion="playful"] :is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card):hover{transform:translateY(-1px) scale(1.03)}
 }
-.btn:focus-visible,.chip:focus-visible,.chip-btn:focus-visible,.icon-btn:focus-visible,.nw-jump button:focus-visible,.themes button:focus-visible{transform:translateY(-1px) scale(1.03)}
-.btn:active,.chip:active,.chip-btn:active,.icon-btn:active,.seg button:active,.nw-jump button:active,.themes button:active{transform:scale(.95);transition-duration:.08s}
+:is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card):focus-visible{transform:translateY(-1px)}
+:is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card):active,.seg button:active{transform:scale(.98);transition-duration:.08s}
+:root[data-motion="playful"] :is(.btn,.chip,.chip-btn,.icon-btn,.seg button,.nw-jump button,.themes button,.wd-next .chip,.th-card,.sc-card){transition-timing-function:var(--spring),var(--ease),ease,ease,ease,ease;transition-duration:.32s,.2s,.2s,.2s,.2s,.2s}
+:root[data-motion="playful"] :is(.name,.tile,button.card,.v-more .menu li,.hcal,.g-det){transition-timing-function:var(--spring),var(--ease),var(--ease);transition-duration:.34s,.2s,.2s}
+:root[data-motion="playful"] :is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card):focus-visible{transform:translateY(-1px) scale(1.03)}
+:root[data-motion="playful"] :is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card,.seg button):active{transform:scale(.95)}
+:root[data-motion="off"] :is(.btn,.chip,.chip-btn,.icon-btn,.seg button,.nw-jump button,.themes button,.wd-next .chip,.th-card,.sc-card,.name,.tile,button.card,.v-more .menu li,.hcal,.g-det){transition-property:background-color,border-color,color,opacity,box-shadow;transform:none!important}
+:root[data-motion="off"] .view.enter>*,:root[data-motion="off"] .tick.just i,:root[data-motion="off"] .tick.just path,:root[data-motion="off"] .xw li.just,:root[data-motion="off"] .view.enter .ribbon .rb{animation:none}
 @media (prefers-reduced-motion:reduce){
-  .btn,.chip,.chip-btn,.icon-btn,.seg button,.nw-jump button,.themes button,.wd-next .chip,.name,.tile,button.card,.v-more .menu li,.hcal,.g-det{transition:none}
-  .btn:hover,.chip:hover,.chip-btn:hover,.icon-btn:hover,.nw-jump button:hover,.themes button:hover,
-  .btn:focus-visible,.chip:focus-visible,.chip-btn:focus-visible,.icon-btn:focus-visible,.nw-jump button:focus-visible,.themes button:focus-visible,
-  .btn:active,.chip:active,.chip-btn:active,.icon-btn:active,.seg button:active,.nw-jump button:active,.themes button:active{transform:none}
+  .btn,.chip,.chip-btn,.icon-btn,.seg button,.nw-jump button,.themes button,.wd-next .chip,.th-card,.sc-card,.name,.tile,button.card,.v-more .menu li,.hcal,.g-det{transition:none!important;transform:none!important}
 }
+/* Qur'an study library (Face 7): curated list, theme filters and draft study notes, clearly set apart from Qur'an text. */
+.st-intro{display:grid;gap:6px}
+.st-draft{font-size:.82rem;padding:8px 12px;border-radius:12px;background:var(--gold-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--gold) 30%,transparent)}
+.st-actions{display:grid;gap:10px}
+.st-cont{text-align:left;width:100%}
+.st-all{justify-self:start;display:inline-flex;align-items:center;gap:8px}
+.st-all svg,.st-backlib svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.st-backlib{align-self:start;display:inline-flex;align-items:center;gap:6px}
+.st-themes .chip{font-size:.84rem}
+#study-list{list-style:none;margin:0;padding:0}
+.rowlink .st-th{color:var(--accent);font-size:.74rem;margin-top:1px}
+.st-detail{display:grid;gap:16px}
+.st-head{display:flex;gap:14px;align-items:flex-start}
+.st-no{display:grid;place-items:center;min-width:44px;height:44px;border-radius:14px;background:var(--accent);color:var(--on-accent);font-weight:700;font-variant-numeric:tabular-nums}
+.st-name{font-family:var(--display);font-weight:400;font-size:1.6rem;line-height:1.2;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.st-name:focus{outline:none}.st-name:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+.st-name .an{font-family:var(--arabic);font-size:1.5rem;color:var(--accent)}
+.st-type{background:var(--surface-2);border:1px solid var(--line);color:var(--ink)}
+.st-sub{font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+:lang(bn) .st-sub{text-transform:none;letter-spacing:0;font-size:.92rem}
+.st-learn{margin:0;padding-left:20px;display:grid;gap:4px;list-style:disc}
+.st-learn li::marker{color:var(--accent)}
+.st-reflect{padding:14px 16px;border-radius:16px;background:var(--accent-2);border-left:4px solid var(--accent)}
+.st-reflect p:first-of-type{font-size:1.04rem}
+.st-reflect .note{margin-top:6px}
+.st-go{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.st-src a{color:var(--accent)}
+/* Core remembrance (Face 7): the content type is labelled so a Qur'an verse or the Shahada is never mistaken for a hadith dua. */
+.dua-head h3 .dk{display:inline-block;margin-left:8px;vertical-align:middle;font-size:.7rem;font-weight:600;padding:1px 8px;border-radius:99px;white-space:nowrap}
+.dk-quran{background:var(--accent-2);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+.dk-decl{background:var(--gold-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--gold) 35%,transparent)}
+.dua-x{display:grid;gap:4px;margin-top:6px;font-size:.84rem}
+.dua-x a{color:var(--accent)}
+.dua-rev{font-size:.76rem}
+/* Rounded header (Face 7): the sticky top bar floats as a rounded, translucent strip with the card radius (20px);
+   its controls use a 14px radius instead of pills. Transparency and spacing follow the glass level above. */
+.top{top:calc(env(safe-area-inset-top,0px) + 6px);margin:6px -6px 0;padding:8px 10px;border-radius:20px;border:1px solid var(--glass-edge,var(--line));box-shadow:var(--glass-hi,none)}
+.top .chip-btn,.top .icon-btn{border-radius:14px}
+.top .brand{padding-left:2px}
+@media (min-width:1024px){.top{margin:10px auto 4px;padding:10px 14px}}
+:root[data-glass="solid"] .top{border-color:var(--line)}
+/* Theme and scene cards (Face 7). Previews are drawn from each theme's real tokens. The chosen card has an accent
+   ring, a thicker border and a check with the word "Chosen", so state never depends on colour alone. */
+.set li.set-block{display:grid;gap:10px;align-items:start}
+.th-groups{display:grid;gap:14px;width:100%}
+.th-h{font-size:.78rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+:root[lang="bn"] .th-h{letter-spacing:0;text-transform:none;font-size:.85rem}
+.th-grid,.sc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
+.th-card,.sc-card{display:grid;gap:6px;align-content:start;padding:6px 6px 8px;border-radius:16px;border:1px solid var(--line);background:var(--surface);text-align:left;color:var(--ink);min-width:0;cursor:pointer}
+.th-card[aria-pressed="true"],.sc-card[aria-pressed="true"]{border:2px solid var(--accent);padding:5px 5px 7px;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.th-card:focus-visible,.sc-card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.th-name{font-size:.84rem;font-weight:600;line-height:1.25;padding-inline:2px}
+.th-state{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;min-height:1.1rem;font-size:.74rem;color:var(--accent);font-weight:600;padding-inline:2px}
+.th-state em{font-style:normal;font-weight:500;color:var(--muted)}
+.th-state .ck{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;margin-right:-2px}
+.th-prev{display:grid;gap:5px;padding:6px;border-radius:11px;background:var(--p-g);border:1px solid rgba(127,127,127,.22);aspect-ratio:4/3;align-content:start}
+.th-prev .p-bar{display:block;height:7px;border-radius:4px;background:color-mix(in srgb,var(--p-s) 80%,transparent)}
+.th-prev .p-card{display:grid;gap:4px;padding:6px;border-radius:8px;background:var(--p-s)}
+.th-prev .p-card b{font-family:var(--display);font-weight:400;font-size:.8rem;line-height:1;color:var(--p-i)}
+.th-prev .p-l{display:block;height:3px;border-radius:2px;background:var(--p-i);opacity:.55}
+.th-prev .p-l.s{width:60%;opacity:.35}
+.th-prev .p-row{display:flex;align-items:center;gap:5px;margin-top:1px}
+.th-prev .p-btn{display:block;width:44%;height:8px;border-radius:5px;background:var(--p-a)}
+.th-prev .p-dot{display:block;width:8px;height:8px;border-radius:50%;background:var(--p-o)}
+.sc-prev{display:block;width:100%;height:auto;aspect-ratio:4/3;border-radius:11px}
+.sc-prev .skyb{fill:#3E6E98}.sc-prev .f1{fill:#7FA0B4}.sc-prev .f2{fill:#46717F}.sc-prev .f3{fill:#1F3F4B}
+.sc-prev .arcp{fill:none;stroke:rgba(255,255,255,.55);stroke-width:1;stroke-dasharray:1.5 2.5}.sc-prev .sun{fill:#FFE6A8}.sc-prev .hzn{stroke:rgba(255,255,255,.5);stroke-width:.8}
+:root[data-theme="dark"] .sc-prev .skyb{fill:#14273D}:root[data-theme="dark"] .sc-prev .f1{fill:#22384E}:root[data-theme="dark"] .sc-prev .f2{fill:#152739}:root[data-theme="dark"] .sc-prev .f3{fill:#0A1520}:root[data-theme="dark"] .sc-prev .sun{fill:#E8ECF6}
+@media (max-width:380px){.th-grid,.sc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-contrast:more){.th-card[aria-pressed="true"],.sc-card[aria-pressed="true"]{border-color:var(--ink)}}
+/* Prayer scenes (Face 7) */
+.sky[data-scene="sky"] .arc .horizon{stroke:rgba(255,255,255,.28)}
+.sky-land .sc-hzn{fill:none;stroke:rgba(255,255,255,.3);stroke-width:1}
+.sky-land .sc-low{opacity:.85}
+.sky-land .sc-dune{opacity:.55}
+.sky[data-scene="mosque"] .sky-land .hl-near{opacity:.92}
+.th-groups,.sc-grid{max-width:620px}
+/* Hijri calendar states (Face 7), distinct in every theme and not by colour alone:
+   today = solid accent tile; selected = 2px accent frame on a raised card surface with bold numerals;
+   keyboard focus = 3px ink outline outside the tile; hover = dashed frame; special days = gold diamond (events)
+   and gold-tinted tile with a gold edge (White Days); fasting plan = green dot. Today + selected adds an ink
+   outer ring, so today stays legible when selected. */
+.cal .c[aria-pressed="true"]{background:var(--surface);border:2px solid var(--accent);box-shadow:var(--shadow);padding:6px 1px 7px}
+.cal .c[aria-pressed="true"] b{font-weight:800}
+.cal .c.today{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.cal .c.today[aria-pressed="true"]{background:var(--accent);border:2px solid var(--on-accent);box-shadow:0 0 0 2px var(--ink)}
+.cal .c.wh[aria-pressed="true"]:not(.today){background:var(--gold-soft)}
+.cal .c.ev::after{width:7px;height:7px;margin-left:-3.5px;border-radius:1px;transform:rotate(45deg)}
+.cal .c.wh{border:1px solid color-mix(in srgb,var(--gold) 55%,transparent)}
+.cal .c.wh[aria-pressed="true"]{border:2px solid var(--accent)}
+.cal .c.today.wh{box-shadow:0 0 0 2px var(--gold) inset}
+.cal .c.today.wh[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink),0 0 0 2px var(--gold) inset}
+button.c:focus-visible{outline:3px solid var(--ink);outline-offset:2px;z-index:1}
+@media (hover:hover) and (pointer:fine){.cal .c[data-k]:not([aria-pressed="true"]):not(.today):hover{border:1px dashed color-mix(in srgb,var(--accent) 70%,var(--ink));transform:none}}
+:root[data-motion="playful"] .cal .c[data-k]:hover{transform:translateY(-1px)}
+.cal-legend .lg-ev{border-radius:1px;transform:rotate(45deg)}
+.cal-legend .lg-sel{background:var(--surface);border:2px solid var(--accent)}
+/* Sticky header: an opaque strip of page ground above the rounded bar, so text never peeks through the gap. */
+.top::before{content:"";position:absolute;left:-7px;right:-7px;bottom:100%;height:calc(env(safe-area-inset-top,0px) + 8px);background:var(--ground);pointer-events:none}
+@media (min-width:1024px){.top::before{height:12px}}
+/* Prayer guide in dark appearances (Face 7): clearer card separation, softer fard badges, readable table rows,
+   and quieter, well-spaced source text. Light appearances are unchanged. */
+:root[data-theme="dark"] .v-guide .card{background:var(--surface);border-color:color-mix(in srgb,var(--line) 70%,rgba(255,255,255,.1));box-shadow:0 1px 0 rgba(255,255,255,.04) inset,var(--shadow)}
+:root[data-theme="dark"] .v-guide .g-det[open]{background:color-mix(in srgb,var(--surface) 88%,var(--accent) 3%)}
+:root[data-theme="dark"] .v-guide .g-det[open]>summary{border-bottom:1px solid var(--line);margin-bottom:10px}
+:root[data-theme="dark"] .u-fard{background:color-mix(in srgb,var(--accent) 22%,var(--surface));color:var(--ink);border-color:color-mix(in srgb,var(--accent) 70%,transparent)}
+:root[data-theme="dark"] .u-fard b{color:var(--accent)}
+:root[data-theme="dark"] .u-sm{background:color-mix(in srgb,var(--accent) 10%,var(--surface));color:color-mix(in srgb,var(--accent) 80%,var(--ink))}
+:root[data-theme="dark"] .g-table th,:root[data-theme="dark"] .g-table td{border-top-color:color-mix(in srgb,var(--line) 60%,rgba(255,255,255,.1))}
+:root[data-theme="dark"] .g-table tbody tr:nth-child(even){background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
+:root[data-theme="dark"] .g-order li::before{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+:root[data-theme="dark"] .v-guide .g-body>p:not(.note){color:color-mix(in srgb,var(--ink) 92%,var(--muted))}
+:root[data-theme="dark"] .v-guide .note{color:var(--muted);line-height:1.6}
+:root[data-theme="dark"] .v-guide .cites small{color:color-mix(in srgb,var(--muted) 90%,var(--ink))}
+
+/* Face 7.1 trackers. Prayer tracker: a 7-day × 5-prayer history grid (information only, square cells) above the one
+   set of prayer controls (round ticks). Extra worship: its own card; each practice has a small strip of its own
+   records in gold, so fard and voluntary history never look alike. */
+@media (min-width:1024px){.v-today .a-extra{grid-area:extra}}
+.fg{margin:12px 0 0;display:grid;gap:8px}
+.fg-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px}
+.fg-key{display:flex;gap:12px;font-size:.76rem;color:var(--muted)}
+.fg-key span{display:inline-flex;align-items:center;gap:5px}
+.fg-grid{display:grid;grid-template-columns:minmax(52px,auto) repeat(7,minmax(0,1fr));gap:4px 3px;align-items:center}
+.fg-body{display:contents}
+.fg-p{font-size:.78rem;color:var(--muted);padding-right:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fg-tl{font-weight:600;padding-top:2px}
+.fg-day{display:grid;justify-items:center;align-content:start;gap:0;min-height:52px;padding:4px 0 5px;border-radius:10px;border:1px solid transparent;background:none;color:inherit;font:inherit;cursor:pointer;line-height:1.15}
+.fg-day .fg-wd{font-size:.7rem;color:var(--muted)}
+.fg-day b{font-size:.95rem;font-weight:600;font-variant-numeric:tabular-nums}
+.fg-day .fg-tbar{display:block;width:16px;height:3px;border-radius:2px;background:var(--accent);margin-top:2px}
+.fg-day.today b{color:var(--accent)}
+.fg-day.sel{border:2px solid var(--accent);background:var(--surface);padding:3px 0 4px}
+.fg-day:focus-visible{outline:3px solid var(--ink);outline-offset:1px}
+@media (hover:hover) and (pointer:fine){.fg-day:not(.sel):hover{border:1px dashed color-mix(in srgb,var(--accent) 60%,var(--muted))}}
+.fg-c{display:block;justify-self:center;width:min(100%,22px);aspect-ratio:1;border-radius:5px;border:1.5px dashed color-mix(in srgb,var(--muted) 55%,transparent);background:transparent}
+.fg-c.on{border:1.5px solid var(--accent);background:var(--accent)}
+.fg-c.sel:not(.on){border-style:solid;border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.fg-key .fg-c{width:12px;height:12px;border-radius:3px}
+.fg-n{text-align:center;font-size:.74rem;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.fg-n.sel{color:var(--accent)}
+.fg-hint{font-size:.78rem}
+.a-track .tday{margin-top:10px}
+.a-extra .wt-head .badge{align-self:start;margin-top:4px}
+.xw-groups{display:grid;gap:4px 24px;margin-top:6px}
+.xw-grp{display:grid;gap:2px;align-content:start}
+.xw-grp .wt-h{margin-top:10px}
+.a-extra .xw li{min-height:0;padding:9px 0;align-items:center}
+.a-extra .xw .nm small{font-size:.76rem}
+.xh{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-top:5px}
+.xs{display:inline-grid;grid-auto-flow:column;grid-auto-columns:12px;gap:3px;vertical-align:middle}
+.xs.x30{grid-auto-columns:5px;gap:2px}
+.xs i{display:block;height:12px;border-radius:3px;border:1.5px solid color-mix(in srgb,var(--gold) 45%,transparent);background:transparent}
+.xs.x30 i{height:14px;border-radius:2px;border-width:1px}
+.xs i.on{background:var(--gold);border-color:var(--gold)}
+.xs i.today{box-shadow:0 0 0 1.5px var(--surface),0 0 0 3px var(--ink)}
+.xs.x30 i.today{box-shadow:0 0 0 1px var(--surface),0 0 0 2px var(--ink)}
+.a-extra .xw .nm small.xc{display:inline;margin:0}
+.xs-key{font-size:.76rem;margin-top:10px;line-height:1.7}
+.xs-key .xs{margin-right:2px}
+.xtick[aria-pressed="true"] i{background:var(--gold);border-color:var(--gold)}
+.xtick svg{stroke:var(--gold-soft)}
+:root[data-theme="dark"] .xtick svg{stroke:var(--surface)}
+@media (min-width:640px) and (max-width:1023.98px){.xw-groups{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
+@media (min-width:1600px){.v-today .xw-groups{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
+.fg-key .fg-tbar{display:inline-block;width:14px;height:3px;border-radius:2px;background:var(--accent)}
+.fg-key{flex-wrap:wrap}
+/* Face 7.1 study pages: verse references are small buttons that open the reader; source tags tell verses from tafsir;
+   the everyday example sits in its own labelled box so it is never read as Qur'an or tafsir. */
+.st-short{display:block;color:var(--ink);opacity:.82;font-size:.84rem;line-height:1.45;margin-top:2px}
+.st-chips{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;padding:0}
+.st-chips li{font-size:.78rem;padding:3px 10px;border-radius:99px;background:var(--accent-2);color:var(--accent);font-weight:600}
+.st-flow{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:0}
+.st-flow li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line)}
+.st-flow li:first-child{border-top:0}
+.st-ref{font:inherit;font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:2px 8px;min-height:28px;cursor:pointer;white-space:nowrap}
+.st-ref:hover{border-color:var(--accent)}
+.st-ref:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.st-concepts{display:grid;gap:12px;margin:8px 0 0}
+.st-concepts>div{padding:10px 12px;border-radius:12px;background:var(--surface-2)}
+.st-concepts dt{font-weight:700}
+.st-concepts dd{margin:4px 0 0;line-height:1.6}
+.st-cmeta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}
+.st-srctag{font-size:.7rem;font-weight:700;letter-spacing:.02em;padding:2px 8px;border-radius:99px;border:1px solid}
+.st-src-q{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+.st-src-t{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 45%,transparent);background:var(--gold-soft)}
+.st-example{padding:12px 14px;border-radius:14px;border:1px dashed color-mix(in srgb,var(--muted) 60%,transparent);background:color-mix(in srgb,var(--surface-2) 60%,transparent)}
+.st-exlab{font-size:.78rem;color:var(--muted);margin:2px 0 6px}
+.st-detail section+section{margin-top:18px}
+/* Qur'an Stories (Face 7.1). Source-type labels are text badges with distinct outlines (Qur'an = accent, hadith =
+   gold, tafsir = dashed), so the source never depends on colour alone. */
+.q-switch{margin:0 0 4px}
+.sk{display:inline-flex;align-items:center;font-size:.7rem;font-weight:700;letter-spacing:.02em;padding:2px 9px;border-radius:99px;border:1.5px solid;white-space:nowrap;line-height:1.5}
+.sk-quran{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 55%,transparent);background:var(--accent-2)}
+.sk-hadith{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 55%,transparent);background:var(--gold-soft)}
+.sk-tafsir{color:var(--ink);border-style:dashed;border-color:color-mix(in srgb,var(--muted) 70%,transparent);background:var(--surface-2)}
+.sg-legend{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:.84rem;color:var(--muted);line-height:1.6}
+.sg-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.sg-card{width:100%;display:grid;gap:6px;padding:14px 16px;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
+.sg-kinds{display:flex;flex-wrap:wrap;gap:4px}
+.sg-t{font-size:1.05rem;font-weight:700;line-height:1.3}
+.sg-s{color:var(--muted);font-size:.9rem;line-height:1.5}
+.sg-go{display:inline-flex;align-items:center;gap:4px;color:var(--accent);font-weight:600;font-size:.86rem}
+.sg-go .chev{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sg-card:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+@media (min-width:700px){.sg-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1600px){.sg-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.sg-detail{display:grid;gap:16px;max-width:820px}
+.sg-lead{font-size:1.05rem;line-height:1.6}
+.sg-part{padding:12px 14px;border-radius:14px;border-left:4px solid var(--line);background:color-mix(in srgb,var(--surface-2) 70%,transparent);display:grid;gap:8px;line-height:1.7}
+.sg-part.sg-quran{border-left-color:var(--accent)}
+.sg-part.sg-hadith{border-left-color:var(--gold)}
+.sg-part.sg-tafsir{border-left-style:dashed;border-left-color:var(--muted)}
+.sg-ph{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.sg-refs{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px}
+a.st-ref{text-decoration:none;display:inline-flex;align-items:center}
+.sg-grade{font-size:.76rem}
+.sg-unknown{padding:12px 14px;border-radius:14px;border:1px dashed var(--line)}
+ul.sg-legend{list-style:none;margin:2px 0 0;padding:0;display:grid;gap:6px}
+ul.sg-legend li{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+/* UI review fix (Face 7.1): the brand name never runs under the header controls; it truncates, and on the smallest
+   phones only the logo is shown (the name stays available to screen readers through the button's label). */
+.top .brand{overflow:hidden;flex:0 1 auto}
+.top .brand b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:374px){.top .brand b{display:none}}
+@media (max-width:360px){.cal .c.h1 small{font-size:.6rem;letter-spacing:-.01em}}
+/* UI review fix (Face 7.1): tablets and narrow desktops (700–1023px) use a wider single column instead of the
+   phone-width one, so pages no longer sit in a narrow strip with large empty margins. */
+@media (min-width:700px) and (max-width:1023.98px){.shell{max-width:720px}.names{grid-template-columns:repeat(4,1fr)}}
+.q-switch{max-width:440px}
+/* Terms of Use and Privacy Policy */
+.legal{display:grid;gap:10px;line-height:1.6}
+.legal .sec-title{margin-top:8px}
+.legal p,.legal h3{overflow-wrap:anywhere;max-width:72ch}
+.site-foot{grid-column:1/-1;width:100%;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 16px;margin:28px 0 8px;padding:14px 4px 0;border-top:1px solid var(--line,rgba(127,127,127,.2));font-size:.85rem;color:var(--muted)}
+.site-foot .linkish{font-size:inherit;padding:6px 2px;min-height:32px}
+.side-legal{margin:10px 4px 0;font-size:.8rem;color:var(--muted);text-align:center}
+.side-legal .linkish{font-size:inherit}

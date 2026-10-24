@@ -2,7 +2,7 @@
    The time-of-day sky card is the one loud element; everything else stays quiet on white cards. */
 :root{
   --ground:#EEF3F1; --surface:#FFFFFF; --surface-2:#F4F8F6; --ink:#0F2420; --muted:#5A6E69; --line:#DCE6E2;
-  --accent:#0E6B5C; --accent-2:#E2F0EC; --on-accent:#FFFFFF; --gold:#9C6210; --gold-soft:#FAEED6;
+  --accent:#0E6B5C; --accent-2:#E2F0EC; --on-accent:#FFFFFF; --gold:#996010; --gold-soft:#FAEED6;
   --danger:#B4483A; --ok:#2E7D5B;
   --r-night:#27454C; --r-twi:#D99A4E; --r-day:#8CCBD0; --r-day2:#B5DDD3; --r-late:#EBC873;
   --shadow:0 1px 2px rgba(15,36,32,.05),0 8px 24px rgba(15,36,32,.06); --shadow-up:0 2px 4px rgba(15,36,32,.07),0 14px 32px rgba(15,36,32,.13);
@@ -12,7 +12,7 @@
   --arabic:'DS Arabic','Amiri','Noto Naskh Arabic','Geeza Pro',serif;
   --ar-scale:1; --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.34,1.56,.64,1);
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+@media (prefers-color-scheme:dark){:root:not([data-theme]){
   --ground:#09130F; --surface:#111E1B; --surface-2:#162622; --ink:#E4EEEA; --muted:#8EA59E; --line:#22382F;
   --accent:#58C8AD; --accent-2:#163932; --on-accent:#05201A; --gold:#E7B65A; --gold-soft:#30271A;
   --danger:#E58A7B; --ok:#62C89D;
@@ -25,6 +25,66 @@
   --danger:#E58A7B; --ok:#62C89D;
   --r-night:#1B3238; --r-twi:#B97B36; --r-day:#3F8F97; --r-day2:#3A8072; --r-late:#B8943F;
   --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.25); --shadow-up:0 2px 6px rgba(0,0,0,.45),0 16px 36px rgba(0,0,0,.42);
+  color-scheme:dark}
+
+/* Colour palettes (Phase 5.3). Each palette has a light and a dark appearance; the appearance mode (System, Light,
+   Dark) is chosen separately and resolved to data-theme by assets/theme-boot.js and app.js. Classic = the primary
+   theme (:root and :root[data-theme="dark"] above), unchanged. */
+:root[data-palette="emerald"]{
+  --ground:#F6F1E4; --surface:#FFFDF7; --surface-2:#F0EADA; --ink:#12261E; --muted:#56655B; --line:#E2D9C4;
+  --accent:#0A6247; --accent-2:#DCEDE3; --on-accent:#FFFFFF; --gold:#835308; --gold-soft:#F5E8CC;
+  --danger:#A13B2B; --ok:#1F7149;
+  --r-night:#24423A; --r-twi:#D3964B; --r-day:#93C9B5; --r-day2:#BBDCC9; --r-late:#E7C46E;
+  --shadow:0 1px 2px rgba(20,20,30,.05),0 8px 24px rgba(20,20,30,.07); --shadow-up:0 2px 4px rgba(20,20,30,.08),0 14px 32px rgba(20,20,30,.14);
+  color-scheme:light}
+:root[data-palette="emerald"][data-theme="dark"]{
+  --ground:#08140F; --surface:#0F1F18; --surface-2:#15291F; --ink:#E6F0EA; --muted:#93AE9F; --line:#21392D;
+  --accent:#5FD0A2; --accent-2:#153A2B; --on-accent:#04170F; --gold:#E3BC6A; --gold-soft:#2E2817;
+  --danger:#E8907F; --ok:#6FD3A2;
+  --r-night:#183229; --r-twi:#B07E3A; --r-day:#3C8C6E; --r-day2:#357560; --r-late:#B4924A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
+  color-scheme:dark}
+:root[data-palette="sandstone"]{
+  --ground:#F3EADB; --surface:#FCF7EE; --surface-2:#EEE3D0; --ink:#2A2118; --muted:#665746; --line:#E0D3BD;
+  --accent:#0F5C66; --accent-2:#D8EBEC; --on-accent:#FFFFFF; --gold:#874C12; --gold-soft:#F3E2C8;
+  --danger:#A33B2C; --ok:#2C6E4E;
+  --r-night:#2A3E44; --r-twi:#D49052; --r-day:#8FC4C6; --r-day2:#B9D7D2; --r-late:#E5C27A;
+  --shadow:0 1px 2px rgba(20,20,30,.05),0 8px 24px rgba(20,20,30,.07); --shadow-up:0 2px 4px rgba(20,20,30,.08),0 14px 32px rgba(20,20,30,.14);
+  color-scheme:light}
+:root[data-palette="sandstone"][data-theme="dark"]{
+  --ground:#0D1416; --surface:#142023; --surface-2:#1A2A2E; --ink:#EEE6DA; --muted:#A99D8C; --line:#263A3E;
+  --accent:#6BC4CC; --accent-2:#163B40; --on-accent:#062226; --gold:#E0A867; --gold-soft:#33281C;
+  --danger:#EE9584; --ok:#74C99A;
+  --r-night:#1A2E33; --r-twi:#B47A3E; --r-day:#3D8A90; --r-day2:#367670; --r-late:#B49248;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
+  color-scheme:dark}
+:root[data-palette="burgundy"]{
+  --ground:#F4ECDD; --surface:#FDF8EF; --surface-2:#F0E6D4; --ink:#2B1A1A; --muted:#6B5352; --line:#E3D5C0;
+  --accent:#7A1F33; --accent-2:#F3DDE0; --on-accent:#FFFFFF; --gold:#80541A; --gold-soft:#F2E3C6;
+  --danger:#A63A2A; --ok:#2E6B4B;
+  --r-night:#3E2A30; --r-twi:#CF8E52; --r-day:#C9B3A4; --r-day2:#DCCBB6; --r-late:#E3C07A;
+  --shadow:0 1px 2px rgba(20,20,30,.05),0 8px 24px rgba(20,20,30,.07); --shadow-up:0 2px 4px rgba(20,20,30,.08),0 14px 32px rgba(20,20,30,.14);
+  color-scheme:light}
+:root[data-palette="burgundy"][data-theme="dark"]{
+  --ground:#140C0E; --surface:#1E1316; --surface-2:#27191D; --ink:#F1E6DA; --muted:#B39F98; --line:#3A262B;
+  --accent:#E58BA0; --accent-2:#3D1B24; --on-accent:#2A0710; --gold:#E2B76B; --gold-soft:#33271A;
+  --danger:#F09A8A; --ok:#7FCB9C;
+  --r-night:#2E1A20; --r-twi:#B07A3E; --r-day:#7E5A63; --r-day2:#6B4F55; --r-late:#B4924A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
+  color-scheme:dark}
+:root[data-palette="indigo"]{
+  --ground:#EEF0FA; --surface:#FFFFFF; --surface-2:#F1F2FB; --ink:#141833; --muted:#535980; --line:#DCDFF0;
+  --accent:#3B3FA8; --accent-2:#E3E5FA; --on-accent:#FFFFFF; --gold:#87590D; --gold-soft:#F6EACB;
+  --danger:#A93B33; --ok:#2C6E50;
+  --r-night:#283060; --r-twi:#D39A4E; --r-day:#9AA5E0; --r-day2:#BCC3EC; --r-late:#E7C46E;
+  --shadow:0 1px 2px rgba(20,20,30,.05),0 8px 24px rgba(20,20,30,.07); --shadow-up:0 2px 4px rgba(20,20,30,.08),0 14px 32px rgba(20,20,30,.14);
+  color-scheme:light}
+:root[data-palette="indigo"][data-theme="dark"]{
+  --ground:#0A0D1E; --surface:#12172F; --surface-2:#191F3E; --ink:#E9EAF6; --muted:#A2A7CB; --line:#262D57;
+  --accent:#AEB8FF; --accent-2:#23295A; --on-accent:#0A0D26; --gold:#EBC266; --gold-soft:#2C2740;
+  --danger:#F09A8A; --ok:#7FD3A8;
+  --r-night:#1C2350; --r-twi:#B9853C; --r-day:#5462A8; --r-day2:#46508E; --r-late:#B9963F;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
   color-scheme:dark}
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -390,7 +450,7 @@ nav.tabs .ind::before{content:"";width:56px;height:32px;border-radius:99px;backg
   .page-head .icon-btn[data-act="back"]{display:none}
 
   /* today: three-column dashboard */
-  .v-today{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"hero hero times" "verse verse track" "forb tiles fast";align-items:start}
+  .v-today{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"hero hero times" "verse verse track" "forb tiles extra" "forb fast extra";grid-template-rows:auto auto auto 1fr;align-items:start}
   .a-hero{grid-area:hero;min-height:300px;padding:30px 32px;align-self:stretch}
   .a-hero h1{font-size:4.2rem}
   .a-hero .count{font-size:2.1rem}
@@ -401,6 +461,7 @@ nav.tabs .ind::before{content:"";width:56px;height:32px;border-radius:99px;backg
   .a-times{grid-area:times}.a-track{grid-area:track;align-self:stretch}.a-fast{grid-area:fast}
   .a-fast .duo{grid-template-columns:1fr;gap:14px}
   .a-forb{grid-area:forb}.a-verse{grid-area:verse;align-self:stretch}
+  .a-extra{grid-area:extra}
   .a-tiles{grid-area:tiles}
 
   /* qur'an: list + reader side by side */
@@ -418,7 +479,13 @@ nav.tabs .ind::before{content:"";width:56px;height:32px;border-radius:99px;backg
 
   /* duas, names */
   .v-duas .chips{flex-wrap:wrap;margin-inline:0;padding-inline:0;overflow:visible}
-  #dua-list{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+  #dua-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  /* Equal-height previews side by side. While a dua is open, cards keep their own height so the open one
+     does not stretch its neighbours; the hidden button keeps the closed cards the same height. */
+  #dua-list:has(.dua.open){align-items:start}
+  .dua-body{min-height:var(--dua-h)}
+  #dua-list .dua.fits .dua-more{display:block;visibility:hidden}
+  .dua .ref{margin-top:auto}
   .names{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
 
   /* more: tile grid */
@@ -428,8 +495,16 @@ nav.tabs .ind::before{content:"";width:56px;height:32px;border-radius:99px;backg
   .v-more .menu button{min-height:104px}
 
   /* calendar, zakat */
-  .v-calendar{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);grid-template-areas:"head head" "cal up";column-gap:24px;align-items:start}
-  .v-calendar>.page-head{grid-area:head}.v-calendar>section:nth-of-type(1){grid-area:cal}.v-calendar>section:nth-of-type(2){grid-area:up}
+  /* Phase 5.3: calendar left; selected day and the planner stacked beside it; White Days full width below */
+  .v-calendar{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);grid-template-areas:"head head" "cal side" "wd wd";column-gap:24px;align-items:start}
+  .cal-side{gap:20px}
+  .v-calendar{align-items:stretch}.v-calendar>.cal-side{align-self:start}
+  .v-calendar>.cal-card{align-content:start;grid-template-rows:auto auto 1fr auto auto}.v-calendar>.cal-card>.cal-legend{align-self:end}
+  .v-calendar .cal{grid-template-rows:auto;grid-auto-rows:minmax(76px,1fr);align-self:stretch}
+  .v-calendar>.page-head{grid-area:head}.v-calendar>.cal-card{grid-area:cal}.v-calendar>.cal-side{grid-area:side}.v-calendar>.wd-card{grid-area:wd}
+  .wd-card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:20px}
+  .wd-card>.wd-top,.wd-card>.wd-sub,.wd-card>.note{grid-column:1/-1}
+  .wd-card>.wd-src{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}
   .cal{gap:6px}.cal .c{min-height:76px;padding-top:10px}.cal .c b{font-size:1.15rem}.cal .c small{font-size:.8rem}
   .v-zakat{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"head head" "f1 res" "f2 res" "note res";column-gap:24px;align-items:start}
   .v-zakat>.page-head{grid-area:head}.v-zakat>section:nth-of-type(1){grid-area:res;position:sticky;top:84px}
@@ -549,4 +624,314 @@ details.fn>div{font-size:.9rem;line-height:1.7;padding-bottom:12px;color:var(--i
   .v-guide{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);column-gap:24px;align-items:start}
   .v-guide>.page-head{grid-column:1/-1}
   .v-guide>.g-intro{grid-column:1/-1}
+}
+
+/* ---- Phase 4: Bangla short tafsir (shown apart from the translation) ---- */
+.tafsir{margin-top:10px;padding:8px 12px 10px;border-left:3px solid var(--gold);border-radius:4px 12px 12px 4px;background:var(--gold-soft);font-size:.93rem;line-height:1.75}
+.tafsir .tf-h{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:baseline;margin-bottom:2px}
+.tafsir .tf-h b{font-size:.85rem;font-weight:600;color:var(--gold)}
+.tafsir .tf-h span{font-size:.78rem;color:var(--muted)}
+/* The Verse for today card can be stretched beside the tracker on wide screens: keep its content together
+   and the reference/button row at the bottom instead of spreading the gaps. */
+.a-verse{display:flex;flex-direction:column}
+.a-verse .verse-foot{margin-top:auto}
+
+/* ---- Phase 4: dua cards - equal-height preview, "Read more" opens the whole card in place ---- */
+.dua{--dua-h:14rem;display:flex;flex-direction:column}
+.dua-body{display:grid;gap:10px;align-content:start;max-height:var(--dua-h);overflow:hidden;position:relative}
+.dua-body::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3.2rem;background:linear-gradient(transparent,var(--surface));pointer-events:none}
+.dua.open .dua-body,.dua.fits .dua-body{max-height:none}
+.dua.open .dua-body::after,.dua.fits .dua-body::after,.dua.fits .dua-more{display:none}
+.dua-more{align-self:flex-start;min-height:40px;font-weight:600;text-decoration:none}
+.dua-more:hover,.dua-more:focus-visible{text-decoration:underline}
+
+/* ---- Phase 4: extra worship (voluntary record, separate from the fard tracker) ---- */
+.xw{list-style:none;margin:4px 0 0;padding:0}
+.xw li{display:flex;align-items:center;gap:10px;min-height:54px;padding:6px 0;border-top:1px solid var(--line);transition:background .3s}
+.xw li:first-child{border-top:0}
+.xw .nm{flex:1;min-width:0}
+.xw .nm b{display:block;font-weight:600}
+.xw .nm small{display:block;color:var(--muted);font-size:.8rem;line-height:1.4}
+.xw .nm small.xc{font-variant-numeric:tabular-nums}
+.xw li.just{animation:xw-flash 1s var(--ease)}
+@keyframes xw-flash{0%{background:var(--accent-2);box-shadow:-8px 0 0 var(--accent-2),8px 0 0 var(--accent-2)}100%{background:transparent;box-shadow:none}}
+.xw-g{margin-top:16px}
+.xw-note{margin-top:6px;padding:8px 12px;border-radius:12px;background:var(--surface-2)}
+.a-extra .linkish{font-size:.85rem}
+@media (prefers-reduced-motion:reduce){.xw li.just{animation:none}.xw li{transition:none}}
+
+/* ---- Phase 5: tracker date navigation ---- */
+.week .wd{display:flex;flex-direction:column;align-items:center;border:0;background:none;padding:4px 0 6px;border-radius:12px;color:inherit;font:inherit;cursor:pointer;min-height:44px}
+.week .wd.sel{background:var(--accent-2);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.week .wd .dots{display:grid}
+.tday{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;display:grid;gap:8px}
+.tnav{display:flex;align-items:center;gap:8px}
+.tnav .icon-btn:disabled{opacity:.35;cursor:default}
+.tdate{flex:1;min-width:0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
+.tdate b{font-weight:600}
+.badge.past{background:var(--gold-soft);color:var(--gold)}
+.tday.past .tlist{box-shadow:inset 3px 0 0 var(--gold);padding-left:10px}
+.tpick{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-size:.88rem}
+.tpick label{color:var(--muted)}
+.tpick .field{width:auto;min-height:40px;padding:6px 10px}
+.tlist{list-style:none;margin:0;padding:0}
+.tlist li{display:flex;align-items:center;justify-content:space-between;min-height:48px;border-top:1px solid var(--line)}
+.tlist li:first-child{border-top:0}
+.tkeep{font-size:.78rem}
+.tdate .badge{margin-left:0}
+
+/* ---- Phase 5: Hadith library ---- */
+.hd-intro{display:grid;gap:8px}
+.hd-list{display:grid;gap:12px}
+.hadith{padding:16px;display:grid;gap:12px}
+.hadith .hd-ar{font-size:calc(1.45rem*var(--ar-scale));line-height:2;text-align:right}
+.hd-tr{line-height:1.7}
+.ar-in{font-family:var(--arabic);unicode-bidi:isolate;font-size:1.08em}
+.hd-ref{font-size:.85rem;display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.hd-ref a,.hadith details a{color:var(--accent)}
+.hd-ref .badge{margin-left:2px}
+.hadith details.fn>div{display:grid;gap:6px;font-size:.86rem}
+@media (min-width:1024px){.hd-cats{flex-wrap:wrap;margin-inline:0;padding-inline:0;overflow:visible}.hd-list{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}}
+
+/* ---- Phase 5: Daily Ayah schedule ---- */
+.votd-day{font-size:.8rem;color:var(--gold);font-weight:600;letter-spacing:.01em}
+.verse-ar .ayah-n{font-size:.8em;color:var(--gold)}
+.verse-tr .vn{font-size:.7em;color:var(--muted);margin-right:2px}
+.votd-ctx{font-size:.88rem;line-height:1.6;padding:8px 12px;border-radius:12px;background:var(--surface-2);color:var(--ink)}
+.votd-ctx b{font-weight:600;color:var(--muted)}
+.saw{font-family:var(--arabic);font-size:1.15em;line-height:1}
+
+/* ---- Phase 5: word help for older English (outside the translation) ---- */
+.gloss{margin-top:6px;font-size:.8rem;line-height:1.6;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px}
+.gloss .gl-h{font-weight:600;margin-right:4px}
+.gloss .gl i{font-style:italic;color:var(--ink)}
+
+/* ---------- Phase 5.2 ---------- */
+/* Generic "Read more" preview (verse explanation, Hadith cards). The whole text is in the page; nothing is cut. */
+.clamp{--clamp-h:9.5rem;display:grid;gap:8px}
+.clamp-body{display:grid;gap:8px;max-height:var(--clamp-h);overflow:hidden;position:relative}
+.clamp-body::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2.6rem;background:linear-gradient(transparent,var(--clamp-fade,var(--surface)));pointer-events:none}
+.clamp.open .clamp-body,.clamp.fits .clamp-body{max-height:none}
+.clamp.open .clamp-body::after,.clamp.fits .clamp-body::after,.clamp.fits .clamp-more{display:none}
+.clamp-more{justify-self:start;min-height:40px;font-weight:600;text-decoration:none}
+.clamp-more:hover,.clamp-more:focus-visible{text-decoration:underline}
+.en-ex{--clamp-fade:var(--gold-soft);margin-top:0}
+.en-ex .clamp-body p{margin:0}
+.en-ex .ex-v{font-size:.8rem;font-weight:600;color:var(--gold);margin-right:2px;font-variant-numeric:tabular-nums}
+.en-ex .ex-src{font-size:.78rem;line-height:1.5;color:var(--muted)}
+.en-ex .ex-flag{font-size:.82rem;line-height:1.55;padding:6px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.en-ex .ex-flag b{font-weight:600}
+/* Today card (Phase 5.2): start times, no countdowns. */
+.sky #cur-start{margin-top:8px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;font-size:1rem;opacity:1}
+.sky #cur-start .lbl{font-size:.85rem;opacity:.9}
+.sky #cur-start b{font-size:1.35rem;font-weight:600}
+.sky .rel,.np-day{font-size:.78rem;font-weight:600;padding:1px 8px;border-radius:99px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28)}
+.np-r{gap:3px}
+.np-day{justify-self:end}
+.sky .adhan-note{font-size:.78rem;line-height:1.45;opacity:.85;margin-top:8px;max-width:72%}
+@media (max-width:420px){.sky .adhan-note,.sky .dates{max-width:100%}}
+/* Hadith cards (Phase 5.2): same shell as the Dua cards. */
+.hadith{display:flex;flex-direction:column;gap:10px}
+.hd-head{display:grid;gap:2px}
+.hd-title{font-size:1rem;font-weight:600;line-height:1.35}
+.hd-cat{font-size:.78rem;color:var(--muted)}
+.hd-main{--clamp-h:19rem}
+.hd-main .clamp-body{gap:12px}
+.hadith .hd-ref{margin-top:auto}
+@media (min-width:1024px){.hd-list{align-items:stretch}.hd-main .clamp-body{min-height:var(--clamp-h)}.hd-main.fits .clamp-more{display:block;visibility:hidden}}
+/* Hadith collections (Phase 5.3): selector, an-Nawawi's Forty numbering, progress and jump list */
+.hd-col{max-width:560px}
+.hd-col button{padding:0 10px;line-height:1.25}
+.nw-intro{display:grid;gap:10px}
+.nw-prog{display:grid;gap:6px;font-size:.88rem;font-weight:600}
+.nw-prog .bar{display:block;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.nw-prog .bar i{display:block;height:100%;border-radius:inherit;background:var(--accent);transition:width .4s var(--ease)}
+.nw-jump{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:6px}
+.nw-jump button{min-height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font:inherit;font-size:.86rem;font-variant-numeric:tabular-nums;color:var(--ink);cursor:pointer;position:relative}
+.nw-jump button.done{background:var(--accent-2);border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent);font-weight:600}
+.nw-jump button.fl::after{content:"";position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.hadith.nw{scroll-margin-top:84px}
+.hadith.nw .hd-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.hadith.nw .hd-title{flex:1;min-width:10ch}
+.hd-title:focus{outline:none}.hd-title:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+.nw-no{display:grid;place-items:center;min-width:34px;height:34px;padding:0 6px;border-radius:10px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums}
+.nw-gr,.nw-flag{font-size:.74rem;font-weight:600;padding:1px 9px;border-radius:99px;border:1px solid var(--line)}
+.nw-gr.sahih{background:var(--accent-2);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)}
+.nw-gr.hasan{background:var(--gold-soft);color:var(--ink);border-color:color-mix(in srgb,var(--gold) 40%,transparent)}
+.nw-flag{background:color-mix(in srgb,var(--danger) 10%,var(--surface));color:var(--ink);border-color:color-mix(in srgb,var(--danger) 35%,transparent)}
+.nw-note{font-size:.84rem;color:var(--muted);padding:8px 10px;border-radius:10px;background:var(--surface-2)}
+.nw-flagtext{padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--danger) 8%,var(--surface))}
+.nw-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.nw-nav{display:flex;gap:14px;font-size:.88rem}
+.nw-nav .linkish{min-height:36px}
+/* Theme picker (Settings) */
+.themes{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;width:100%}
+.themes button{display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 12px 6px 8px;border-radius:14px;border:1px solid var(--line);background:var(--surface);text-align:left;font-size:.88rem;line-height:1.25}
+.themes button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;font-weight:600}
+.themes .sw{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid rgba(0,0,0,.12);background:conic-gradient(var(--a) 0 50%,var(--b) 0 100%)}
+.sw-classic{--a:#EEF3F1;--b:#0E6B5C}.sw-emerald{--a:#F6F1E4;--b:#0A6247}.sw-sandstone{--a:#F3EADB;--b:#0F5C66}.sw-burgundy{--a:#F4ECDD;--b:#7A1F33}.sw-indigo{--a:#12172F;--b:#EBC266}
+
+/* Restrained glass (Phase 5.2): only navigation and controls that float over content — the header, the tab bar,
+   the language/location chips, segmented controls, the tracker date picker, the sidebar's next-prayer box,
+   popovers and sheets. Reading surfaces (cards, verses, hadith, duas) stay opaque.
+   Without backdrop-filter support, or when the system asks for less transparency or more contrast, the
+   same elements fall back to solid surfaces. */
+:root{--glass:color-mix(in srgb,var(--surface) 70%,transparent);--glass-strong:color-mix(in srgb,var(--surface) 84%,transparent);--glass-edge:color-mix(in srgb,var(--line) 70%,rgba(255,255,255,.55));--glass-hi:inset 0 1px 0 rgba(255,255,255,.45);--glass-blur:saturate(160%) blur(16px)}
+:root[data-theme="dark"]{--glass-edge:color-mix(in srgb,var(--line) 70%,rgba(255,255,255,.12));--glass-hi:inset 0 1px 0 rgba(255,255,255,.07)}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--glass-edge:color-mix(in srgb,var(--line) 70%,rgba(255,255,255,.12));--glass-hi:inset 0 1px 0 rgba(255,255,255,.07)}}
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  .top .chip-btn,.top .icon-btn,.seg,.tnav,.tpick .field,.cal-pop,.side-next{background:var(--glass-strong);border-color:var(--glass-edge);box-shadow:var(--glass-hi),var(--shadow);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+  .top{background:color-mix(in srgb,var(--ground) 62%,transparent);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+  nav.tabs{background:var(--glass);box-shadow:var(--glass-hi);border-top-color:var(--glass-edge);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+  .seg button[aria-pressed="true"]{background:var(--surface);box-shadow:var(--glass-hi),var(--shadow)}
+  .tnav{border:1px solid var(--glass-edge);border-radius:16px;padding:6px}
+}
+@media (prefers-reduced-transparency:reduce),(prefers-contrast:more){
+  .top .chip-btn,.top .icon-btn,.seg,.tnav,.tpick .field,.cal-pop,.side-next,nav.tabs{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:var(--shadow)}
+  .top{background:var(--ground);-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+@media (prefers-contrast:more){.top .chip-btn,.top .icon-btn,.seg,.tnav,.cal-pop,nav.tabs{border-color:var(--ink)}}
+/* Hijri calendar (Phase 5.2) */
+.cal-card{display:grid;gap:14px;position:relative}
+.cal-tools{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.cal-tools .cal-hint{flex:1;min-width:200px;font-size:.8rem}
+.btn.sm{min-height:36px;padding:0 14px;font-size:.85rem;border-radius:99px}
+button.c{font:inherit;color:inherit;cursor:pointer;transition:transform .15s var(--ease),box-shadow .15s,border-color .15s}
+.cal .c[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1.5px var(--accent) inset}
+.cal .c.today[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface) inset,0 0 0 3.5px var(--accent) inset}
+.cal .c.fp::before{content:"";position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.cal .c.today.fp::before{background:var(--on-accent)}
+.cal .c.today.wh{box-shadow:0 0 0 2px var(--gold) inset}
+.cal-legend .lg-fp{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+@media (hover:hover) and (pointer:fine){.cal .c[data-k]:hover{border-color:color-mix(in srgb,var(--accent) 55%,transparent);transform:translateY(-1px)}}
+.cal-pop{position:absolute;z-index:6;width:min(260px,calc(100% - 16px));display:grid;gap:3px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-up);font-size:.84rem;line-height:1.4;pointer-events:none}
+.cal-pop[hidden]{display:none}
+.cal-pop b{font-weight:600}
+.cal-pop small{color:var(--muted);font-size:.74rem}
+.cal-pop .pp{justify-self:start;font-size:.74rem;font-weight:600;padding:0 8px;border-radius:99px;background:var(--accent-2);color:var(--accent)}
+.cal-pop .pp.wh{background:var(--gold-soft);color:var(--gold)}
+.cal-pop .pp.ev{background:var(--gold-soft);color:var(--ink)}
+.cal-pop .pp.fp{background:color-mix(in srgb,var(--ok) 18%,var(--surface));color:var(--ink)}
+.cal-detail{display:grid;gap:8px}
+.cal-detail .cd-h{font-weight:500}
+.cd-tags{display:flex;flex-wrap:wrap;gap:6px}
+.cd-tags li{font-size:.8rem;font-weight:600;padding:2px 10px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line)}
+.cd-tags .td{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.cd-tags .wh{background:var(--gold-soft);color:var(--gold);border-color:color-mix(in srgb,var(--gold) 35%,transparent)}
+.cd-warn{font-size:.88rem;padding:8px 12px;border-radius:12px;background:color-mix(in srgb,var(--danger) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--danger) 40%,transparent)}
+.fplan{display:grid;gap:8px;margin-top:4px;padding-top:10px;border-top:1px solid var(--line)}
+.fp-row{display:flex;align-items:center;gap:10px;min-height:44px;font-weight:500}
+.fp-row input{width:20px;height:20px;accent-color:var(--accent)}
+.fp-note{display:grid;gap:4px;font-size:.88rem}
+.cal-side{display:grid;gap:16px;align-content:start}
+.cal-plan{display:grid;gap:8px}
+.cp-sub{font-size:.85rem;color:var(--muted);font-weight:600;margin:4px 0 0}
+.cp-fasts{display:flex;flex-wrap:wrap;gap:6px}
+.cp-fasts .chip{min-height:36px;max-width:100%}
+.cp-n{display:inline-block;max-width:16ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;color:var(--muted)}
+.up-list.compact li{grid-template-columns:44px minmax(0,1fr) auto;gap:10px;padding:7px 0}
+.up-list.compact .d{padding:4px 0}
+.up-list.compact .d b{font-size:1rem}
+.up-list.compact .e b{font-size:.92rem}
+.up-list.compact .e small{font-size:.8rem}
+.up-list .in{font-size:.75rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.wd-card{display:grid;gap:10px}
+.wd-top{display:grid;gap:10px}
+.wd-next{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.wd-next .chip{min-height:36px}
+.wd-sub{font-size:.9rem;margin-top:4px}
+.wd-src{display:grid;gap:10px}
+.wd-src li{padding:10px 12px;align-content:space-between;border-radius:12px;background:var(--surface-2);display:grid;gap:4px;font-size:.92rem;line-height:1.6}
+.wd-src .ref{font-size:.8rem}
+.wd-src a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){button.c{transition:none}.cal .c[data-k]:hover{transform:none}}
+/* Prayer-day chart (Phase 5.2) */
+.dayviz{margin:10px 12px 2px;display:grid;gap:4px}
+.dayviz svg{width:100%;max-width:560px;height:auto;margin-inline:auto;overflow:visible}
+.dayviz .sky-day{fill:color-mix(in srgb,var(--r-day) 30%,var(--surface))}
+.dayviz .sky-night{fill:color-mix(in srgb,var(--r-night) 22%,var(--surface))}
+.dayviz .horizon{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+.dayviz .sunpath{fill:none;stroke:var(--gold);stroke-width:2;stroke-linecap:round}
+.view.enter .dayviz .sunpath{stroke-dasharray:100;animation:drawpath 1.2s var(--ease) .1s both}
+@keyframes drawpath{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
+.dayviz text{font-family:var(--body);font-size:10.5px;fill:var(--ink)}
+.dayviz .tk{fill:var(--muted);font-size:9.5px;font-variant-numeric:tabular-nums}
+.dayviz .pr circle{fill:var(--accent);stroke:var(--surface);stroke-width:1.5}
+.dayviz .pr.cur circle{r:5;fill:var(--accent)}
+.dayviz .pr.cur text{font-weight:700;fill:var(--accent)}
+.dayviz .lead{fill:none;stroke:var(--muted);stroke-opacity:.55;stroke-width:1;stroke-dasharray:2 2}
+.dayviz .evm path{fill:var(--surface);stroke:var(--r-twi);stroke-width:1.5}
+.dayviz .evm text{fill:var(--muted);font-size:9.5px}
+.dayviz .now{stroke:var(--ink);stroke-width:1;opacity:.55}
+.dayviz .sun{fill:#F2B544;stroke:var(--surface);stroke-width:2}
+.dayviz .sun.below{fill:var(--muted)}
+.viz-key{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.74rem;padding-inline:4px}
+.viz-key span{display:inline-flex;align-items:center;gap:6px}
+.viz-key i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.viz-key .k-ev{border-radius:1px;transform:rotate(45deg);background:var(--surface);border:1.5px solid var(--r-twi)}
+.viz-key .k-sun{background:#F2B544}
+.viz-polar{margin:12px 16px 6px;padding:10px 12px;border-radius:12px;background:var(--surface-2)}
+:root[lang="bn"] .dayviz text{font-size:11.5px}
+@media (prefers-reduced-motion:reduce){.view.enter .dayviz .sunpath{animation:none;stroke-dasharray:none}}
+.dayviz .tl{stroke:var(--muted);stroke-width:1}
+
+/* ---------- Phase 5.3 ---------- */
+/* Today card: two more sky palettes so the colour follows the real light (see skyPeriod in app.js). */
+.sky[data-p="sunrise"]{--s1:#3E6FA0;--s2:#C99A86;--s3:#F6C88A;--m1:#9A8C93;--m2:#5D6475;--m3:#2A3445;--hz:#F8D2A4;--cl:#FFE3C4;--clo:.55;--glow:#FFD08A}
+.sky[data-p="golden"]{--s1:#3B5E86;--s2:#C08A5E;--s3:#F2B562;--m1:#9A7F63;--m2:#5E4E3E;--m3:#2E2620;--hz:#F5C27A;--cl:#FFD9A8;--clo:.5;--glow:#FFB45C}
+.sky .arc .orb.hide{display:none}
+.sky .moong .mn-dark{fill:rgba(20,30,48,.55);stroke:rgba(230,236,255,.35);stroke-width:.8}
+.sky .moong .mn-lit{fill:#F2F4F8}
+.sky .moong{filter:drop-shadow(0 0 6px rgba(230,236,255,.75))}
+/* Countdown and prohibited-time note under the start time: compact, not bold, not alarming. */
+.sky .cd{margin-top:4px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;font-size:.95rem}
+.sky .cd .lbl{font-size:.85rem;opacity:.9}
+.sky .cd b{font-size:1.15rem;font-weight:600;letter-spacing:.02em}
+.sky .cd-off{font-size:.82rem;opacity:.85}
+.sky .forb-warn{margin-top:10px;max-width:460px;font-size:.84rem;line-height:1.45;font-weight:400;padding:7px 11px;border-radius:12px;background:rgba(5,18,26,.38);border:1px solid rgba(255,255,255,.22);text-shadow:none}
+.sky .forb-warn .linkish{color:inherit;opacity:.95;margin-left:2px}
+.fw-sheet{display:grid;gap:10px;margin-top:10px;line-height:1.6}
+.fw-src{display:grid;gap:6px;font-size:.9rem}
+.fw-src a{color:var(--accent)}
+
+/* Verse for today: a quiet geometric pattern (an eight-point star lattice drawn in the theme's gold), fading out
+   towards the text. It sits behind an opaque card, never behind moving content, and is not animated. */
+.a-verse{position:relative;isolation:isolate;overflow:hidden}
+.a-verse::before{content:"";position:absolute;inset:0 0 auto auto;width:min(62%,360px);height:240px;z-index:-1;pointer-events:none;background:var(--gold);opacity:.10;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.1'%3E%3Cpath d='M28 6l6.4 15.6L50 28l-15.6 6.4L28 50l-6.4-15.6L6 28l15.6-6.4z'/%3E%3Cpath d='M12.4 12.4h31.2v31.2H12.4z'/%3E%3Ccircle cx='28' cy='28' r='5'/%3E%3C/g%3E%3C/svg%3E") 0 0/56px 56px repeat,linear-gradient(225deg,#000 10%,transparent 70%);
+  -webkit-mask-composite:source-in;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.1'%3E%3Cpath d='M28 6l6.4 15.6L50 28l-15.6 6.4L28 50l-6.4-15.6L6 28l15.6-6.4z'/%3E%3Cpath d='M12.4 12.4h31.2v31.2H12.4z'/%3E%3Ccircle cx='28' cy='28' r='5'/%3E%3C/g%3E%3C/svg%3E") 0 0/56px 56px repeat,linear-gradient(225deg,#000 10%,transparent 70%);mask-composite:intersect}
+.a-verse::after{content:"";position:absolute;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(120% 70% at 100% 0%,var(--gold-soft) 0%,transparent 55%);opacity:.75}
+@media (prefers-contrast:more){.a-verse::before,.a-verse::after{display:none}}
+/* Zakat (Phase 5.3) */
+.zk-disclaimer{font-size:.86rem;line-height:1.55;padding:10px 14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink)}
+.form label small.zk-hint,.zk-hint{display:block;font-size:.78rem;line-height:1.45;color:var(--muted);font-weight:400;margin:2px 0 4px}
+.zk-warn{font-size:.85rem;padding:6px 10px;border-radius:10px;background:color-mix(in srgb,var(--danger) 12%,transparent);color:inherit}
+.zk-break{margin-top:8px}
+.zk-break summary{cursor:pointer;font-weight:600;font-size:.9rem}
+.zk-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.88rem}
+.zk-table td{padding:5px 0;border-top:1px solid color-mix(in srgb,currentColor 18%,transparent)}
+.zk-table td:last-child{text-align:right;padding-left:12px;white-space:nowrap}
+.zk-table tr.sum td{font-weight:600}
+.zk-formula{font-size:.8rem;margin-top:8px;opacity:.9}
+.zk-learn{display:grid;gap:8px}
+.zk-q{border-top:1px solid var(--line);padding:8px 0}
+.zk-q summary{cursor:pointer;font-weight:600;min-height:32px;display:flex;align-items:center}
+.zk-q p{margin-top:6px;line-height:1.6;font-size:.93rem}
+/* Interaction (Phase 5.3): a small spring on controls and cards. Hover only on devices that can hover; keyboard focus gets
+   the same lift; a press scales down briefly for touch. Only controls and card shells move: the Qur'an, hadith and dua
+   texts themselves are never animated. Everything is switched off for prefers-reduced-motion. */
+.btn,.chip,.chip-btn,.icon-btn,.seg button,.nw-jump button,.themes button,.wd-next .chip{transition:transform .32s var(--spring),box-shadow .2s var(--ease),background-color .2s,border-color .2s,color .2s,opacity .2s}
+.name,.tile,button.card,.v-more .menu li,.hcal,.g-det{transition:transform .34s var(--spring),box-shadow .2s var(--ease),border-color .2s var(--ease)}
+@media (hover:hover) and (pointer:fine){
+  .btn:hover,.chip:hover,.chip-btn:hover,.icon-btn:hover,.nw-jump button:hover,.themes button:hover{transform:translateY(-1px) scale(1.03)}
+  .chip:hover,.chip-btn:hover,.icon-btn:hover,.nw-jump button:hover,.themes button:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+  .seg button:not([aria-pressed="true"]):hover{background:color-mix(in srgb,var(--surface) 60%,transparent)}
+}
+.btn:focus-visible,.chip:focus-visible,.chip-btn:focus-visible,.icon-btn:focus-visible,.nw-jump button:focus-visible,.themes button:focus-visible{transform:translateY(-1px) scale(1.03)}
+.btn:active,.chip:active,.chip-btn:active,.icon-btn:active,.seg button:active,.nw-jump button:active,.themes button:active{transform:scale(.95);transition-duration:.08s}
+@media (prefers-reduced-motion:reduce){
+  .btn,.chip,.chip-btn,.icon-btn,.seg button,.nw-jump button,.themes button,.wd-next .chip,.name,.tile,button.card,.v-more .menu li,.hcal,.g-det{transition:none}
+  .btn:hover,.chip:hover,.chip-btn:hover,.icon-btn:hover,.nw-jump button:hover,.themes button:hover,
+  .btn:focus-visible,.chip:focus-visible,.chip-btn:focus-visible,.icon-btn:focus-visible,.nw-jump button:focus-visible,.themes button:focus-visible,
+  .btn:active,.chip:active,.chip-btn:active,.icon-btn:active,.seg button:active,.nw-jump button:active,.themes button:active{transform:none}
 }

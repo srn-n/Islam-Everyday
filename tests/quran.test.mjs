@@ -47,7 +47,7 @@ test("alignment: languages agree ayah by ayah", () => {
   const spot = [
     [1, 1, "بسم الله", "In the name of Allah", "রহমান"],
     [2, 1, "الم", "Alif. Lam. Mim", "আলিফ"],
-    [2, 255, "الحي القيوم", "There is no deity save Him", "আল্লাহ্"],
+    [2, 255, "الحي القيوم", "There is no God save Him", "আল্লাহ্"], // Pickthall 1930 wording, restored in Phase 4
     [19, 1, "كهيعص", "Kaf. Ha. Ya. A'in. Sad", "কাফ"],
     [36, 1, "يس", "Ya Sin", "সীন"],
     [55, 13, "فبأي آلاء ربكما تكذبان", "favours of your Lord", "অনুগ্রহ"],

@@ -1081,6 +1081,7 @@ button.c:focus-visible{outline:3px solid var(--ink);outline-offset:2px;z-index:1
 .fg-hint{font-size:.78rem}
 .a-track .tday{margin-top:10px}
 .a-extra .wt-head .badge{align-self:start;margin-top:4px}
+.a-extra{container-type:inline-size;min-width:0}
 .xw-groups{display:grid;gap:4px 24px;margin-top:6px}
 .xw-grp{display:grid;gap:2px;align-content:start}
 .xw-grp .wt-h{margin-top:10px}
@@ -1088,7 +1089,9 @@ button.c:focus-visible{outline:3px solid var(--ink);outline-offset:2px;z-index:1
 .a-extra .xw .nm small{font-size:.76rem}
 .xh{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-top:5px}
 .xs{display:inline-grid;grid-auto-flow:column;grid-auto-columns:12px;gap:3px;vertical-align:middle}
-.xs.x30{grid-auto-columns:5px;gap:2px}
+.xs.x30{display:grid;grid-auto-flow:row;grid-template-columns:repeat(30,minmax(0,1fr));gap:2px;width:100%;max-width:208px}
+.xh:has(.x30){display:grid;gap:4px}
+@container (max-width:300px){.xs.x30{grid-template-columns:repeat(15,minmax(0,1fr));max-width:120px;row-gap:3px}}
 .xs i{display:block;height:12px;border-radius:3px;border:1.5px solid color-mix(in srgb,var(--gold) 45%,transparent);background:transparent}
 .xs.x30 i{height:14px;border-radius:2px;border-width:1px}
 .xs i.on{background:var(--gold);border-color:var(--gold)}
@@ -1100,8 +1103,8 @@ button.c:focus-visible{outline:3px solid var(--ink);outline-offset:2px;z-index:1
 .xtick[aria-pressed="true"] i{background:var(--gold);border-color:var(--gold)}
 .xtick svg{stroke:var(--gold-soft)}
 :root[data-theme="dark"] .xtick svg{stroke:var(--surface)}
-@media (min-width:640px) and (max-width:1023.98px){.xw-groups{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
-@media (min-width:1600px){.v-today .xw-groups{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
+/* Two columns only when the card itself is wide enough for the fasting strip and its button. */
+@container (min-width:600px){.xw-groups{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
 .fg-key .fg-tbar{display:inline-block;width:14px;height:3px;border-radius:2px;background:var(--accent)}
 .fg-key{flex-wrap:wrap}
 /* Face 7.1 study pages: verse references are small buttons that open the reader; source tags tell verses from tafsir;

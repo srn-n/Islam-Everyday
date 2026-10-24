@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import vm from "node:vm";
 import { read, exists, loadBrowser } from "./helpers.mjs";
 
-const SCRIPTS = ["assets/quran-meta.js", "assets/data.js", "assets/votd.js", "assets/names.js", "assets/app.js", "sw.js"];
+const SCRIPTS = ["assets/quran-meta.js", "assets/data.js", "assets/votd.js", "assets/names.js", "assets/bnfix.js", "assets/xtrack.js", "assets/hadith.js", "assets/glossary.js", "assets/app.js", "sw.js"];
 
 test("all scripts parse", () => { for (const f of SCRIPTS) assert.doesNotThrow(() => new vm.Script(read(f), { filename: f }), f); });
 

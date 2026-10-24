@@ -16,15 +16,16 @@
     "language": "en",
     "title": "The Meaning of the Glorious Koran",
     "translator": "Mohammed Marmaduke William Pickthall (1875-1936)",
-    "edition": "First published 1930. Digital text: Tanzil 'en.pickthall', mirrored in fawazahmed0/quran-api edition 'eng-mohammedmarmadu'",
+    "edition": "Wording follows the first edition (New York: Alfred A. Knopf; London: George Allen & Unwin, 1930). Digital base text: Tanzil 'en.pickthall' (an edited electronic text of unidentified origin, descended from the USC-MSA text), mirrored in fawazahmed0/quran-api edition 'eng-mohammedmarmadu', corrected to the 1930 wording",
     "sourceUrl": "https://raw.githubusercontent.com/fawazahmed0/quran-api/1/editions/eng-mohammedmarmadu.json",
     "sourceCommit": "47ca096b0976443ba2eab2e45cdf0fb4096a2610",
     "upstream": "https://tanzil.net/trans/en.pickthall",
-    "license": "Public domain. The translator died in 1936, so the work is out of copyright in life+70 countries (including Australia and Bangladesh); the 1930 US publication entered the US public domain on 1 January 2026. The fawazahmed0/quran-api repository is released under The Unlicense.",
-    "attribution": "English translation: Marmaduke Pickthall, The Meaning of the Glorious Koran (1930). Digital text from Tanzil (tanzil.net) via fawazahmed0/quran-api.",
+    "license": "The 1930 translation is in the public domain: the translator died in 1936, so the term has ended in life+70 countries (Australia, the UK, the EU) and in Bangladesh (life+60), and the 1930 US publication entered the US public domain on 1 January 2026. Tanzil offers its translation files for non-commercial use with credit (tanzil.net/trans); this app is free and non-commercial and credits Tanzil. The fawazahmed0/quran-api repository is released under The Unlicense. The wording of later revised printings is not used.",
+    "attribution": "English translation: Marmaduke Pickthall, The Meaning of the Glorious Koran (1930 first edition). Digital base text from Tanzil (tanzil.net) via fawazahmed0/quran-api, corrected to the 1930 wording.",
     "notices": [
-      "Text bundled unmodified, as Tanzil asks for its translation texts."
+      "Wording follows the 1930 first edition. 393 verses of the Tanzil text are corrected to the 1930 wording (transcription errors, the replaced words \"God\", \"Owner\" and \"Mecca\", and the edited electronic text's rewordings), each checked against three 1930 copies and later printings. Modern spellings (judgment, steadfast and similar) and the digital text's punctuation are kept. Every change, with the replaced text, the reason and the checks made, is listed in data/quran/en-corrections.json and docs/translation-audit.md."
     ],
+    "corrections": "data/quran/en-corrections.json",
     "inputSha256": "aaff752d4349005282d977eebb86398279330c8df8736d4528a7afe80dd9ce66"
   },
   "bn": {
@@ -46,5 +47,27 @@
       "Islam Everyday shows no advertisements."
     ],
     "inputSha256": "aabc75546a73da563f4f90d1e5c9a3136aec8776b3242c33b2e0539076563365"
+  },
+  "bnt": {
+    "id": "bn-mukhtasar-quranenc",
+    "language": "bn",
+    "kind": "tafsir (short explanation, not a translation)",
+    "title": "Bengali Translation of Al-Mukhtasar in Interpreting the Noble Quran",
+    "issuer": "Tafsir Center for Quranic Studies",
+    "version": "1.0.0",
+    "versionDate": "2020-10-15",
+    "publisher": "Encyclopedia of the Noble Qur'an (QuranEnc.com)",
+    "sourceUrl": "https://quranenc.com/en/browse/bengali_mokhtasar",
+    "api": "https://quranenc.com/api/v1/translation/sura/bengali_mokhtasar/{sura}",
+    "retrieved": "2026-10-13",
+    "license": "QuranEnc republication terms: (1) no modification, addition or deletion of the content; (2) clearly refer to the publisher and the source (QuranEnc.com); (3) mention the version number; (4) keep the transcript information inside the document; (5) notify QuranEnc.com of any note on the translation; (6) update to the latest version issued by QuranEnc.com; (7) no inappropriate advertisements alongside the translation.",
+    "attribution": "Bangla short tafsir: Al-Mukhtasar in Interpreting the Noble Quran, Tafsir Center for Quranic Studies, Bengali version 1.0.0 (2020-10-15), published by QuranEnc.com (https://quranenc.com/en/browse/bengali_mokhtasar).",
+    "notices": [
+      "Text bundled exactly as returned by the QuranEnc API. Where the publisher explains a group of verses together, each verse in the group carries the same explanation.",
+      "About 1,100 entries contain left-over characters from an old Bangla font encoding (for example ত্রæটি for ত্রুটি). The data is kept as published; the app repairs these characters only when displaying them (assets/bnfix.js), and they are listed for reporting to QuranEnc.",
+      "Maintenance duty: check QuranEnc.com for newer versions and re-run `npm run import:quran`.",
+      "Islam Everyday shows no advertisements."
+    ],
+    "inputSha256": "c8d4f3a137e485d534540169e33cb1a0d720dc05d143b30324f69c2f0ab9e631"
   }
 }

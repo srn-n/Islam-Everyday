@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-11",
+  "generated": "2026-10-16",
   "expectedSurahs": 114,
   "expectedAyahs": 6236,
   "languages": {
@@ -13,7 +13,8 @@
       "ayahs": 6236,
       "missing": [],
       "empty": [],
-      "complete": true
+      "complete": true,
+      "corrections": 393
     },
     "bn": {
       "ayahs": 6236,
@@ -54,6 +55,12 @@
           "64:3"
         ]
       }
+    },
+    "bnt": {
+      "ayahs": 6236,
+      "missing": [],
+      "empty": [],
+      "complete": true
     }
   }
 }

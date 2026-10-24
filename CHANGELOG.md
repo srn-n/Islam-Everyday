@@ -2,6 +2,176 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Phase 5.4: release audit (19 October 2026)
+
+Nothing was committed, pushed or deployed. An audit of the Phase 4–5.3 build; only demonstrable technical defects were fixed. See `docs/release-readiness.md`.
+
+### Fixed
+- Accessibility: the primary light theme's gold (#9C6210 → #996010) now meets 4.5:1 on its pale background (was 4.38:1, the one recorded exception; the "Next" label and the Witr legend failed WCAG AA). Two unnamed complementary landmarks on the Qur'an page now have names (sidebar, surah list).
+- Hadith data: Bangla notes on the 16 Phase 5.3 narrations used Latin digits; now Bangla digits like the rest. Muslim 2318 and 1893 relabelled 2318a and 1893a, the numbers sunnah.com itself shows.
+- Wording: the advance notices for the zenith and sunset periods now say "From about …" (the margins are approximations); the zakat warning names every reason a value is ignored (it omitted "unrealistically large").
+
+### Verified (no change needed)
+- All 720 hadith fields (40 general + 40 an-Nawawi entries) identical to HadeethEnc today; all 154 sunnah.com links open at the stated numbers with Arabic text.
+- Solar times within 1 minute of an independent NOAA calculation; DST change days and high latitudes behave as documented.
+- English translation records, verse ids across languages, attribution; service worker updates from v4, v5 and the Phase 5.2 build, interrupted saves and shared-origin caches.
+
+### Added
+- `tests/phase54.test.mjs` (8 checks), `tests/browser/phase54.cjs` (14), `tests/browser/offline.cjs` (36), `docs/scholar-review-checklist.md`, `docs/release-readiness.md`.
+
+## Phase 5.3: countdown, prohibited times, chart labels, appearance, zakat, calendar layout, an-Nawawi's Forty, interactions (19 October 2026)
+
+Nothing was committed, pushed or deployed.
+
+### Today card
+- Hero background follows the time of day, now including a short sunrise and a golden-hour period, with the moon's phase at night. The Verse card has its own quiet background (faint eight-point star pattern and soft wash; off with "more contrast").
+- A live countdown under the current prayer's start time: "{next prayer} begins in HH:MM:SS", always to the next prayer's actual start, never to an invented end. Updates every second, switches at each prayer, runs across midnight, falls back to a plain note when the day's times are unreliable.
+- Prohibited-time line (compact, not bold) with a "Why?" sheet: sunrise to +15 min, Dhuhr −10 min to Dhuhr, Maghrib −15 min to Maghrib, a 10-minute advance notice, and after-Fajr/after-Asr notes only once that prayer is ticked. Sources: Sahih Muslim 831, Sahih al-Bukhari 586, Ibn Baz fatwa 18495. Sunrise, solar noon and sunset are calculated locally (there is no prayer-time API). Nothing is shown when the times are unreliable.
+
+### Day chart
+- All labels in one chronological row above the chart, each over its own event with a leader line; collisions resolved by moving groups as little as possible inside the chart (`assets/dayviz.js`). The draw-in animation is kept.
+
+### Appearance
+- Separate **Appearance** (System/Light/Dark) and **Theme** (palette) settings. New palettes: Sandstone & Deep Teal, Burgundy & Warm Parchment; Classic, Emerald & Ivory and Midnight Indigo & Gold kept; every palette has light and dark sets. `assets/theme-boot.js` applies the choice before first paint; System follows device changes live; Phase 5.2 settings migrate.
+
+### Zakat
+- The verbatim disclaimer (and Bangla), grouped inputs with hints, a visible formula and breakdown, validation, a choice of nisab weights (87.48/612.36 g or 85/595 g), no built-in prices, Learn sections in both languages, references to Sahih al-Bukhari 8 and Islamic Relief Australia (labelled apart). Formula unchanged (`assets/zakat.js`).
+
+### Hijri calendar
+- Rebalanced: month on the left; selected day and a compact "Fasting planner and upcoming dates" panel (your planned fasts as shortcuts, the next four Islamic dates) on the right, level top and bottom; White Days and its evidence full width below in two aligned rows. Personal notes and saved plans unchanged.
+
+### Hadith
+- General library: 16 more narrations from al-Bukhari and Muslim (40 in all), same verification as before.
+- New, separate collection: **Imam an-Nawawi's Forty Hadith**, all 42, in his numbering, from HadeethEnc's dedicated entries (texts, takhrij, grades unchanged; every field hash-checked), each linked to sunnah.com/nawawi40 and the underlying collection numbers. Sahih and Hasan shown apart; nine grades flagged for review; context notes on nos. 8 and 14; translation note on no. 35. Collection selector, numbered jump list, previous/next, Mark as read with progress, both languages.
+- Scholar review pack extended with the an-Nawawi verification table, prohibited times and zakat (`docs/scholar-review.md`).
+
+### Interaction
+- Spring lift on hover and keyboard focus, brief press scale for touch, on controls and card shells only; never on religious texts; off with reduced motion.
+
+### Tests
+- `tests/phase53.test.mjs` (28 checks) and `tests/browser/phase53.cjs` (64 checks). Phase 5.2 tests updated where the brief changed the behaviour (one countdown to the next start; themes split into mode and palette; 40 general hadith), keeping their other assertions.
+
+## Phase 5.2: Today card, English variants and explanations, Hadith cards, themes, calendar, day chart (18 October 2026)
+
+Nothing was committed, pushed or deployed.
+
+### Today card
+- Countdowns and ending times removed. The card shows the current prayer period and when it started, the next prayer and when it starts (Today/Tomorrow), and the local Gregorian and Hijri dates. Isha that began before midnight is labelled "yesterday". A note distinguishes start (adhan) times from iqamah. The sidebar's next prayer shows its time instead of a countdown.
+
+### Languages
+- Settings → Language: English (India) (default), English (US), Bangla. The variants change Intl date/number formats, am/pm vs AM/PM and US spelling of interface strings; religious texts are never respelled. All hard-coded `en-AU` formats replaced. Switching language keeps the page, filters, date and the card or verse being read (Hadith, Duas, Qur'an reader, 99 Names), including while fonts load.
+
+### Verse for today: English explanation
+- All 180 entries (267 verses) show the published English *Al-Mukhtasar* (Tafsir Center for Quranic Studies, QuranEnc.com, `english_mokhtasar`, retrieved 18 October 2026) in English, as a separate labelled layer with its source line and Read more. Texts are stored unchanged and were checked one by one against SHA-256 hashes of the publisher's text; only the leading verse number is hidden. Not AI-generated. Seven sensitive explanations carry an editorial note. Pickthall and the Bangla layers are unchanged.
+
+### Hadith cards
+- Same shell as the Dua cards: reference heading and categories, a preview of the Arabic and translation, Read more/Show less in place (no truncation), open state kept across filtering and language; equal heights on desktop.
+
+### Themes and glass
+- Two optional themes, Emerald & Ivory and Midnight Indigo & Gold, beside the unchanged System/Light/Dark. Theme picker with swatches. System dark mode no longer overrides a chosen theme.
+- Restrained glass on the header, tab bar, segmented controls, tracker date control, sidebar box and calendar popover; reading surfaces stay opaque; solid fallbacks without `backdrop-filter`, with reduced transparency or more contrast.
+
+### Hijri calendar
+- Days are buttons: mouse hover and keyboard focus show a popover; click/tap/Enter shows details (Gregorian and Hijri date, calculated label, White Day, key dates, the maghrib rule); arrows, Page Up/Down, Home/End move across days and months with roving focus; touch selects without a popover; Go to today.
+- White Days card in English and Bangla with sunnah.com references checked on 18 October 2026 (Abu Dawud 2449 sahih per al-Albani; Bukhari 1981; Muslim 1160; Muslim 1141 for the Tashriq exception). 13 Dhul-Hijjah flagged as not fasted. Next White Days as shortcuts.
+- Optional per-day fasting plan (checkbox and note), stored on the device.
+- Method stated: Umm al-Qura plus the adjustment; calculated, not sighted.
+
+### Day chart
+- The ribbon in Prayer times is replaced by a chart of the sun's altitude through the local day, with the horizon, sunrise and sunset as events (not prayers), the five prayer starts and the sun now; text equivalent; reduced motion; fallback note at high latitudes when the formulas fail (for example London in June).
+
+### Docs and tests
+- `docs/scholar-review.md` (generator updated): sections D (English explanation notes and publisher slips) and E (White Days), new checklist items and open question 5.
+- New `tests/phase52.test.mjs` (20 tests). `npm test`: 90 tests, 90 pass (baseline 70).
+- New `tests/browser/phase52.cjs` (Playwright, run separately): 52 checks, all pass. The Phase 4–5 tracker (33) and service-worker (23) browser checks still pass.
+
+## Phases 4 and 5: final review before release (18 October 2026)
+
+Nothing was committed, pushed or deployed.
+
+### Edition decision (English Qur'an)
+- Provenance established: the Tanzil text names no printed source and matches the USC-MSA electronic text (Project Gutenberg #16955), an edited text of unidentified origin. Nine scanned printings were compared (three 1930 first-edition copies, the 1948 and 1957 impressions, three later typesettings); none has the electronic text's wording. The earlier "later revised edition" explanation is withdrawn.
+- Decision: one edition, the 1930 first edition (public domain). 242 more verses restored to the 1930 wording (round 3), 10 earlier entries extended or revised; 393 in total. Nothing reverted. The Phase 4 "God", "Owner" and "Mecca" restorations are confirmed by all three 1930 copies.
+- 4:135 (Phase 5) had mixed the two texts; now the 1930 "(than ye are)".
+- Not reproduced: 10 misprints of the 1930 printing; 2:57 and 82:9 held back for review. 24 adopted readings flagged for a qualified reviewer (13 where 1930 leaves an element of the Arabic untranslated).
+- Modern spellings and the digital text's punctuation kept as a separate, documented normalisation.
+- `en-corrections.json` records the witnesses, policy, reasons, checks and review notes; `docs/translation-audit.md` rewritten with the evidence; importer notice, licence and attribution updated; About page credits updated.
+
+### Religious content audit
+- Hadith: all 216 stored fields re-checked against HadeethEnc (identical), all 24 HadeethEnc pages and 39 sunnah.com references open at the stated numbers. 24 pass source checks; none withheld; two flagged for reviewer attention (h15, h23).
+- Verse for today: all 180 entries re-read with the updated English; 9 entries include verses changed by the edition decision, none became misleading. Day 132 (35:28 starts mid-sentence) and day 6 (6:54) flagged for the reviewer. Schedule and anchor unchanged.
+- New `docs/scholar-review.md` (built by `tools/build-scholar-review.cjs`): the 24 hadith, 180 passages, context notes, flagged verses, open questions and a reviewer checklist. No reviewer or approval is claimed.
+
+### Tracker and offline
+- Extra worship is labelled "Today", and a note explains that earlier dates apply to the five fard prayers only.
+- Service worker: activation now deletes only its own caches (it previously deleted every cache on the origin, including other GitHub Pages projects'); precaching and data fetches bypass the HTTP cache; a partial "save for offline" is no longer reported as saved; users who had saved an older copy are told to save again (Qur'an page and Settings). A data fingerprint in `sw.js` is test-guarded so changed data cannot hide behind an old cache.
+
+### Tests
+- New `tests/review.test.mjs` (10 tests). `npm test`: 70 tests, 70 pass (baseline 60).
+- Browser checks (Playwright, controlled clock): 33 tracker and cross-feature checks; 23 service-worker checks covering first install, update from the released v4 and from Phase 4 (v5), returning users offline; Phase 4 dua and extra-worship checks. All pass.
+
+## Phase 5: hadith library, 180-day Verse for today, English corrections round 2, tracker dates (17 October 2026)
+
+Worked on top of the uncommitted Phase 4 changes (base `2cbe798`). Nothing was committed, pushed or deployed.
+
+### Hadith library (Task 1)
+- New `assets/hadith.js`: 24 narrations from Sahih al-Bukhari and Sahih Muslim, all graded Authentic by HadeethEnc.com. Arabic, English and Bangla texts, attribution and grade reproduced unchanged from HadeethEnc (retrieved 17 October 2026; no version number is exposed, so the date is recorded).
+- Every collection number was opened on sunnah.com and the Arabic compared. Where the collection's wording differs from the HadeethEnc text, the reference is marked "close" or "similar" and a note explains it (10 narrations).
+- 12 categories with the brief's English and Bangla labels; each narration is stored once and linked to one or more categories.
+- New More → Hadith page (also in the desktop sidebar): category chips, cards with right-to-left Arabic, narrator, grade, clickable sunnah.com and HadeethEnc links, and a review notice. Switching language keeps the category and the card being read.
+- Withheld: HadeethEnc 4810 (too long for a card), 6267 (hasan, not in Bukhari or Muslim), 10411 (duplicate of an included narration), 3762 and 5797 (left out to stay at 24).
+
+### Verse for today (Task 2)
+- `assets/votd.js` rewritten as a fixed 180-day schedule: anchor 1 January 2026 = day 1, `index = ((dayNumber mod 180) + 180) mod 180`, using the selected city's calendar date. No randomness.
+- Six 30-day themes. 180 entries (45 short passages of 2–8 verses), each referring to the bundled Qur'an data by surah and verse. Each was read with the surrounding verses and the Al-Mukhtasar explanation; 57 have a context note in both languages. Passages easily misread on their own were left out.
+- The card shows the day and theme, all verses of a passage, the translation, the short tafsir (Bangla), word help (English), the context note and footnotes.
+
+### English translation (Task 3)
+- All 6,236 verses aligned word by word with both 1930 OCR copies; 750 differences that both copies agree on (651 verses) were classified by hand.
+- 60 more verses corrected (151 in total), each with three checks recorded in `en-corrections.json`: both 1930 witnesses, two independent translations used only for comparison (Yusuf Ali, Sahih International; not bundled), and the Arabic or the grammar.
+- Spelling modernisations (judgment, steadfast, and others) left as they are.
+- 185 verses with different but faithful wording escalated, not changed. They were thought to point to a later revised Pickthall edition (withdrawn in the final review above: no such printed edition was found). The Phase 4 "God", "Owner" and "Mecca" restorations may be affected in the same way; this is listed as an open decision in `docs/translation-audit.md`.
+- New `assets/glossary.js`: word help for older English words, shown outside the translation in the Verse for today card, and in the reader when Settings → Explain older English words is on.
+- `tools/import-quran.mjs` notice updated; `editions.json` and `coverage.json` regenerated. Only the 151 corrected English verses differ from the source; Arabic, Bangla and short tafsir unchanged.
+
+### Prayer tracker dates (Task 4)
+- Previous/next buttons, a date picker and a selectable week strip; Today / Yesterday / Earlier date label; Back to today link; count and empty state for the selected date.
+- Each prayer is toggled per date (`IE_XTRACK.togglePrayer`); other dates are untouched. Future dates cannot be selected; the earliest is 119 days back, matching the 120-day retention.
+- Calendar-date arithmetic (`shift`, `diff`, `clamp`, `valid`) instead of time arithmetic, so midnight, DST, month ends, year ends and 29 February are safe. Storage format unchanged; no records lost.
+
+### Other
+- `index.html` loads `hadith.js` and `glossary.js`; the service worker precaches them and moves to cache v6 (English data changed).
+- About page credits for HadeethEnc and the Verse for today schedule; README updated.
+- Tests: `tests/votd.test.mjs` rewritten (8 tests), new `tests/phase5.test.mjs` (10 tests); `npm test` 60/60 pass.
+
+## Phase 4 implementation: translation audit, short tafsir, dua cards, extra worship (13 October 2026)
+
+Worked from a clone of `srn-n/Islam-Everyday` at `2cbe798`. Nothing was committed, pushed or deployed.
+
+### English translation (Task 1)
+- Identified the text as Tanzil's `en.pickthall` (Pickthall, 1930), confirmed identical to the source file for all 6,236 verses.
+- Compared every verse with two OCR copies of the 1930 first edition. 91 verses corrected where both copies agree on different wording: mostly Pickthall's word "God" that the digital text had replaced with "Allah", plus "Owner" (1:4), "Mecca", typos, a wrong word (31:14), missing or misplaced parentheses and quotation marks.
+- New `data/quran/en-corrections.json` keeps each replaced text and reason; `tools/import-quran.mjs` re-applies it and refuses to run if the source changes.
+- 632 flagged verses are unchanged and listed as unverified in `docs/translation-audit.md`. Arabic, Bangla and numbering untouched.
+
+### Bangla short tafsir (Task 2)
+- The Zakaria footnotes cannot be shortened under QuranEnc's terms, so the published short tafsir *Al-Mukhtasar* (Bengali v1.0.0) was added verbatim as `data/quran/bnt/` (6,236 entries).
+- Shown under the translation in the reader and the Verse for today card, in a separate box labelled as an explanation and not the Qur'an text. Zakaria's footnotes stay collapsible.
+- `assets/bnfix.js` repairs left-over legacy Bangla font characters (about 1,100 entries) on display only.
+- No English summaries yet (deferred by the owner).
+
+### Dua cards (Task 3)
+- Equal-height previews with a Read more / Show less button; the reference stays visible; no inner scrolling; open state kept while filtering.
+
+### Extra worship (Task 4)
+- New Today section: Tahajjud, Duha, Sunnah rawatib, Witr (labelled by school as in the Prayer guide) and voluntary fast, stored per date in `xlog` (`assets/xtrack.js`), separate from the fard log. Undo by tapping again; 120-day retention; 7- and 30-day counts.
+- Check animation, row highlight and a quiet message after the state update; reduced motion respected; focus stays on the button.
+
+### Other
+- `index.html` loads the two new scripts; the service worker precaches them, accepts `bnt` for offline saving and moves to cache v5 (the English data changed, so offline copies are refreshed).
+- About page, README and offline-size text updated. Desktop Today grid gains an `extra` area.
+- Tests: new `tests/phase4.test.mjs` (11 tests); the 2:255 spot check now expects Pickthall's "There is no God save Him".
+
 ## Phase 4: Islam Everyday 1.0.0, release preparation (11 October 2026)
 
 Scope: as set out in `PHASE4.md`. All work is in `DinSathi-Web`. There was no `sources/` folder or root `AGENTS.md` in the workspace.

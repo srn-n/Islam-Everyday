@@ -744,6 +744,7 @@ function votdBody(e) {
     ${votdExpl(e, many)}
     ${e.ctx ? `<p class="votd-ctx"><b>${t("vd_ctx")}</b> ${esc(e.ctx[st.lang]).replace(/ﷺ/g, '<span class="saw" lang="ar">ﷺ</span>')}</p>` : ""}
     ${fns.length ? `<details class="fn"><summary>${t("footnotes")}</summary><div lang="bn">${fns.join("<br><br>")}</div></details>` : ""}
+    ${shActs("verse", `${i}:${e.a}-${e.b}`, `${sname(i)} ${num(i)}:${range}`)}
     ${foot}`;
 }
 /* English explanation (Phase 5.2): Al-Mukhtasar, English edition, from assets/votd-en.js, shown unchanged under its
@@ -1263,6 +1264,17 @@ function shItem(kind, key) {
     return { kind, title: hRef(refs[0] || h.refs[0]), ar: h.ar, body: [h[st.lang]], ref: (refs.length ? refs : h.refs).map(hRef).join(" · ") + " · " + h.grade.he[st.lang], hash: "hadith/" + h.id, pdf: true }; }
   if (kind === "nawawi") { const r0 = NW && NW.HADITH.find(z => z.n === +key); if (!r0) return null; const r = nwRec(r0);
     return { kind, title: t("nw_title") + " · " + t("nw_no").replace("{n}", num(r.n)).replace("{t}", num(NW_N)), ar: unPUA(r.ar), body: [r[st.lang]], ref: [hRef({ c: "nawawi40", n: String(r.n) })].concat(r.refs.map(hRef)).join(" · ") + " · " + r.grade[st.lang], hash: "nawawi/" + r.n, pdf: true }; }
+  if (kind === "verse") { const m = String(key).match(/^(\d+):(\d+)-(\d+)$/); if (!m) return null; const i = +m[1], a = +m[2], b2 = +m[3];
+    if (!qReady(i)) return null; const ks = []; for (let k = a; k <= b2; k++) ks.push(k); const many = ks.length > 1;
+    const RW = window.IE_RWWAD, rw = !bn() && RW && ks.every(k => RW.get(i, k)), tr = QS[st.lang + ":" + i], ar = QS["ar:" + i];
+    const arN = k => String(k).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+    const trTxt = ks.map(k => (many ? `(${num(k)}) ` : "") + (rw ? RW.get(i, k)[0] : tr.t[k - 1]).replace(/\s*\[[\d০-৯]+\]/g, "").replace(/ {2,}/g, " ")).join(" ");
+    let ex = [], exH = "";
+    if (bn()) { if (QS["bnt:" + i]) ks.forEach(k => { const z = QS["bnt:" + i][k - 1]; if (z && !ex.includes(z)) ex.push(z); }); ex = ex.map(z => FIX.repair(z)); exH = t("tafsir") + " · " + t("tf_label"); }
+    else if (VE) { ex = VE.forPassage(i, a, b2).map(z => z.text); exH = t("vd_expl") + " · " + t("vd_expl_label"); }
+    const where = `${sname(i)} ${num(i)}:${many ? num(a) + "–" + num(b2) : num(a)}`;
+    return { kind, title: t("votd") + " · " + where, ar: ks.map(k => ar[k - 1] + (many ? ` ﴿${arN(k)}﴾` : "")).join(" "), body: [trTxt],
+      ref: where + " · " + t(bn() ? "sh_tr_bn" : rw ? "sh_tr_rw" : "sh_tr_pk"), extra: ex.length ? exH + "\n" + ex.join("\n\n") : "", hash: `verse/${i}:${a}-${b2}`, img: true }; }
   if (kind === "story") { const x = ST && ST.get(key); if (!x) return null;
     const sp = x.story && x.story.en ? (x.story[st.lang] && x.story[st.lang][0] ? x.story[st.lang] : x.story.en) : [];
     const hl = x.hadith || [], plab = p => (p.kind === "hadith" ? p.refs.map(r => { const h = hl.find(z => z.label === r); return h ? `${h.label} (${t("sg_grade")}: ${h.grade})` : r; }) : p.refs.map(r => (bn() ? "কুরআন " : "Qur'an ") + num(r))).join(", ");
@@ -1278,6 +1290,7 @@ function shText(o) {
   if (o.lead) out.push("", o.lead);
   if (o.body.length) out.push("", o.body.join("\n\n"));
   if (o.ref) out.push("", "— " + o.ref);
+  if (o.extra) out.push("", o.extra);
   return out.join("\n");
 }
 const shActs = (kind, key, label) => `<div class="sh-acts"><button type="button" class="btn ghost sm" data-act="shcopyitem" data-k="${kind}" data-key="${esc(key)}" aria-label="${esc(t("sh_copyof").replace("{t}", label))}">${ic("copy")}<span>${t("copy")}</span></button><button type="button" class="btn ghost sm" data-act="share" data-k="${kind}" data-key="${esc(key)}" aria-haspopup="dialog" aria-label="${esc(t("sh_shareof").replace("{t}", label))}">${ic("share")}<span>${t("share")}</span></button></div>`;
@@ -1304,7 +1317,7 @@ async function shImage(o) {
   const blocks = [], add = (txt, font, lh, color, gap, align, rtl) => { if (txt) blocks.push({ lines: wrap(txt, font, rtl), font, lh, color, gap, align, rtl }); };
   const arPx = o.kind === "name" ? 128 : 60;
   add(o.title, `600 40px ${SANS}`, 56, "#0E6B5C", 0, "center");
-  add(o.ar, `400 ${arPx}px ${AR}`, Math.round(arPx * (o.kind === "name" ? 1.45 : 1.9)), "#0F2420", 40, "center", true);
+  add(o.ar, `400 ${arPx}px ${AR}`, Math.round(arPx * (o.kind === "name" ? 1.45 : 2.15)), "#0F2420", 40, "center", true);
   add(o.tl, `400 32px ${SANS}`, 48, "#5A6E69", 24, "center");
   add(o.mean, `600 40px ${SANS}`, 56, "#0F2420", 22, "center");
   o.body.forEach((b, k) => add(b, `400 34px ${SANS}`, 52, "#1C3530", k ? 18 : 34, o.kind === "name" ? "left" : "center"));
@@ -1364,6 +1377,7 @@ function shLink() {
 function deepParse(h) {
   let m;
   if ((m = h.match(/^story\/([\w-]+)$/)) && window.IE_STORIES && IE_STORIES.get(m[1])) return { kind: "story", key: m[1], r: { tab: "quran", sub: "stories", story: m[1] } };
+  if ((m = h.match(/^verse\/(\d+):(\d+)-(\d+)$/)) && QM.meta[+m[1] - 1] && +m[2] >= 1 && +m[2] <= +m[3] && +m[3] <= QM.meta[+m[1] - 1][3]) return { kind: "verse", key: m[1] + ":" + m[2] + "-" + m[3], r: { tab: "quran", sub: "all", surah: +m[1], ayah: +m[2] } };
   if ((m = h.match(/^dua\/(\d+)$/)) && DUAS[+m[1]]) return { kind: "dua", key: +m[1], r: { tab: "duas" } };
   if ((m = h.match(/^name\/(\d+)$/)) && +m[1] >= 1 && NAMES[+m[1] - 1]) return { kind: "name", key: +m[1] - 1, r: { tab: "more", sub: "names" } };
   if ((m = h.match(/^hadith\/(\w+)$/)) && HD.HADITH.some(z => z.id === m[1])) return { kind: "hadith", key: m[1], r: { tab: "more", sub: "hadith" } };

@@ -101,13 +101,14 @@ The guide shows how many rak'ahs each daily prayer has, which are obligatory, an
   - fard
   - wajib (the Hanafi Witr)
   - sunnah mu'akkadah
-  - other sunnah / nafl
+  - other sunnah (ghayr mu'akkadah) — dashed green
+  - nafl (extra voluntary prayer) — dotted violet (Face 7.2; the Hanafi column follows Darul Uloom Deoband: 2 nafl after Dhuhr, and at Isha 4 other sunnah before, 2 nafl after the sunnah and 2 after Witr)
   - Witr
 - **Each prayer** opens to show:
   - the full sequence of units;
   - a short note on where the schools agree and differ;
   - the sources used, ending with a review-status sentence.
-- **What the words mean** explains rak'ah, fard, wajib, sunnah mu'akkadah, other sunnah/nafl and Witr in plain English and Bangla.
+- **What the words mean** explains rak'ah, fard, wajib, sunnah mu'akkadah, other sunnah, nafl and Witr (the four before Asr are other sunnah, not nafl) in plain English and Bangla.
 - **Witr** is presented without flattening the schools:
   - In the Hanafi school, Witr is wajib: three rak'ahs with one salam.
   - The majority view (Maliki, Shafi'i and Hanbali) is that Witr is a confirmed sunnah. It is at least one rak'ah, commonly prayed as two then one.
@@ -200,6 +201,7 @@ index     = ((dayNumber mod 180) + 180) mod 180                       (0 = sched
 - Each dua card shows an equal-height preview: Arabic, transliteration and meaning, with the reference always visible.
 - A dua that does not fit has a **Read more** button (`aria-expanded`), which opens the whole card in place; **Show less** closes it. There is no inner scrolling. A dua only a couple of lines longer than the preview is shown in full.
 - Side by side (desktop), closed cards in a row are the same height; while one is open, the others keep their own height.
+- Face 7.2 adds twelve short duas in two new groups, **Prayer & purity** and **Everyday moments**, plus three under Worry & asking; Arabic and references checked on sunnah.com. They are appended after the existing duas so saved favourites still point at the same duas.
 
 ### Hadith (More → Hadith)
 
@@ -244,7 +246,7 @@ index     = ((dayNumber mod 180) + 180) mod 180                       (0 = sched
 
 - **Trackers:** Prayer tracker and Extra worship are separate cards. The prayer-times rows are information only. The Prayer tracker shows a 7-day × 5-prayer history grid above the one set of prayer controls; Extra worship shows a small strip per practice (7 days, fasting 30 days) from that practice's own records. Voluntary records never affect the fard count or streak.
 - **Qur'an study** pages have an overview, how the surah unfolds, key ideas and terms with their source, takeaways and an everyday example (`assets/study-notes.js`; source files in `tools/study-notes/`, rebuild with `python3 tools/study-notes/build.py`).
-- **Qur'an Stories** (`assets/stories.js`; sources in `tools/stories/`, rebuild with `python3 tools/stories/build.py`): 28 source-labelled stories from the Qur'an and from Sahih al-Bukhari / Sahih Muslim. Add a story by adding an entry to a `tools/stories/stories_*.py` file and rebuilding.
+- **Qur'an Stories** (`assets/stories.js`; sources in `tools/stories/`, rebuild with `python3 tools/stories/build.py`): 39 source-labelled stories from the Qur'an and from Sahih al-Bukhari / Sahih Muslim, in four groups (prophets, peoples, stories the Prophet ﷺ told, lives of the Companions). Each opens with **The story** — one continuous retelling (`tools/stories/narr_*.py`) that joins the story's parts without adding to them; the build checks that any words in double quotation marks appear in the parts — followed by **References**, the source-labelled parts. Add a story by adding an entry to a `tools/stories/stories_*.py` file and its retelling to a `narr_*.py` file, then rebuilding.
 - **Verse for today (English)** uses the Rowwad Translation Center translation (QuranEnc.com, v1.0.20) — plain modern English — exactly as published with its notes (`assets/en-rwwad.js`; rebuild with `python3 tools/import-rwwad-subset.py <english_rwwad.sqlite>` when QuranEnc publishes a new version). The reader keeps Pickthall, with the "Word guide" for older words.
 - **Quotation convention** in study notes and stories: double quotation marks = exact words of a named published translation; single quotation marks = the app's own wording.
 
@@ -406,6 +408,7 @@ assets/votd-day.js         Thursday/Friday verse entries (shown only when review
 assets/en-rwwad.js         Rowwad English for the Verse for today and Ayat al-Kursi (generated)
 assets/study-notes.js      Qur'an study notes for the 45 surahs (generated from tools/study-notes/)
 assets/stories.js          Qur'an Stories catalogue (generated from tools/stories/)
+assets/name-stories.js     99 Names: one everyday story per name (generated from tools/name-stories/)
 assets/legal.js            Terms of Use and Privacy Policy (English and Bangla)
 assets/dayviz.js           Day-chart label layout
 assets/theme-boot.js       Applies appearance, theme, glass and motion before first paint
@@ -452,6 +455,7 @@ Prohibited times (Phase 5.3) use the same solar formulas: sunrise and sunset at 
 - **Hadith:** 40 general narrations and an-Nawawi's 42, checked against sunnah.com and HadeethEnc (re-checked 17 October 2026: texts identical, all links resolve) but not reviewed by a scholar. No HadeethEnc version number is available. Translation notes have not been sent to HadeethEnc (including the "our brothers" slip in an-Nawawi no. 35). The nine flagged an-Nawawi grades have not been verified independently.
 - **Prohibited times:** the minute margins (15/10/15) are approximations chosen for this app; schools and scholars differ on the durations and the exceptions. At high latitudes no warning is shown.
 - **Zakat:** removed from the interface in Face 7; the calculation file and saved values are kept unused.
+- **99 Names stories** (`assets/name-stories.js`, built by `python3 tools/name-stories/build.py`): one everyday story per name, written for this app as a teaching example. Each follows the name's sourced explanation and is labelled in the sheet as an illustration, not a source-based claim or tafsir. Drafts, not yet reviewed by a qualified scholar.
 - **Qur'an Stories** retellings, "why this matters" notes and modern examples, and the expanded **Qur'an study** notes, are drafts written for this app with an AI assistant and are not yet reviewed by a qualified scholar.
 - **Qur'an study notes, Ayat al-Kursi and Shahada transliterations, the app's Shahada translation and the Friday verse draft** are drafts written for this app (with an AI assistant) and have not been reviewed by a qualified scholar. The app labels them so.
 - **Verse for today:** the selection, themes and context notes are editorial and have not been reviewed by a scholar. The English explanation is published commentary (Al-Mukhtasar) reproduced unchanged, not reviewed by a scholar for this app; QuranEnc gives no version number for its English edition. A few publisher typing slips are shown as published (listed in `docs/scholar-review.md`). Only the 267 scheduled verses are bundled, so the Qur'an reader has no English explanation.

@@ -73,6 +73,14 @@ These were **drafted with an AI assistant during development** and are labelled 
   - The note in "Musa: the river, the palace and Madyan" that Pharaoh's wife is named Asiyah through hadith (Sahih al-Bukhari 3411 names her).
 - **Verse for today in English** now uses the Rowwad Translation Center translation (QuranEnc v1.0.20) with its own footnotes. Confirm the edition choice; QuranEnc's terms ask that newer versions be adopted when published.
 
+## 6b. Added in Face 7.2 (25 October 2026) — drafts, labelled in the app
+
+- **Complete story retellings** (`tools/stories/narr_*.py`): each joins the story's referenced parts into one account. Check that no retelling adds a name, number, place, dialogue or event the parts (and their sources) do not give.
+- **New stories** (`tools/stories/stories_h.py`): the loan and the piece of wood (Bukhari 2291), the jar of gold (Bukhari 3472), the merchant who let debts go (Bukhari 2078), the man who feared his Lord (Bukhari 3481 — presented as about fear of Allah and His mercy, not as an example to copy), the thorny branch (Bukhari 652), Sulayman and the two mothers (Bukhari 3427), charity that seemed to go wrong (Bukhari 1421), the cloud (Muslim 2984a); Companions: the guest in the dark (Bukhari 3798, with 59:9), the Bedouin in the mosque (Bukhari 220), the one who swept the mosque (Bukhari 458). The leper/bald/blind man part now follows Bukhari 3464's wording on the ending.
+- **Prayer guide**: "other sunnah" (ghayr mu'akkadah) and "nafl" are now separate kinds. Confirm the Hanafi additions from Darul Uloom Deoband fatwa 12335 (2 nafl after Dhuhr; at Isha 4 sunnah ghayr mu'akkadah before, 2 nafl after the sunnah, 2 nafl after Witr), and that the four before Asr are sunnah ghayr mu'akkadah in both schools.
+- **Twelve new duas** (Bukhari 142, 1032, 3282, 3616, 6224, 6346; Muslim 234a, 591, 2721a; Abu Dawud 30; Tirmidhi 2140, 3513): the English and Bangla meanings and transliterations were written for this app.
+- **99 Names stories** (`tools/name-stories/stories_*.py`): one illustration per name. Check that each story stays within the name's sourced explanation, never likens Allah to a creature, and handles the names of severity (Al-Mudhill, Al-Qadir, Al-Muntaqim, Ad-Darr, Al-Mumit) with care. For names with no located explanation (Al-Khafid, Al-Wajid, Al-Muqaddim, Al-Mu'akhkhir, Ar-Rashid) the stories say so and stay with the related text.
+
 ## 7. Already listed earlier (unchanged)
 
 White Days evidence (four references), Prayer guide, 99 Names explanations, duas and pronunciation guide: see `docs/scholar-review.md` and each section's own review note.

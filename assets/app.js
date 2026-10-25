@@ -958,9 +958,9 @@ function vStories() {
   <section class="card pad st-intro"><p><b>${t("sg_title")}</b></p><p class="note">${sawS(t("sg_intro"))}</p>
     <ul class="sg-legend">${[["quran", "sg_lq"], ["hadith", "sg_lh"], ["tafsir", "sg_lt"]].map(([k, l]) => `<li>${srcLabel(k)} <span>${t(l)}</span></li>`).join("")}</ul>
     <p class="note st-draft" role="note">${t("sg_draft")}</p></section>
-  <div class="search">${ic("search")}<input id="sg-search" class="field" type="search" inputmode="search" autocomplete="off" placeholder="${esc(t("sg_search"))}" aria-label="${esc(t("sg_search"))}" aria-controls="sg-list" value="${esc(sgQuery)}"></div>
-  <div class="chips" role="group" aria-label="${esc(t("st_coll"))}">${g.map(([k, l]) => `<button type="button" class="chip" data-act="sgrp" data-k="${k}" aria-pressed="${sgGroup === k}">${escS(l)}</button>`).join("")}</div>
-  <p class="note" id="sg-count" aria-live="polite"></p>
+  <div class="sg-tools"><div class="search">${ic("search")}<input id="sg-search" class="field" type="search" inputmode="search" autocomplete="off" placeholder="${esc(t("sg_search"))}" aria-label="${esc(t("sg_search"))}" aria-controls="sg-list" value="${esc(sgQuery)}"></div>
+  <div class="chips sg-chips" role="group" aria-label="${esc(t("st_coll"))}">${g.map(([k, l]) => `<button type="button" class="chip" data-act="sgrp" data-k="${k}" aria-pressed="${sgGroup === k}">${escS(l)}</button>`).join("")}</div>
+  <p class="note" id="sg-count" aria-live="polite"></p></div>
   <ul class="sg-list" id="sg-list">${storyList()}</ul>`;
 }
 function vStory() {
@@ -974,8 +974,11 @@ function vStory() {
     <h3 class="sr" id="sg-h">${escS(L2(x.title))}</h3>
     <p class="sg-lead">${escS(L2(x.short))}</p>
     <p class="st-draft" role="note">${t("sg_draftnote")}</p>
+    ${x.story && x.story.en && x.story.en[0] ? `<section class="sg-story" aria-labelledby="sg-st-h"><h3 class="sg-sec" id="sg-st-h">${t("sg_story")}</h3><p class="note">${t("sg_story_n")} <button type="button" class="linkish" data-act="sgjump">${t("sg_jump")}</button></p>
+      <div class="sg-prose">${(x.story[st.lang] && x.story[st.lang][0] ? x.story[st.lang] : x.story.en).map(p => `<p>${escS(p)}</p>`).join("")}</div></section>` : ""}
+    <section class="sg-refsec" aria-labelledby="sg-ref-h"><h3 class="sg-sec" id="sg-ref-h" tabindex="-1">${t("sg_refs")}</h3><p class="note">${t("sg_refs_n")}</p>
     ${x.parts.map(p => `<section class="sg-part sg-${p.kind}"><p class="sg-ph">${srcLabel(p.kind)} <span class="sg-refs">${p.refs.map(p.kind === "hadith" ? href : qref).join(" ")}</span></p><p>${escS(L2(p.text))}</p></section>`).join("")}
-    <section class="sg-unknown"><h4 class="st-sub">${t("sg_unknown")}</h4><p>${escS(L2(x.unknown))}</p></section>
+    <section class="sg-unknown"><h4 class="st-sub">${t("sg_unknown")}</h4><p>${escS(L2(x.unknown))}</p></section></section>
     <section><h4 class="st-sub">${t("sg_why")}</h4><p>${escS(L2(x.why))}</p><p class="note">${t("sg_why_n")}</p></section>
     <section class="st-example"><h4 class="st-sub">${t("sg_ex")}</h4><p class="st-exlab">${t("sg_ex_n")}</p><p>${escS(L2(x.example))}</p></section>
     <details class="fn st-src"><summary>${t("st_src")}</summary><div><p>${t("sg_src1")}</p><p>${t("st_src3")}</p><p>${t("st_src4")}</p></div></details>
@@ -1223,6 +1226,8 @@ function nameSheet(i, opener) {
       <p class="ns-status note"><span>${t("basedon")}: ${x.expl.src.map(id => { const c = cite(id); return `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label)}</a>`; }).join("; ")}.</span> <span>${t("rv_" + x.status)}</span></p></section>
     ${x.note ? `<section aria-labelledby="ns-nt"><h4 id="ns-nt">${t("scholarnote")}</h4><p>${esc(L(x.note))}</p></section>` : ""}
     <section class="refl" aria-labelledby="ns-rf"><h4 id="ns-rf">${t("reflection")}</h4><p class="note">${t("reflectionh")}</p><p>${esc(L(x.refl))}</p></section>
+    ${(() => { const ns = window.IE_NAME_STORIES && IE_NAME_STORIES.get(x.id); if (!ns) return ""; const ps = (ns[st.lang] && ns[st.lang].length ? ns[st.lang] : ns.en);
+      return `<section class="ns-story" aria-labelledby="ns-sy"><h4 id="ns-sy">${t("ns_story")}</h4><p class="note">${t("ns_story_n")}</p><div class="ns-prose">${ps.map(p => `<p>${esc(p)}</p>`).join("")}</div></section>`; })()}
     <section aria-labelledby="ns-src"><h4 id="ns-src">${t("sources")}</h4>${citeList(allSrc)}</section>
     <div class="row ns-nav"><button type="button" class="btn ghost" data-act="name" data-i="${(i + 98) % 99}">${ic("back")} ${t("prevname")}</button><button type="button" class="btn ghost" data-act="name" data-i="${(i + 1) % 99}">${t("nextname")} ${ic("chev")}</button></div>
   </div>`, opener);
@@ -1230,11 +1235,11 @@ function nameSheet(i, opener) {
 }
 
 /* ---------------- Prayer guide ---------------- */
-const KINDS = ["fard", "wajib", "sm", "sg", "witr"];
+const KINDS = ["fard", "wajib", "sm", "sg", "nafl", "witr"];
 const school = () => st.school === "hanafi" || st.school === "shafii" ? st.school : (+st.asr === 2 ? "hanafi" : "shafii");
 function gCite(id) {
   const r = GD.refs[id], m = /^(bukhari|muslim|tirmidhi|abudawud):(.+)$/.exec(id);
-  const lab = m ? cite(id).label : { badat: "Badat (Hanafi)", shafiifiqh: "Shafiifiqh (Shafi'i)", islamweb84719: "IslamWeb 84719", birmingham: "Darul Ifta Birmingham", islamqa36793: "IslamQA 36793" }[id] || id;
+  const lab = m ? cite(id).label : { badat: "Badat (Hanafi)", shafiifiqh: "Shafiifiqh (Shafi'i)", islamweb84719: "IslamWeb 84719", deoband12335: "Darul Uloom Deoband 12335", birmingham: "Darul Ifta Birmingham", islamqa36793: "IslamQA 36793" }[id] || id;
   return { label: lab, url: r.url, desc: L(r), grade: r.grade };
 }
 function gSources(ids) {
@@ -1496,7 +1501,9 @@ function vAbout() {
     ["আরবি পাঠ", "উসমানি লিপি, নোবেল কুরআন এনসাইক্লোপিডিয়া (quranenc.com), quran-json প্যাকেজের মাধ্যমে (CC BY-SA 4.0)।"],
     ["বাংলা অনুবাদ", "ড. আবু বকর মুহাম্মাদ যাকারিয়া, সংস্করণ ১.১.১ (২২ মে ২০২১), প্রকাশক QuranEnc.com। অনুবাদ ও টীকা অপরিবর্তিতভাবে দেওয়া হয়েছে। QuranEnc-এর শর্ত: বিষয়বস্তুতে কোনো পরিবর্তন নয়; প্রকাশক ও উৎস উল্লেখ; সংস্করণ নম্বর উল্লেখ; সর্বশেষ সংস্করণে হালনাগাদ; অনুপযুক্ত বিজ্ঞাপন নয়।"],
     ["ইংরেজি অনুবাদ (আজকের আয়াত, আয়াতুল কুরসি)", "রুওয়াদ ট্রান্সলেশন সেন্টার (রাবওয়াহ দাওয়াহ অ্যাসোসিয়েশন, ইসলামিক কনটেন্ট সার্ভিস অ্যাসোসিয়েশন ইন ল্যাঙ্গুয়েজেস ও IslamHouse.com-এর সহযোগিতায়), ইংরেজি অনুবাদ, সংস্করণ ১.০.২০, প্রকাশক QuranEnc.com। সহজ আধুনিক ইংরেজি; আজকের আয়াত ও আয়াতুল কুরসিতে ব্যবহৃত, পাঠ ও অনুবাদকের টীকা QuranEnc-এর শর্ত অনুযায়ী অপরিবর্তিত। কুরআন পাঠকে পিকথল ব্যবহৃত হয়।"],
-    ["কুরআন অধ্যয়ন ও কুরআনের কাহিনি", "এআই সহকারীর সাহায্যে এই অ্যাপের জন্য লেখা খসড়া টীকা ও পুনর্কথন, যে আয়াত থেকে এসেছে তার সঙ্গে যুক্ত; মাক্কি/মাদানি শ্রেণিবিন্যাস Tanzil Quran Metadata 1.0 (CC BY 3.0) থেকে; কাহিনির হাদিস সহীহ বুখারী ও সহীহ মুসলিম থেকে, sunnah.com-এ যাচাই করা। এখনো কোনো যোগ্য আলেম পর্যালোচনা করেননি।"],
+    ["কুরআন অধ্যয়ন ও কুরআনের কাহিনি", "এআই সহকারীর সাহায্যে এই অ্যাপের জন্য লেখা খসড়া টীকা ও পুনর্কথন, যে আয়াত থেকে এসেছে তার সঙ্গে যুক্ত; মাক্কি/মাদানি শ্রেণিবিন্যাস Tanzil Quran Metadata 1.0 (CC BY 3.0) থেকে; কাহিনির হাদিস সহীহ বুখারী ও সহীহ মুসলিম থেকে, sunnah.com-এ যাচাই করা। প্রতিটি কাহিনির শুরুর পূর্ণ পুনর্কথন শুধু উল্লিখিত অংশগুলো জুড়ে দেয়। এখনো কোনো যোগ্য আলেম পর্যালোচনা করেননি।"],
+    ["৯৯ নাম — গল্প", "প্রতিটি নামের জন্য একটি দৈনন্দিন গল্প, এআই সহকারীর সাহায্যে এই অ্যাপের জন্য শেখানোর উদাহরণ হিসেবে লেখা। প্রতিটি গল্প নামটির সূত্রভিত্তিক ব্যাখ্যা অনুসরণ করে এবং উদাহরণ হিসেবে চিহ্নিত, কোনো সূত্র বা ফতোয়া নয়। এখনো কোনো যোগ্য আলেম পর্যালোচনা করেননি।"],
+    ["আরও দোয়া (Face 7.2)", "বারোটি ছোট দোয়া যোগ করা হয়েছে; আরবি পাঠ ও রেফারেন্স sunnah.com-এ যাচাই করা (দুই সহিহের বাইরের সংকলনের মান দেখানো হয়েছে)। অর্থ ও উচ্চারণ এই অ্যাপের জন্য লেখা।"],
     ["ইংরেজি ব্যাখ্যা (আজকের আয়াত)", "আল-মুখতাসার ফি তাফসিরিল কুরআনিল কারিম, তাফসির সেন্টার ফর কুরআনিক স্টাডিজ, ইংরেজি সংস্করণ, প্রকাশক QuranEnc.com। এই সংস্করণের কোনো সংস্করণ নম্বর QuranEnc দেয়নি; আজকের আয়াতের ২৬৭টি আয়াতের ব্যাখ্যা ১৮ অক্টোবর ২০২৬ তারিখে সংগ্রহ করে অপরিবর্তিতভাবে দেখানো হয় (শুরুর আয়াত নম্বর লুকানো)। এটি প্রকাশিত তাফসির—এআই-লিখিত নয়, কুরআনের অনুবাদও নয়। সংবেদনশীল বিষয়ের কয়েকটি ব্যাখ্যার সঙ্গে এই অ্যাপের লেখা ছোট সম্পাদকীয় টীকা আছে। ইংরেজি ভাষা বেছে নিলে দেখা যায়। এই অ্যাপের জন্য কোনো যোগ্য আলেম স্বতন্ত্রভাবে পর্যালোচনা করেননি। একই QuranEnc শর্ত প্রযোজ্য।"],
     ["বাংলা সংক্ষিপ্ত তাফসির", "আল-মুখতাসার ফি তাফসিরিল কুরআনিল কারিম, তাফসির সেন্টার ফর কুরআনিক স্টাডিজ, বাংলা সংস্করণ ১.০.০ (১৫ অক্টোবর ২০২০), প্রকাশক QuranEnc.com। এটি ব্যাখ্যা, কুরআনের অনুবাদ নয়; প্রকাশিত রূপেই দেওয়া হয়েছে। পুরোনো বাংলা ফন্ট-এনকোডিংয়ের কিছু অক্ষর শুধু দেখানোর সময় ঠিক করা হয়। একই শর্ত প্রযোজ্য।"],
     ["ইংরেজি অনুবাদ", "মারমাডিউক পিকথল, The Meaning of the Glorious Koran, ১৯৩০ সালের প্রথম সংস্করণ, পাবলিক ডোমেইন। ডিজিটাল ভিত্তি-পাঠ Tanzil (tanzil.net) থেকে, fawazahmed0/quran-api-এর মাধ্যমে; ৩৯৩টি আয়াত প্রথম সংস্করণের তিনটি কপির সঙ্গে মিলিয়ে ১৯৩০ সালের শব্দে ফেরানো হয়েছে (data/quran/en-corrections.json, docs/translation-audit.md)। আধুনিক বানান ও ডিজিটাল পাঠের যতিচিহ্ন রাখা হয়েছে।"],
@@ -1513,7 +1520,9 @@ function vAbout() {
     ["Bangla translation", "Dr. Abu Bakr Muhammad Zakaria, version 1.1.1 (22 May 2021), published by QuranEnc.com. Translation and footnotes are included unchanged. QuranEnc's terms: no change to the content; credit the publisher and source; state the version; update to the latest version; no inappropriate advertising."],
     ["English translation", "Marmaduke Pickthall, The Meaning of the Glorious Koran, 1930 first edition, public domain. Digital base text from Tanzil (tanzil.net) via fawazahmed0/quran-api; 393 verses are restored to the 1930 wording, checked against three copies of the first edition (data/quran/en-corrections.json, docs/translation-audit.md). Modern spellings and the digital text's punctuation are kept. Older words can be explained with Settings → Explain older English words; the explanations are not part of the translation."],
     ["English translation (Verse for today, Ayat al-Kursi)", "Rowwad Translation Center (with the Rabwah Dawah Association, the Islamic Content Service Association in Languages and IslamHouse.com), English Translation, version 1.0.20, published by QuranEnc.com (quranenc.com/en/browse/english_rwwad). Plain modern English, used for the Verse for today and Ayat al-Kursi; text and translators' notes shown unchanged under QuranEnc's terms. The Qur'an reader uses Pickthall."],
-    ["Qur'an study and Qur'an Stories", "Draft notes and retellings written for this app with an AI assistant, tied to the verses they come from; Meccan/Medinan from Tanzil Quran Metadata 1.0 (CC BY 3.0); story narrations from Sahih al-Bukhari and Sahih Muslim, checked on sunnah.com. Not yet reviewed by a qualified scholar."],
+    ["Qur'an study and Qur'an Stories", "Draft notes and retellings written for this app with an AI assistant, tied to the verses they come from; Meccan/Medinan from Tanzil Quran Metadata 1.0 (CC BY 3.0); story narrations from Sahih al-Bukhari and Sahih Muslim, checked on sunnah.com. The complete retelling at the top of each story only joins its referenced parts. Not yet reviewed by a qualified scholar."],
+    ["99 Names — stories", "One everyday story for each name, written for this app with an AI assistant as a teaching example. Each follows the sourced explanation of its name and is labelled as an illustration, not a source or a ruling. Not yet reviewed by a qualified scholar."],
+    ["More duas (Face 7.2)", "Twelve short duas added with their Arabic and references checked on sunnah.com (gradings shown for collections outside the two Sahihs). Meanings and transliterations were written for this app."],
     ["English explanation (Verse for today)", "Al-Mukhtasar in Interpreting the Noble Quran, Tafsir Center for Quranic Studies, English edition, published by QuranEnc.com. QuranEnc lists no version number for this edition; the texts for the 267 verses of the Verse for today were retrieved on 18 October 2026 and are shown unchanged (the leading verse number is hidden). It is published commentary, not AI-generated and not a translation of the Qur'an. A few explanations that touch on sensitive matters carry a short editorial note written for this app. Not independently reviewed by a qualified scholar for this app. The same QuranEnc terms apply."],
     ["Bangla short explanation", "Al-Mukhtasar in Interpreting the Noble Quran, Tafsir Center for Quranic Studies, Bengali version 1.0.0 (15 October 2020), published by QuranEnc.com. It is an explanation, not a translation of the Qur'an, and is shown as published; some characters left over from an old Bangla font encoding are repaired on display only. The same QuranEnc terms apply."],
     ["99 Names", "From Tafsir al-Sa'di, Tafsir Ibn Kathir (abridged English), Sahih al-Bukhari, Sahih Muslim, at-Tirmidhi, Abu Dawud, Ibn Majah and one journal article. Each explanation ends with the sources it used and its review status. None has yet been independently reviewed by a qualified scholar."],
@@ -1721,6 +1730,7 @@ document.addEventListener("click", e => {
     case "surah": closeSheet(); if (desk() && R.tab === "quran" && R.sub === "all") { openSurahDesk(+d.s, +d.a || 0); break; } go({ tab: "quran", sub: "all", surah: +d.s, ayah: +d.a || 0 }); break;
     case "story": go({ tab: "quran", sub: "stories", story: d.k }); break;
     case "sgrp": sgGroup = d.k; refreshStories(); break;
+    case "sgjump": { const h = $("sg-ref-h"); if (h) { h.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); h.focus({ preventScroll: true }); } break; }
     case "study": if (desk() && R.tab === "quran" && R.sub !== "all") { openStudyDesk(+d.s); break; } go({ tab: "quran", study: +d.s }); break;
     case "stg": stGroup = d.k; stTheme = "all"; refreshStudy(); break;
     case "stt": stTheme = d.k; refreshStudy(); break;

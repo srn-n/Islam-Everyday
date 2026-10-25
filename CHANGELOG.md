@@ -2,6 +2,26 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Face 7.2: stories, duas, Prayer guide and 99 Names examples (25 October 2026)
+
+Local working-tree edits only: nothing was staged, committed, pushed or deployed.
+
+### Changed
+- **Qur'an Stories layout:** the search box, the group filters and the story count now sit in their own spaced group, with wider gaps between filter chips and between story cards.
+- **Every story now opens with "The story"** — one continuous, plain-language retelling that joins the story's parts in order without adding anything they do not say — followed by **"References"**, the existing source-labelled parts (Qur'an account / Prophetic hadith / Tafsir explanation), "What the sources do not tell us", "Why this matters" and the modern example. A "Jump to the references" link moves focus to them. The retellings live in `tools/stories/narr_*.py`; `build.py` now requires one for every story and checks that any words in double quotation marks are copied from the story's own parts.
+- **Prayer guide:** "Other sunnah / nafl" is split into **Other sunnah (ghayr mu'akkadah)** (dashed green) and **Nafl** (dotted violet). Checked against Shaykh Yusuf Badat (Hanafi), Darul Uloom Deoband fatwa 12335 (Hanafi) and the Shafi'i answer citing Mughni al-Muhtaj: the four rak'ahs before Asr are other sunnah (ghayr mu'akkadah), not nafl, in both schools. Following Deoband, the Hanafi column adds 2 nafl after Dhuhr and, at Isha, 4 other sunnah before, 2 nafl after the sunnah and 2 nafl after Witr. The Shafi'i column has no set nafl. On phones the table's pills now wrap instead of being cut off.
+- The leper, bald and blind man story's ending now follows the wording of Sahih al-Bukhari 3464.
+
+### Added
+- **Eleven new stories** (39 in total), each checked against sunnah.com on 25 October 2026: eight more that the Prophet ﷺ told (the loan and the piece of wood; the jar of gold; the merchant who let debts go; the man who feared his Lord; the thorny branch; Sulayman and the two mothers; charity that seemed to go wrong; the cloud that watered one garden) and a new group, **Lives of the Companions** (the guest in the dark; the Bedouin in the mosque; the one who swept the mosque).
+- **Twelve short duas** in two new groups, **Prayer & purity** (entering and leaving the toilet, after wudu, after the prayer, Laylat al-Qadr) and **Everyday moments** (sneezing and the reply, rain, visiting the sick, anger), plus three under Worry & asking (guidance and contentment, a steady heart, great distress). Arabic and references checked on sunnah.com; appended so saved favourites are unchanged.
+- **99 Names — "A story to understand it":** every name now has an everyday story in English and Bangla (`assets/name-stories.js`, built from `tools/name-stories/`), shown after the reflection and labelled as an illustration written for this app, not a source-based claim or tafsir. Each story follows its name's sourced explanation; for names with no located explanation it says so.
+- About & sources credits for the name stories and the new duas; `docs/scholar-review-checklist.md` §6b.
+
+### Checks (scratchpad, not added to the repo)
+- User-journey test on phone (390px) and desktop (1366px): 102 checks pass, including the new story layout and references jump, the Hanafi nafl/other-sunnah split, the name story and the new dua groups.
+- Overflow and clipping sweep at 320, 390, 768 and 1366px in light English and dark Bangla: no horizontal scroll, no console errors.
+
 ## Face 7.1: final worship, Qur'an and UI pass (24 October 2026)
 
 Local working-tree edits only: nothing was staged, committed, pushed or deployed. As requested, no test suite was run and no tests were added; the review was visual and interactive.

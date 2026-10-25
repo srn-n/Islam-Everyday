@@ -10,7 +10,7 @@ const DATA_REV = "d4ab4a46286f"; // fingerprint of data/quran/**/*.json (except 
 const APP = "islam-everyday-app-v6", DATA = "islam-everyday-data-v6";
 const OWN = /^(islam-everyday|dinsathi)-/;
 const CORE = ["./", "index.html", "assets/app.css", "assets/fonts.css", "assets/app.js", "assets/data.js", "assets/quran-meta.js",
-  "assets/votd.js", "assets/votd-en.js", "assets/votd-day.js", "assets/en-rwwad.js", "assets/locale.js", "assets/dayviz.js", "assets/zakat.js", "assets/theme-boot.js", "assets/names.js", "assets/guide.js", "assets/bnfix.js", "assets/xtrack.js", "assets/hadith.js", "assets/nawawi.js", "assets/study.js", "assets/study-notes.js", "assets/stories.js", "assets/glossary.js", "assets/legal.js", "manifest.webmanifest", "favicon.ico",
+  "assets/votd.js", "assets/votd-en.js", "assets/votd-day.js", "assets/en-rwwad.js", "assets/locale.js", "assets/dayviz.js", "assets/zakat.js", "assets/theme-boot.js", "assets/names.js", "assets/name-stories.js", "assets/guide.js", "assets/bnfix.js", "assets/xtrack.js", "assets/hadith.js", "assets/nawawi.js", "assets/study.js", "assets/study-notes.js", "assets/stories.js", "assets/glossary.js", "assets/legal.js", "manifest.webmanifest", "favicon.ico",
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-192.png", "icons/maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon.svg",
   "assets/fonts/hind-siliguri-bengali-400-normal.woff2", "assets/fonts/hind-siliguri-latin-400-normal.woff2",
   "assets/fonts/hind-siliguri-bengali-600-normal.woff2", "assets/fonts/hind-siliguri-latin-600-normal.woff2",

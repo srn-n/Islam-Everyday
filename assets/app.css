@@ -1200,3 +1200,32 @@ ul.sg-legend li{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .ns-story{border-radius:14px;padding:12px 14px;border:1px solid var(--line);display:grid;gap:8px}
 .ns-story h4{margin:0}
 .ns-prose{display:grid;gap:10px;line-height:1.7}
+/* Face 7.3: copy & share */
+.sh-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+.sh-acts .btn.sm{min-height:40px;padding:0 14px 0 12px;gap:6px}
+.sh-acts .btn svg{width:16px;height:16px}
+.sh-sheet{display:grid;gap:10px}
+.sh-sheet .sh-h{font-family:var(--display);font-weight:400;font-size:1.5rem;line-height:1.2;padding-right:44px}
+.sh-t{font-weight:600;color:var(--accent);overflow-wrap:anywhere}
+.sh-opts{display:grid;border-bottom:1px solid var(--line)}
+.sheet .sh-opts .opt svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:var(--accent)}
+.sh-hit{box-shadow:0 0 0 3px var(--accent),var(--shadow);transition:box-shadow .4s}
+#print-area{display:none}
+@media print{
+  body.printing{background:#fff;color:#111;padding:0}
+  body.printing > *:not(#print-area){display:none!important}
+  body.printing #print-area{display:block;font-family:var(--body);font-size:12pt;line-height:1.6;color:#111;max-width:none}
+  #print-area .pr-head{display:flex;justify-content:space-between;border-bottom:2px solid #0E6B5C;padding-bottom:6pt;margin-bottom:14pt;color:#0E6B5C;font-size:10pt}
+  #print-area .pr-head b{font-family:var(--display);font-weight:400;font-size:13pt}
+  #print-area h1{font-family:var(--display);font-weight:400;font-size:20pt;line-height:1.25;margin:0 0 10pt}
+  #print-area h2{font-size:13pt;margin:16pt 0 6pt;color:#0E6B5C;break-after:avoid}
+  #print-area h3{font-size:11pt;margin:10pt 0 3pt;break-after:avoid}
+  #print-area p{margin:0 0 8pt;orphans:3;widows:3}
+  #print-area .pr-lead{font-size:12.5pt;color:#333}
+  #print-area .pr-ar{font-family:var(--arabic);direction:rtl;text-align:right;font-size:19pt;line-height:2;margin:6pt 0 10pt}
+  #print-area .pr-tl{font-style:italic;color:#444}
+  #print-area .pr-mean{font-weight:600}
+  #print-area .pr-ref{color:#7a4f10;font-size:10.5pt;margin-top:10pt}
+  #print-area .pr-foot{border-top:1px solid #ccc;margin-top:18pt;padding-top:6pt;font-size:9pt;color:#555;overflow-wrap:anywhere}
+  #print-area .ar-in{font-family:var(--arabic)}
+}

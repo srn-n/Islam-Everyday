@@ -89,6 +89,9 @@ const P = {
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
   guide: '<path d="M5 20V10a7 7 0 0 1 14 0v10M3 20h18M12 13v7M9.5 16h5"/>',
   hadith: '<path d="M7 3.5h10a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 11.5h6M9 15h3.5"/>',
+  share: '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/>',
+  image: '<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 16l-5-5-8.5 8.5"/>',
+  link: '<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>',
   ext: '<path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>'
 };
 const ic = (n, cls) => `<svg viewBox="0 0 24 24" aria-hidden="true"${cls ? ` class="${cls}"` : ""}>${P[n]}</svg>`;
@@ -384,8 +387,9 @@ let R = { tab: TABS.includes(st.tab) ? st.tab : "today", sub: null, surah: 0, ay
 /* Face 7: zakat removed from the UI (route, nav, More, About). st.zk and assets/zakat.js are kept untouched; old #more/zakat links fall back to More. */
 const SUBS = ["guide", "hadith", "names", "calendar", "settings", "about", "terms", "privacy"];
 const hashSub = h => SUBS.includes(h) ? h : (h.startsWith("more/") && SUBS.includes(h.slice(5)) ? h.slice(5) : null);
-const h0 = (location.hash || "").slice(1);
-if (TABS.includes(h0)) R.tab = h0;
+const h0 = (location.hash || "").slice(1), d0 = deepParse(h0); // Face 7.3: a shared link to one item
+if (d0) R = Object.assign({ sub: null, surah: 0, ayah: 0, study: 0, story: null }, d0.r);
+else if (TABS.includes(h0)) R.tab = h0;
 else if (h0 === "quran/all") R = { tab: "quran", sub: "all", surah: 0, ayah: 0 }; // Face 7: link to the full list of 114 surahs
 else if (h0 === "stories" || h0 === "quran/stories") R = { tab: "quran", sub: "stories", surah: 0, ayah: 0 }; // Face 7.1
 else if (hashSub(h0)) R = { tab: "more", sub: hashSub(h0), surah: 0, ayah: 0 };
@@ -402,14 +406,18 @@ function go(r, push = true) {
 const hashRoute = h => TABS.includes(h) ? { tab: h } : h === "quran/all" ? { tab: "quran", sub: "all" } : (h === "stories" || h === "quran/stories") ? { tab: "quran", sub: "stories" }
   : hashSub(h) ? { tab: "more", sub: hashSub(h) } : h.startsWith("more/") ? { tab: "more" } : null;
 addEventListener("hashchange", () => {
-  const r = hashRoute((location.hash || "").slice(1));
+  const hh = (location.hash || "").slice(1), dd = deepParse(hh);
+  if (dd) { if ($("sheet").classList.contains("on")) closeSheet(); deepPre(dd); go(dd.r, false); try { history.replaceState(R, ""); } catch (e) {} deepPost(dd); return; }
+  const r = hashRoute(hh);
   // Face 7.1 fix: record the route on this history entry, so Back from a page opened after a link returns here.
   if (r) { go(r, false); try { history.replaceState(R, ""); } catch (e) {} }
 });
 addEventListener("popstate", e => { depth = Math.max(0, depth - 1);
   if (e.state && e.state.tab) { R = e.state; render(true); return; }
   // An entry without app state (for example one created by a link to #stories): route from its hash.
-  const r = hashRoute((location.hash || "").slice(1)); go(r || { tab: "today" }, false); });
+  const hh = (location.hash || "").slice(1), dd = deepParse(hh);
+  if (dd) { deepPre(dd); go(dd.r, false); deepPost(dd); return; }
+  const r = hashRoute(hh); go(r || { tab: "today" }, false); });
 try { history.replaceState(R, ""); } catch (e) {}
 
 /* ---------------- shell ---------------- */
@@ -973,6 +981,7 @@ function vStory() {
   <article class="card pad sg-detail" aria-labelledby="sg-h">
     <h3 class="sr" id="sg-h">${escS(L2(x.title))}</h3>
     <p class="sg-lead">${escS(L2(x.short))}</p>
+    ${shActs("story", x.id, L2(x.title))}
     <p class="st-draft" role="note">${t("sg_draftnote")}</p>
     ${x.story && x.story.en && x.story.en[0] ? `<section class="sg-story" aria-labelledby="sg-st-h"><h3 class="sg-sec" id="sg-st-h">${t("sg_story")}</h3><p class="note">${t("sg_story_n")} <button type="button" class="linkish" data-act="sgjump">${t("sg_jump")}</button></p>
       <div class="sg-prose">${(x.story[st.lang] && x.story[st.lang][0] ? x.story[st.lang] : x.story.en).map(p => `<p>${escS(p)}</p>`).join("")}</div></section>` : ""}
@@ -1045,7 +1054,7 @@ function duaList() {
   const list = DUAS.map((d, i) => [d, i]).filter(([d, i]) => (dCat === "all" || (dCat === "fav" ? st.fav.includes(i) : d.c === dCat)) &&
     (!q || [d.te, d.tb, d.en, d.bn, d.tl, d.bt].join(" ").toLowerCase().includes(q))).sort((x, y) => (y[0].c === "core") - (x[0].c === "core"));
   if (!list.length) return `<p class="note">${dCat === "fav" ? t("nofav") : t("none")}</p>`;
-  return list.map(([d, i]) => { const fav = st.fav.includes(i); const open = dOpen.has(i); return `<article class="card dua${open ? " open" : ""}" data-i="${i}"><div class="dua-head"><h3>${esc(bn() ? d.tb : d.te)}${d.k ? `<span class="badge dk dk-${d.k}">${t(d.k === "quran" ? "dk_quran" : "dk_decl")}</span>` : ""}</h3><button type="button" class="mini" data-act="fav" data-i="${i}" aria-pressed="${fav}" aria-label="${esc(t("save"))}">${ic("heart")}</button><button type="button" class="mini" data-act="copydua" data-i="${i}" aria-label="${esc(t("copy"))}">${ic("copy")}</button></div><div class="dua-body" id="dua-b-${i}"><p class="ar" lang="ar">${d.ar}</p>${st.tl ? `<p class="tl">${esc(bn() ? d.bt : d.tl)}</p>` : ""}<p>${esc(bn() ? d.bn : d.en)}</p></div><button type="button" class="linkish dua-more" data-act="duamore" data-i="${i}" aria-expanded="${open}" aria-controls="dua-b-${i}">${t(open ? "readless" : "readmore")}</button><p class="ref">${esc(bn() ? d.rb : d.re)}</p>${duaExtra(d)}</article>`; }).join("");
+  return list.map(([d, i]) => { const fav = st.fav.includes(i); const open = dOpen.has(i); return `<article class="card dua${open ? " open" : ""}" data-i="${i}"><div class="dua-head"><h3>${esc(bn() ? d.tb : d.te)}${d.k ? `<span class="badge dk dk-${d.k}">${t(d.k === "quran" ? "dk_quran" : "dk_decl")}</span>` : ""}</h3><button type="button" class="mini" data-act="fav" data-i="${i}" aria-pressed="${fav}" aria-label="${esc(t("save"))}">${ic("heart")}</button><button type="button" class="mini" data-act="copydua" data-i="${i}" aria-label="${esc(t("sh_copyof").replace("{t}", bn() ? d.tb : d.te))}">${ic("copy")}</button><button type="button" class="mini" data-act="share" data-k="dua" data-key="${i}" aria-haspopup="dialog" aria-label="${esc(t("sh_shareof").replace("{t}", bn() ? d.tb : d.te))}">${ic("share")}</button></div><div class="dua-body" id="dua-b-${i}"><p class="ar" lang="ar">${d.ar}</p>${st.tl ? `<p class="tl">${esc(bn() ? d.bt : d.tl)}</p>` : ""}<p>${esc(bn() ? d.bn : d.en)}</p></div><button type="button" class="linkish dua-more" data-act="duamore" data-i="${i}" aria-expanded="${open}" aria-controls="dua-b-${i}">${t(open ? "readless" : "readmore")}</button><p class="ref">${esc(bn() ? d.rb : d.re)}</p>${duaExtra(d)}</article>`; }).join("");
 }
 /* Face 7 core remembrance: a short sourced note, links to the sources, and (for a Qur'an verse) the way to read it in
    the reader with the translator's notes; marked as not yet reviewed by a qualified scholar. */
@@ -1096,6 +1105,7 @@ function hadithList() {
         <button type="button" class="linkish clamp-more" data-act="hdmore" data-id="${h.id}" aria-expanded="${open}" aria-controls="hd-b-${h.id}">${t(open ? "readless" : "readmore")}</button>
       </div>
       <p class="hd-ref">${refs.map(x => `<a href="${x.url}" target="_blank" rel="noopener noreferrer">${esc(hRef(x))}</a>`).join(" · ")} <span class="badge cur">${esc(h.grade.he[st.lang])}</span></p>
+      ${shActs("hadith", h.id, hRef(refs[0] || h.refs[0]))}
       <details class="fn"><summary>${t("hd_src")}</summary><div>
         <p><b>${t("hd_narr")}:</b> ${esc(h.narrator[st.lang])}</p>
         <p><b>${t("hd_grade")}:</b> ${esc(h.grade.collection[st.lang])}. HadeethEnc: ${esc(h.attribution[st.lang])}, ${esc(h.grade.he[st.lang])}</p>
@@ -1131,6 +1141,7 @@ function nawawiList() {
       </div>
       <p class="hd-ref"><a href="${r.link}" target="_blank" rel="noopener noreferrer">${esc(hRef({ c: "nawawi40", n: String(n) }))}</a>${r.refs.length ? " · " + r.refs.map(x => `<a href="${x.url}" target="_blank" rel="noopener noreferrer">${esc(hRef(x))}</a>`).join(" · ") : ""} <span class="badge cur">${esc(r.grade[st.lang])}</span></p>
       ${r.note ? `<p class="hd-note nw-note">${esc(r.note[st.lang])}</p>` : ""}
+      ${shActs("nawawi", n, t("nw_no").replace("{n}", num(n)).replace("{t}", num(NW_N)))}
       <details class="fn"><summary>${t("hd_src")}</summary><div>
         <p><b>${t("nw_takhrij")}:</b> ${esc(r.attribution[st.lang])}</p>
         <p><b>${t("hd_grade")}:</b> HadeethEnc: ${esc(r.grade[st.lang])}${r.refs.filter(x => x.grade).map(x => ` · ${esc(hRef(x))}: ${esc(x.grade)} (sunnah.com)`).join("")}</p>
@@ -1220,6 +1231,7 @@ function nameSheet(i, opener) {
     <h3 class="ns-title">${esc(bn() ? x.bt : x.tl)}</h3>
     <p class="ar ns-ar" lang="ar" dir="rtl">${x.ar}</p>
     <dl class="ns-mean"><div><dt>English</dt><dd lang="en">${esc(x.en)}</dd></div><div><dt>বাংলা</dt><dd lang="bn">${esc(x.bn)}</dd></div></dl>
+    ${shActs("name", i, bn() ? x.bt : x.tl)}
     <section aria-labelledby="ns-ev"><h4 id="ns-ev">${t("evidence")}</h4>
       ${ev ? `<ul class="ev">${ev}</ul>` : ""}${had ? `<ul class="ev had">${had}</ul>` : ""}${!ev && !had ? `<p class="note">${t("noevidence")}</p>` : ""}</section>
     <section aria-labelledby="ns-ex"><h4 id="ns-ex">${t(x.status === "commentary" ? "explanation" : "explanation2")}</h4><p>${esc(L(x.expl))}</p>
@@ -1232,6 +1244,146 @@ function nameSheet(i, opener) {
     <div class="row ns-nav"><button type="button" class="btn ghost" data-act="name" data-i="${(i + 98) % 99}">${ic("back")} ${t("prevname")}</button><button type="button" class="btn ghost" data-act="name" data-i="${(i + 1) % 99}">${t("nextname")} ${ic("chev")}</button></div>
   </div>`, opener);
   $("sheet").dataset.name = x.id;
+}
+
+/* ---------------- Copy & share (Face 7.3) ----------------
+   Duas, the 99 Names, hadith (both collections) and Qur'an Stories can be copied and shared. Copy puts the Arabic (where there is
+   Arabic), the meaning in the reader's language and the reference on the clipboard. Share offers a website link, and an image (JPG)
+   for a dua or a Name, or a PDF (the browser's print window) for a hadith or a story. Images and PDFs are made on the device. */
+// Links point at the website this page was opened from; the installed app (or a page opened from a file) has no web address, so it offers no link.
+const SITE = !NATIVE && /^https?:$/.test(location.protocol) ? location.href.split("#")[0] : "";
+const shUrl = h => SITE ? SITE + "#" + h : "";
+const L3 = o => o ? (o[st.lang] || o.en || "") : "";
+function shItem(kind, key) {
+  if (kind === "dua") { const d = DUAS[+key]; if (!d) return null;
+    return { kind, title: bn() ? d.tb : d.te, ar: d.ar, tl: bn() ? d.bt : d.tl, body: [bn() ? d.bn : d.en], ref: bn() ? d.rb : d.re, hash: "dua/" + (+key), img: true }; }
+  if (kind === "name") { const x = NAMES[+key]; if (!x) return null;
+    return { kind, title: `${num(x.n)}. ${bn() ? x.bt : x.tl}`, ar: x.ar, mean: bn() ? x.bn : x.en, body: [L(x.expl)], ref: t("basedon") + ": " + x.expl.src.map(id => cite(id).label).join("; "), hash: "name/" + x.n, img: true }; }
+  if (kind === "hadith") { const h = HD.HADITH.find(z => z.id === key); if (!h) return null; const refs = h.refs.filter(x => x.wording !== "similar");
+    return { kind, title: hRef(refs[0] || h.refs[0]), ar: h.ar, body: [h[st.lang]], ref: (refs.length ? refs : h.refs).map(hRef).join(" · ") + " · " + h.grade.he[st.lang], hash: "hadith/" + h.id, pdf: true }; }
+  if (kind === "nawawi") { const r0 = NW && NW.HADITH.find(z => z.n === +key); if (!r0) return null; const r = nwRec(r0);
+    return { kind, title: t("nw_title") + " · " + t("nw_no").replace("{n}", num(r.n)).replace("{t}", num(NW_N)), ar: unPUA(r.ar), body: [r[st.lang]], ref: [hRef({ c: "nawawi40", n: String(r.n) })].concat(r.refs.map(hRef)).join(" · ") + " · " + r.grade[st.lang], hash: "nawawi/" + r.n, pdf: true }; }
+  if (kind === "story") { const x = ST && ST.get(key); if (!x) return null;
+    const sp = x.story && x.story.en ? (x.story[st.lang] && x.story[st.lang][0] ? x.story[st.lang] : x.story.en) : [];
+    const hl = x.hadith || [], plab = p => (p.kind === "hadith" ? p.refs.map(r => { const h = hl.find(z => z.label === r); return h ? `${h.label} (${t("sg_grade")}: ${h.grade})` : r; }) : p.refs.map(r => (bn() ? "কুরআন " : "Qur'an ") + num(r))).join(", ");
+    return { kind, title: L3(x.title), lead: L3(x.short), body: sp, parts: x.parts.map(p => ({ h: t("sk_" + p.kind) + " · " + plab(p), p: L3(p.text) })), unknown: L3(x.unknown),
+      ref: t("sg_refs") + ": " + x.parts.map(plab).join("; "), hash: "story/" + x.id, pdf: true }; }
+  return null;
+}
+function shText(o) {
+  const out = [o.title];
+  if (o.ar) out.push("", o.ar);
+  if (o.tl) out.push(o.tl);
+  if (o.mean) out.push(o.mean);
+  if (o.lead) out.push("", o.lead);
+  if (o.body.length) out.push("", o.body.join("\n\n"));
+  if (o.ref) out.push("", "— " + o.ref);
+  return out.join("\n");
+}
+const shActs = (kind, key, label) => `<div class="sh-acts"><button type="button" class="btn ghost sm" data-act="shcopyitem" data-k="${kind}" data-key="${esc(key)}" aria-label="${esc(t("sh_copyof").replace("{t}", label))}">${ic("copy")}<span>${t("copy")}</span></button><button type="button" class="btn ghost sm" data-act="share" data-k="${kind}" data-key="${esc(key)}" aria-haspopup="dialog" aria-label="${esc(t("sh_shareof").replace("{t}", label))}">${ic("share")}<span>${t("share")}</span></button></div>`;
+const canFiles = () => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File([""], "a.jpg", { type: "image/jpeg" })] })); } catch (e) { return false; } };
+let shCur = null;
+function shareSheet(kind, key, opener) {
+  const o = shItem(kind, key); if (!o) return; shCur = { kind, key };
+  const opt = (act, icn, label) => `<button type="button" class="opt" data-act="${act}">${ic(icn)}<span>${esc(label)}</span></button>`;
+  openSheet(`<div class="sh-sheet"><p class="eyebrow">${t("sh_" + (kind === "nawawi" ? "hadith" : kind))}</p><h3 class="sh-h">${t("sh_title")}</h3><p class="sh-t">${esc(o.title)}</p>
+    <div class="sh-opts">${o.img ? opt("shjpg", "image", t("sh_jpg")) + (canFiles() ? opt("shjpgshare", "share", t("sh_jpgshare")) : "") : ""}${o.pdf ? opt("shpdf", "doc", t("sh_pdf")) : ""}${SITE ? opt("shlink", "link", t("sh_link")) + (navigator.share ? opt("shnative", "share", t("sh_native")) : "") : ""}${opt("shcopy", "copy", t("sh_text"))}</div>
+    ${o.pdf ? `<p class="note">${t("sh_pdf_n")}</p>` : ""}<p class="note">${t(SITE ? "sh_note" : "sh_note_app")}</p>
+    ${kind === "name" ? `<div class="row"><button type="button" class="btn ghost" data-act="name" data-i="${+key}">${ic("back")} ${t("sh_backname")}</button></div>` : ""}</div>`, opener);
+  delete $("sheet").dataset.name; // a Name sheet still loading its verses must not redraw over this one
+}
+/* The image: drawn on a canvas with the bundled fonts, in a fixed light palette so it reads the same wherever it is sent. */
+async function shImage(o) {
+  const SANS = '"DS Sans", system-ui, sans-serif', AR = '"DS Arabic", "Amiri", "Noto Naskh Arabic", serif', DISP = '"DS Display", Georgia, serif';
+  const all = [o.title, o.tl, o.mean, o.ref].concat(o.body).filter(Boolean).join(" ");
+  try { await Promise.all([document.fonts.load(`400 60px ${AR}`, o.ar || "ا"), document.fonts.load(`400 34px ${SANS}`, all), document.fonts.load(`600 34px ${SANS}`, all), document.fonts.load(`400 34px ${DISP}`, "Islam Everyday")]); } catch (e) {}
+  const W = 1080, P = 96, MW = W - P * 2, c = document.createElement("canvas"), x = c.getContext("2d");
+  const wrap = (txt, font, rtl) => { x.font = font; x.direction = rtl ? "rtl" : "ltr"; const out = [];
+    String(txt).split("\n").forEach(par => { let line = ""; par.split(/\s+/).filter(Boolean).forEach(w => { const tt = line ? line + " " + w : w; if (line && x.measureText(tt).width > MW) { out.push(line); line = w; } else line = tt; }); if (line) out.push(line); });
+    return out; };
+  const blocks = [], add = (txt, font, lh, color, gap, align, rtl) => { if (txt) blocks.push({ lines: wrap(txt, font, rtl), font, lh, color, gap, align, rtl }); };
+  const arPx = o.kind === "name" ? 128 : 60;
+  add(o.title, `600 40px ${SANS}`, 56, "#0E6B5C", 0, "center");
+  add(o.ar, `400 ${arPx}px ${AR}`, Math.round(arPx * (o.kind === "name" ? 1.45 : 1.9)), "#0F2420", 40, "center", true);
+  add(o.tl, `400 32px ${SANS}`, 48, "#5A6E69", 24, "center");
+  add(o.mean, `600 40px ${SANS}`, 56, "#0F2420", 22, "center");
+  o.body.forEach((b, k) => add(b, `400 34px ${SANS}`, 52, "#1C3530", k ? 18 : 34, o.kind === "name" ? "left" : "center"));
+  add(o.ref, `400 28px ${SANS}`, 42, "#8A5A12", 36, "center");
+  const head = 168, foot = 150, bodyH = blocks.reduce((s, b) => s + b.gap + b.lines.length * b.lh, 0);
+  const H = Math.max(W, head + bodyH + foot);
+  c.width = W; c.height = H;
+  x.fillStyle = "#F6F1E6"; x.fillRect(0, 0, W, H);
+  x.fillStyle = "#FFFFFF"; x.beginPath(); (x.roundRect ? x.roundRect(40, 40, W - 80, H - 80, 36) : x.rect(40, 40, W - 80, H - 80)); x.fill();
+  x.fillStyle = "#0E6B5C"; x.fillRect(40, 40, W - 80, 10);
+  x.textBaseline = "middle"; x.direction = "ltr"; x.textAlign = "left"; x.font = `400 34px ${DISP}`; x.fillStyle = "#0E6B5C"; x.fillText("Islam Everyday", P, 112);
+  x.textAlign = "right"; x.font = `600 24px ${SANS}`; x.fillStyle = "#8A5A12"; x.fillText(t("sh_" + (o.kind === "nawawi" ? "hadith" : o.kind)).toUpperCase(), W - P, 112);
+  let y = head + Math.max(0, (H - head - foot - bodyH) / 2);
+  blocks.forEach(b => { y += b.gap; x.font = b.font; x.fillStyle = b.color; x.direction = b.rtl ? "rtl" : "ltr"; x.textAlign = b.align;
+    const bx = b.align === "center" ? W / 2 : P;
+    b.lines.forEach(l => { x.fillText(l, bx, y + b.lh / 2); y += b.lh; }); });
+  x.direction = "ltr"; x.textAlign = "center"; x.fillStyle = "#DCE6E2"; x.fillRect(P, H - foot + 10, MW, 2);
+  x.font = `400 26px ${SANS}`; x.fillStyle = "#5A6E69";
+  x.fillText(SITE ? shUrl(o.hash).replace(/^https?:\/\//, "") : "Islam Everyday", W / 2, H - foot / 2 - 6, MW);
+  return new Promise(res => c.toBlob(res, "image/jpeg", 0.92));
+}
+async function shJpg(share) {
+  const o = shCur && shItem(shCur.kind, shCur.key); if (!o) return;
+  toast(t("sh_making"));
+  let blob = null; try { blob = await shImage(o); } catch (e) {}
+  if (!blob) { toast(t("sh_fail")); return; }
+  const name = "islam-everyday-" + o.hash.replace("/", "-") + ".jpg";
+  if (share) { try { await navigator.share({ files: [new File([blob], name, { type: "image/jpeg" })], title: o.title }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
+  const u = URL.createObjectURL(blob), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 5000); toast(t("sh_saved"));
+}
+/* The PDF: the item is laid out in a print-only area and the browser's print window opens, where "Save as PDF" is a printer. */
+function shPdf() {
+  const o = shCur && shItem(shCur.kind, shCur.key); if (!o) return;
+  let pa = $("print-area"); if (!pa) { pa = document.createElement("div"); pa.id = "print-area"; document.body.appendChild(pa); }
+  pa.setAttribute("lang", st.lang);
+  pa.innerHTML = `<header class="pr-head"><b>Islam Everyday</b><span>${t("sh_" + (o.kind === "nawawi" ? "hadith" : o.kind))}</span></header><h1>${escS(o.title)}</h1>
+    ${o.lead ? `<p class="pr-lead">${escS(o.lead)}</p>` : ""}${o.ar ? `<p class="pr-ar" lang="ar" dir="rtl">${esc(o.ar).replace(/\n/g, "<br>")}</p>` : ""}${o.tl ? `<p class="pr-tl">${esc(o.tl)}</p>` : ""}${o.mean ? `<p class="pr-mean">${esc(o.mean)}</p>` : ""}
+    ${o.kind === "story" && o.body.length ? `<h2>${t("sg_story")}</h2>` : ""}${o.body.map(p => `<p>${(o.kind === "story" ? escS(p) : (bn() ? arRuns(p) : esc(p))).replace(/\n/g, "<br>")}</p>`).join("")}
+    ${o.parts ? `<h2>${t("sg_refs")}</h2>${o.parts.map(p => `<h3>${escS(p.h)}</h3><p>${escS(p.p)}</p>`).join("")}${o.unknown ? `<h3>${t("sg_unknown")}</h3><p>${escS(o.unknown)}</p>` : ""}` : `<p class="pr-ref">${escS(o.ref)}</p>`}
+    <footer class="pr-foot">${SITE ? esc(shUrl(o.hash)) : "Islam Everyday"}</footer>`;
+  closeSheet();
+  const t0 = document.title; document.title = "Islam Everyday - " + o.title.replace(/[\\/:*?"<>|]/g, " ");
+  const done = () => { document.body.classList.remove("printing"); document.title = t0; removeEventListener("afterprint", done); };
+  document.body.classList.add("printing"); addEventListener("afterprint", done);
+  setTimeout(() => { try { window.print(); } catch (e) { done(); } }, 380);
+}
+function shNative() {
+  const o = shCur && shItem(shCur.kind, shCur.key); if (!o || !SITE) return;
+  try { navigator.share({ title: o.title, text: o.title, url: shUrl(o.hash) }).catch(() => {}); } catch (e) {}
+}
+function shLink() {
+  const o = shCur && shItem(shCur.kind, shCur.key); if (!o || !SITE) return;
+  try { navigator.clipboard.writeText(shUrl(o.hash)).then(() => toast(t("sh_linkok")), () => toast(t("copyfail"))); } catch (e) { toast(t("copyfail")); }
+}
+/* Deep links: #dua/<index>, #name/<1–99>, #hadith/<id>, #nawawi/<1–42>, #story/<id>. */
+function deepParse(h) {
+  let m;
+  if ((m = h.match(/^story\/([\w-]+)$/)) && window.IE_STORIES && IE_STORIES.get(m[1])) return { kind: "story", key: m[1], r: { tab: "quran", sub: "stories", story: m[1] } };
+  if ((m = h.match(/^dua\/(\d+)$/)) && DUAS[+m[1]]) return { kind: "dua", key: +m[1], r: { tab: "duas" } };
+  if ((m = h.match(/^name\/(\d+)$/)) && +m[1] >= 1 && NAMES[+m[1] - 1]) return { kind: "name", key: +m[1] - 1, r: { tab: "more", sub: "names" } };
+  if ((m = h.match(/^hadith\/(\w+)$/)) && HD.HADITH.some(z => z.id === m[1])) return { kind: "hadith", key: m[1], r: { tab: "more", sub: "hadith" } };
+  if ((m = h.match(/^nawawi\/(\d+)$/)) && NW && NW.HADITH.some(z => z.n === +m[1])) return { kind: "nawawi", key: +m[1], r: { tab: "more", sub: "hadith" } };
+  return null;
+}
+function deepPre(d) {
+  if (d.kind === "dua") { dQuery = ""; dCat = "all"; }
+  else if (d.kind === "hadith") { st.hcol = "general"; hCat = "all"; save(); }
+  else if (d.kind === "nawawi") { st.hcol = "nawawi"; save(); }
+}
+function deepPost(d) {
+  setTimeout(() => {
+    if (d.kind === "name") { nameSheet(d.key); return; }
+    if (d.kind === "nawawi") { nwGo(d.key); return; }
+    const el = d.kind === "dua" ? document.querySelector(`#dua-list .dua[data-i="${d.key}"]`) : d.kind === "hadith" ? $("hd-" + d.key) : null;
+    const h = el && el.querySelector("h3");
+    if (el) { scrollTo(0, Math.max(0, el.getBoundingClientRect().top + scrollY - 84)); el.classList.add("sh-hit"); setTimeout(() => el.classList.remove("sh-hit"), 2400); }
+    if (h) { h.setAttribute("tabindex", "-1"); h.focus({ preventScroll: true }); }
+  }, 60);
 }
 
 /* ---------------- Prayer guide ---------------- */
@@ -1759,7 +1911,15 @@ document.addEventListener("click", e => {
       <p class="note">${t("fw_checked")}</p></div>`, b); break;
     case "vxmore": { const open = vxOpen !== d.id; vxOpen = open ? d.id : null; toggleClamp(b, open); break; }
     case "fav": { const i = +d.i, on = st.fav.includes(i); st.fav = on ? st.fav.filter(x => x !== i) : st.fav.concat(i); save(); b.setAttribute("aria-pressed", !on); if (!on && !reduce) { b.animate && b.animate([{ transform: "scale(1)" }, { transform: "scale(1.3)" }, { transform: "scale(1)" }], { duration: 320, easing: "cubic-bezier(.34,1.56,.64,1)" }); } if (dCat === "fav") { $("dua-list").innerHTML = duaList(); fitDuas(); } break; }
-    case "copydua": { const x = DUAS[+d.i]; copyText(`${x.ar}\n${bn() ? x.bt : x.tl}\n${bn() ? x.bn : x.en}\n— ${bn() ? x.rb : x.re}`); break; }
+    case "copydua": { const o = shItem("dua", +d.i); if (o) copyText(shText(o)); break; }
+    case "shcopyitem": { const o = shItem(d.k, d.key); if (o) copyText(shText(o)); break; }
+    case "share": shareSheet(d.k, d.key, b); break;
+    case "shcopy": { const o = shCur && shItem(shCur.kind, shCur.key); if (o) copyText(shText(o)); break; }
+    case "shlink": shLink(); break;
+    case "shnative": shNative(); break;
+    case "shjpg": shJpg(false); break;
+    case "shjpgshare": shJpg(true); break;
+    case "shpdf": shPdf(); break;
     case "cal": { let [y, m] = calM; m += +d.d; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; } calM = [y, m]; hidePop(); render(false); break; }
     case "calday": { calSel = d.k; document.querySelectorAll(".cal .c[data-k]").forEach(c => { const on = c.dataset.k === d.k; c.setAttribute("aria-pressed", on); c.tabIndex = on ? 0 : -1; });
       const [y, m, dd] = XT.parts(d.k), det = $("cal-detail"); if (det) det.innerHTML = calDetail(calInfo(y, m, dd, snap || snapshot()));
@@ -1825,7 +1985,9 @@ document.addEventListener("change", e => {
 
 /* ---------------- boot ---------------- */
 const LOGO = `<svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="104" fill="#0E6B5C"/><clipPath id="ie-door"><path d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392Z"/></clipPath><g clip-path="url(#ie-door)"><rect width="512" height="512" fill="#167C68"/><circle cx="256" cy="392" r="84" fill="#F2BE5C"/></g><path d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392Z" fill="none" stroke="#F6EEDC" stroke-width="40" stroke-linejoin="round"/><path d="M118 393H394" stroke="#F6EEDC" stroke-width="40" stroke-linecap="round"/></svg>`;
+if (d0) deepPre(d0);
 render(true);
+if (d0) deepPost(d0);
 if (!NATIVE && "serviceWorker" in navigator && document.querySelector('link[rel="manifest"]') && window.top === window) {
   try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {}
 }

@@ -121,6 +121,10 @@ const P = {
   share: '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/>',
   image: '<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 16l-5-5-8.5 8.5"/>',
   link: '<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>',
+  mail: '<rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4.5 7l7.5 6 7.5-6"/>',
+  flag: '<path d="M5.5 21V4.5M5.5 5h11l-2 4 2 4h-11"/>',
+  bulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',
+  bug: '<rect x="7.5" y="7.5" width="9" height="12" rx="4.5"/><path d="M12 7.5V19.5M4 13h3.5M16.5 13H20M5 8l2.7 2M19 8l-2.7 2M5 19l2.7-2M19 19l-2.7-2M9.5 7.5a2.5 2.5 0 0 1 5 0"/>',
   ext: '<path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>'
 };
 const ic = (n, cls) => `<svg viewBox="0 0 24 24" aria-hidden="true"${cls ? ` class="${cls}"` : ""}>${P[n]}</svg>`;
@@ -414,7 +418,7 @@ function vExtra(s) {
 /* ---------------- routing ---------------- */
 let R = { tab: TABS.includes(st.tab) ? st.tab : "today", sub: null, surah: 0, ayah: 0 };
 /* Face 7: zakat removed from the UI (route, nav, More, About). st.zk and assets/zakat.js are kept untouched; old #more/zakat links fall back to More. */
-const SUBS = ["guide", "hadith", "names", "calendar", "settings", "about", "terms", "privacy"];
+const SUBS = ["guide", "hadith", "names", "calendar", "settings", "about", "terms", "privacy", "feedback"];
 const hashSub = h => SUBS.includes(h) ? h : (h.startsWith("more/") && SUBS.includes(h.slice(5)) ? h.slice(5) : null);
 const h0 = (location.hash || "").slice(1), d0 = deepParse(h0); // Face 7.3: a shared link to one item
 if (d0) R = Object.assign({ sub: null, surah: 0, ayah: 0, study: 0, story: null }, d0.r);
@@ -483,7 +487,7 @@ function render(anim) {
   else if (R.tab === "quran") f = R.sub === "all" || R.surah ? (desk() ? vQuranDesk : (R.surah ? vReader : vQuran)) : (desk() ? vStudyDesk : (R.study ? vStudyDetail : vStudy));
   else if (R.tab === "duas") f = vDuas;
   
-  else f = { guide: vGuide, hadith: vHadith, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy") }[R.sub] || vMore;
+  else f = { guide: vGuide, hadith: vHadith, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy"), feedback: vFeedback }[R.sub] || vMore;
   const g = routeGroup(R);
   if (g && !lazyDone.has(g)) { // page data not loaded yet: show a short loading state, then draw the page
     v.innerHTML = `<div class="lazy-wait" role="status"><span class="spin" aria-hidden="true"></span>${esc(t("pgloading"))}</div>`;
@@ -1220,7 +1224,7 @@ function nwGo(n) {
 /* ---------------- MORE + sub pages ---------------- */
 function vMore() {
   const s = snap || snapshot(), hj = hijriNow(s);
-  const items = [["guide", "guide", t("guide_s")], ["hadith", "hadith", t("hadith_s")], ["names", "names", t("names_s")], ["calendar", "calendar", hText(hj)], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
+  const items = [["guide", "guide", t("guide_s")], ["hadith", "hadith", t("hadith_s")], ["names", "names", t("names_s")], ["calendar", "calendar", hText(hj)], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["feedback", "mail", t("feedback_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
   return `<div class="page-head"><h2>${t("more")}</h2></div>${installCard()}
   <ul class="card menu">${items.map(([k, icn, sub]) => `<li><button type="button" data-act="go" data-tab="more" data-sub="${k}"><span class="ic">${ic(icn)}</span><span class="grow"><b>${t(k === "names" ? "names99" : k)}</b><small>${esc(sub)}</small></span>${ic("chev", "chev")}</button></li>`).join("")}</ul>`;
 }
@@ -1351,7 +1355,7 @@ function shareSheet(kind, key, opener) {
   const o = shItem(kind, key); if (!o) return; shCur = { kind, key };
   const opt = (act, icn, label) => `<button type="button" class="opt" data-act="${act}">${ic(icn)}<span>${esc(label)}</span></button>`;
   openSheet(`<div class="sh-sheet"><p class="eyebrow">${t("sh_" + (kind === "nawawi" ? "hadith" : kind))}</p><h3 class="sh-h">${t("sh_title")}</h3><p class="sh-t">${esc(o.title)}</p>
-    <div class="sh-opts">${o.img ? opt("shjpg", "image", t("sh_jpg")) + (canFiles() ? opt("shjpgshare", "share", t("sh_jpgshare")) : "") : ""}${o.pdf ? opt("shpdf", "doc", t("sh_pdf")) : ""}${SITE ? opt("shlink", "link", t("sh_link")) + (navigator.share ? opt("shnative", "share", t("sh_native")) : "") : ""}${opt("shcopy", "copy", t("sh_text"))}</div>
+    <div class="sh-opts">${o.img ? opt("shjpg", "image", t("sh_jpg")) + (canFiles() ? opt("shjpgshare", "share", t("sh_jpgshare")) : "") : ""}${o.pdf ? opt("shpdf", "doc", t("sh_pdf")) : ""}${SITE ? opt("shlink", "link", t("sh_link")) + (navigator.share ? opt("shnative", "share", t("sh_native")) : "") : ""}${opt("shcopy", "copy", t("sh_text"))}<a class="opt" href="${esc(fbMail("mistake", fbItem(kind, o)))}" data-fb="item">${ic("flag")}<span>${esc(t("fb_mistake"))}</span></a></div>
     ${o.pdf ? `<p class="note">${t("sh_pdf_n")}</p>` : ""}<p class="note">${t(SITE ? "sh_note" : "sh_note_app")}</p>
     ${kind === "name" ? `<div class="row"><button type="button" class="btn ghost" data-act="name" data-i="${+key}">${ic("back")} ${t("sh_backname")}</button></div>` : ""}</div>`, opener);
   delete $("sheet").dataset.name; // a Name sheet still loading its verses must not redraw over this one
@@ -1756,11 +1760,45 @@ function vAbout() {
   <section class="card pad" style="display:grid;gap:10px">${t("aboutbody").split("\n").map(p => `<p>${esc(p)}</p>`).join("")}</section>
   <section class="card pad"><h3 class="sec-title">${t("qcredit")}</h3><dl class="credits">${E.map(([k, v]) => `<div><dt>${esc(sp(k))}</dt><dd>${esc(sp(v))}</dd></div>`).join("")}</dl>
   <p class="note" style="margin-top:8px"><a href="data/quran/editions.json" target="_blank" rel="noopener">editions.json</a> · <a href="https://quranenc.com/en/browse/bengali_zakaria" target="_blank" rel="noopener noreferrer">QuranEnc.com</a> · <a href="https://quranenc.com/en/browse/bengali_mokhtasar" target="_blank" rel="noopener noreferrer">Al-Mukhtasar</a> · <a href="https://tanzil.net/trans/" target="_blank" rel="noopener noreferrer">Tanzil</a></p></section>
-  <p class="note">Islam Everyday · ${t("version")} ${num("1.0.0")}</p>`;
+  <p class="note">Islam Everyday · ${t("version")} ${num(APPV)}</p>`;
 }
 /* Terms of Use and Privacy Policy (assets/legal.js). Plain sections; the contact link is the public GitHub Issues page. */
 /* Footer on every page: copyright and the legal links, so the policies are always one tap away. */
 const siteFoot = () => `<footer class="site-foot"><span>© ${num(2026)} ${bn() ? "সামিউর রহমান" : "Samiur Rahman"}</span><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="privacy">${t("privacy")}</button><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="terms">${t("terms")}</button><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="about">${t("about")}</button></footer>`;
+/* Feedback (Oct 2026): by email, no server. Each link opens the user's email app with a message ready to send; nothing
+   leaves the device until they press Send. The message carries only what is listed in fb_privacy: never location or records. */
+const APPV = "1.0.0", FB_EMAIL = "samiiiur@yahoo.com";
+const fbDevice = () => { const u = navigator.userAgent || "";
+  const os = /iphone/i.test(u) ? "iPhone" : /ipad/i.test(u) || (/macintosh/i.test(u) && navigator.maxTouchPoints > 1) ? "iPad" : /android/i.test(u) ? "Android" : /windows/i.test(u) ? "Windows" : /mac os/i.test(u) ? "Mac" : /linux|cros/i.test(u) ? "Linux" : "";
+  const br = /SamsungBrowser/.test(u) ? "Samsung Internet" : /Edg\//.test(u) ? "Edge" : /OPR\//.test(u) ? "Opera" : /Firefox|FxiOS/.test(u) ? "Firefox" : /Chrome|CriOS/.test(u) ? "Chrome" : /Safari/.test(u) ? "Safari" : "";
+  return (phone() ? "Phone" : "Computer") + (os || br ? ` (${[os, br].filter(Boolean).join(", ")})` : "") + (standalone() ? ", installed app" : ""); };
+function fbMail(type, item) {
+  const L = { mistake: "Mistake", problem: "Problem", idea: "Idea", other: "Message" }[type];
+  const lines = [];
+  if (item) { lines.push("Item: " + item.what + " - " + item.title); if (item.ref) lines.push("Reference: " + item.ref); if (item.link) lines.push("Link: " + item.link); }
+  lines.push("Language: " + (st.lang === "bn" ? "Bangla" : "English"), "App version: " + APPV, "Device: " + fbDevice(), "", "----", t("fb_ask_" + type), "", "");
+  const subj = "[Islam Everyday] " + L + (item ? ": " + item.title : "");
+  return `mailto:${FB_EMAIL}?subject=${encodeURIComponent(subj.slice(0, 140))}&body=${encodeURIComponent(lines.join("\r\n"))}`;
+}
+/* The item a share sheet is showing, for a "Report a mistake" email. */
+function fbItem(kind, o) {
+  const ref = Array.isArray(o.ref) ? o.ref.join("; ") : (o.ref || "");
+  return { what: { dua: "Dua", name: "Name of Allah", hadith: "Hadith", nawawi: "An-Nawawi's Forty", story: "Story", verse: "Verse" }[kind] || kind,
+    title: String(o.title || "").slice(0, 120), ref: String(ref).slice(0, 300), link: shUrl(o.hash) };
+}
+function vFeedback() {
+  const row = (type, icn) => `<li><a href="${esc(fbMail(type))}" data-fb="${type}"><span class="ic">${ic(icn)}</span><span class="grow"><b>${t("fb_" + type)}</b><small>${esc(t("fb_" + type + "_s"))}</small></span>${ic("ext", "chev")}</a></li>`;
+  return `<div class="page-head">${back()}<h2>${t("feedback")}</h2></div>
+  <section class="card pad fb-intro"><p>${t("fb_intro")}</p></section>
+  <ul class="card menu fb-menu">${row("mistake", "flag")}${row("problem", "bug")}${row("idea", "bulb")}${row("other", "mail")}</ul>
+  <section class="card pad fb-notes">
+    <p class="note">${ic("share", "fb-i")}${t("fb_tip")}</p>
+    <p class="note">${ic("lock", "fb-i")}${t("fb_privacy")}</p>
+    <p class="note">${esc(t("fb_noapp")).replace("{e}", `<b class="fb-mail">${FB_EMAIL}</b>`)}</p>
+    <div class="row"><button type="button" class="btn ghost sm" data-act="fbcopy">${ic("copy")}<span>${t("fb_copy")}</span></button></div>
+    <p class="note"><a href="https://github.com/srn-n/islam-everyday/issues" target="_blank" rel="noopener noreferrer">${t("fb_github")}</a></p>
+  </section>`;
+}
 function vLegal(kind) {
   const l = st.lang === "bn" ? "bn" : "en", secs = LG ? (kind === "terms" ? LG.TERMS : LG.PRIVACY)[l] : [];
   return `<div class="page-head">${back()}<h2>${t(kind)}</h2></div>
@@ -1821,7 +1859,7 @@ function locate() {
 let sideNext = null;
 const SIDE = [["today", "today", "today"], ["study_nav", "quran", "quran"], ["stories_nav", "stories", "quran/stories"], ["duas", "duas", "duas"], null,
   ["guide", "guide", "more/guide"], ["hadith", "hadith", "more/hadith"], ["calendar", "calendar", "more/calendar"], ["names99", "names", "more/names"], null,
-  ["settings", "gear", "more/settings"], ["about", "info", "more/about"]];
+  ["settings", "gear", "more/settings"], ["about", "info", "more/about"], ["feedback", "mail", "more/feedback"]];
 function side() {
   const el = $("side"); if (!el) return;
   el.setAttribute("aria-label", t("sidebar")); // a named landmark, distinct from the reader's surah list
@@ -1981,6 +2019,7 @@ document.addEventListener("click", e => {
     case "copydua": { const o = shItem("dua", +d.i); if (o) copyText(shText(o)); break; }
     case "shcopyitem": { const o = shItem(d.k, d.key); if (o) copyText(shText(o)); break; }
     case "share": shareSheet(d.k, d.key, b); break;
+    case "fbcopy": try { navigator.clipboard.writeText(FB_EMAIL).then(() => toast(t("fb_copied")), () => toast(t("copyfail"))); } catch (x) { toast(t("copyfail")); } break;
     case "shcopy": { const o = shCur && shItem(shCur.kind, shCur.key); if (o) copyText(shText(o)); break; }
     case "shlink": shLink(); break;
     case "shnative": shNative(); break;

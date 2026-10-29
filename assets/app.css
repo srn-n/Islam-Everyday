@@ -1229,3 +1229,36 @@ ul.sg-legend li{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
   #print-area .pr-foot{border-top:1px solid #ccc;margin-top:18pt;padding-top:6pt;font-size:9pt;color:#555;overflow-wrap:anywhere}
   #print-area .ar-in{font-family:var(--arabic)}
 }
+
+/* Phone speed (Oct 2026): boot splash shown while the first scripts load, and the short wait while a page's data loads */
+@media (pointer:fine){.boot{visibility:hidden}} /* desktop: blank while loading, as before */
+.boot{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted)}
+.boot b{font-family:var(--display,serif);font-weight:400;font-size:1.5rem;color:var(--ink)}
+.lazy-wait{min-height:40vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);text-align:center;padding:24px 16px}
+.lazy-wait p{margin:0;max-width:32ch}
+.spin{display:inline-block;width:22px;height:22px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite}
+.lazy-wait .spin{margin-right:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none;border-top-color:var(--line)}}
+/* The language button shows "বাং" in English mode: draw it with the phone's own font so English pages never download
+   the 74 KB Bangla web font just for this label. */
+@media (pointer:coarse){.lang-btn{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali","Nirmala UI",sans-serif}}
+/* Touch screens (Oct 2026): every control is at least 44px tall to tap, without changing the desktop layout.
+   Inline text-style buttons ("Why?", "Set your school…") get a taller invisible hit area that does not move the text. */
+@media (pointer:coarse){
+  .chip,.btn.sm,.seg>button,.top .brand,.chip-btn,.icon-btn{min-height:44px}
+  .icon-btn,.top .brand{min-width:44px}
+  .site-foot .linkish,.wd-next .chip,.cp-fasts .chip{min-height:44px}
+  .site-foot .linkish{margin-top:0;margin-bottom:0;padding-top:0;padding-bottom:0}
+  .linkish{padding-top:12px;padding-bottom:12px;margin-top:-12px;margin-bottom:-12px}
+  .fp-row{min-height:44px;display:flex;align-items:center;gap:10px}
+  .fp-row input[type=checkbox]{width:22px;height:22px;flex:none}
+  .switch::before{content:"";position:absolute;inset:-7px -4px} /* 50x30 switch, 58x44 tap area */
+}
+@media (pointer:coarse){.nw{white-space:nowrap}}
+/* Install-as-app card (More page) */
+.install{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.install img{width:44px;height:44px;border-radius:11px;flex:none}
+.install .grow{display:flex;flex-direction:column;gap:2px;min-width:0}
+.install small{color:var(--muted);font-size:.84rem}
+.install .btn{flex:none}

@@ -35,6 +35,8 @@ const SYD = { fajr: 4.7, sunrise: 6.05, dhuhr: 12.4, asr: 15.9, maghrib: 18.75, 
 const at = h => BASE + Math.round(h * 3600e3);
 
 /* ---------- countdown ---------- */
+const lazyList = () => { const m = read("assets/app.js").match(/const LAZY = (\{[^\n]+\});/); return Object.values(JSON.parse(m[1].replace(/(\w+):/g, '"$1":'))).flat().map(n => `assets/${n}.js`); };
+
 test("countdown: HH:MM:SS, rounds down, never negative, past 24 h", () => {
   const c = sandbox();
   assert.equal(c.countdown(0), "00:00:00");
@@ -360,8 +362,8 @@ test("every t() key used by the app exists in English and Bangla", () => {
 
 test("new scripts load before app.js and are precached", () => {
   for (const f of ["assets/dayviz.js", "assets/zakat.js", "assets/nawawi.js", "assets/theme-boot.js"]) {
-    assert.ok(html.includes(f), f); assert.ok(sw.includes(`"${f}"`), "sw " + f);
-    if (f !== "assets/theme-boot.js") assert.ok(html.indexOf(f) < html.indexOf("assets/app.js"), f);
+    assert.ok(html.includes(f) || lazyList().includes(f), f); assert.ok(sw.includes(`"${f}"`), "sw " + f);
+    if (f !== "assets/theme-boot.js") assert.ok((html.includes(f) && html.indexOf(f) < html.indexOf("assets/app.js")) || lazyList().includes(f), f);
   }
 });
 

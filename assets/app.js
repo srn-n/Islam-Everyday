@@ -3,9 +3,38 @@
 "use strict";
 const QM = window.QURAN_META, X = window.DINSATHI;
 const { I18N, TL, DUAS, DUA_CATS, CITIES, METHODS, EVENTS, HM, CURRENCIES } = X;
-const NM = window.DINSATHI_NAMES, VOTD = window.DINSATHI_VOTD, NAMES = NM.names, GD = window.IE_GUIDE;
-const FIX = window.IE_BNFIX || { repair: s => s }, XT = window.IE_XTRACK, HD = window.IE_HADITH, GL = window.IE_GLOSS, NW = window.IE_NAWAWI;
-const LOC = window.IE_LOCALE, VE = window.IE_VOTD_EN, DV = window.IE_DAYVIZ, SD = window.IE_STUDY;
+const VOTD = window.DINSATHI_VOTD;
+const FIX = window.IE_BNFIX || { repair: s => s }, XT = window.IE_XTRACK, GL = window.IE_GLOSS;
+const LOC = window.IE_LOCALE, VE = window.IE_VOTD_EN, DV = window.IE_DAYVIZ;
+/* Phone speed (Oct 2026): page data that the Today screen does not need is loaded only when its page opens, so a phone
+   downloads about a third of the scripts before the first screen appears. LAZY lists each group's files in load order;
+   bindLazy() picks up the globals they define. The service worker still precaches all of them for offline use. */
+const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"] };
+let NM, NAMES = [], GD, HD, NW, SD, ST, LG = null, HCOLL = {}, NW_N = 0;
+const lazyDone = new Set(), lazyP = {}, lazyFiles = new Set();
+/* Phones (touch screen) get the on-demand loading; computers with a mouse keep the previous behaviour: everything is
+   loaded straight after the first screen, so their pages open with no "Loading…" step. */
+const phone = () => { try { return matchMedia("(pointer: coarse)").matches; } catch (e) { return false; } };
+function bindLazy() {
+  NM = window.DINSATHI_NAMES; NAMES = NM ? NM.names : []; GD = window.IE_GUIDE; HD = window.IE_HADITH; NW = window.IE_NAWAWI;
+  SD = window.IE_STUDY; ST = window.IE_STORIES; LG = window.IE_LEGAL || null;
+  HCOLL = Object.assign({}, NW ? NW.COLLECTIONS : {}, HD ? HD.COLLECTIONS : {});
+  NW_N = NW ? NW.HADITH.length : 0;
+}
+bindLazy();
+for (const g in LAZY) if ({ names: NM && window.IE_NAME_STORIES, guide: NM && GD, hadith: HD && NW, study: SD, stories: ST, legal: LG }[g]) lazyDone.add(g); // already on the page
+function need(g) {
+  if (!g || lazyDone.has(g)) return Promise.resolve();
+  if (!lazyP[g]) lazyP[g] = LAZY[g].reduce((p, n) => p.then(() => lazyFiles.has(n) ? 0 : new Promise((ok, no) => {
+    const sc = document.createElement("script"); sc.src = "assets/" + n + ".js";
+    sc.onload = () => { lazyFiles.add(n); ok(); }; sc.onerror = () => { sc.remove(); no(new Error(n)); }; document.head.appendChild(sc);
+  })), Promise.resolve()).then(() => { bindLazy(); lazyDone.add(g); }, e => { delete lazyP[g]; throw e; });
+  return lazyP[g];
+}
+/* Which group a route or a shared link needs (null: nothing extra). */
+const routeGroup = r => r.tab === "quran" ? (r.sub === "stories" ? "stories" : (r.sub === "all" || r.surah) ? null : "study")
+  : r.tab === "more" ? ({ names: "names", guide: "guide", hadith: "hadith", about: "legal", terms: "legal", privacy: "legal" }[r.sub] || null) : null;
+const hashGroup = h => /^story\//.test(h) ? "stories" : /^name\//.test(h) ? "names" : /^(hadith|nawawi)\//.test(h) ? "hadith" : null;
 const PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"], ROWS = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
 const TABS = ["today", "quran", "duas", "more"];
 const mq = (() => { try { return matchMedia("(min-width: 1024px)"); } catch (e) { return { matches: false }; } })();
@@ -405,8 +434,12 @@ function go(r, push = true) {
 /* A route for a typed or linked hash (#stories, #more/guide, …), or null. */
 const hashRoute = h => TABS.includes(h) ? { tab: h } : h === "quran/all" ? { tab: "quran", sub: "all" } : (h === "stories" || h === "quran/stories") ? { tab: "quran", sub: "stories" }
   : hashSub(h) ? { tab: "more", sub: hashSub(h) } : h.startsWith("more/") ? { tab: "more" } : null;
+/* A shared link to an item whose page data is not loaded yet: load it, then handle the link again. */
+const deepWait = hh => { const g = hashGroup(hh); if (!g || lazyDone.has(g)) return false;
+  need(g).then(() => { if ((location.hash || "").slice(1) === hh) dispatchEvent(new HashChangeEvent("hashchange")); }, () => toast(t("pgfail"))); return true; };
 addEventListener("hashchange", () => {
-  const hh = (location.hash || "").slice(1), dd = deepParse(hh);
+  const hh0 = (location.hash || "").slice(1); if (deepWait(hh0)) return;
+  const hh = hh0, dd = deepParse(hh);
   if (dd) { if ($("sheet").classList.contains("on")) closeSheet(); deepPre(dd); go(dd.r, false); try { history.replaceState(R, ""); } catch (e) {} deepPost(dd); return; }
   const r = hashRoute(hh);
   // Face 7.1 fix: record the route on this history entry, so Back from a page opened after a link returns here.
@@ -415,7 +448,8 @@ addEventListener("hashchange", () => {
 addEventListener("popstate", e => { depth = Math.max(0, depth - 1);
   if (e.state && e.state.tab) { R = e.state; render(true); return; }
   // An entry without app state (for example one created by a link to #stories): route from its hash.
-  const hh = (location.hash || "").slice(1), dd = deepParse(hh);
+  const hh = (location.hash || "").slice(1); if (deepWait(hh)) return;
+  const dd = deepParse(hh);
   if (dd) { deepPre(dd); go(dd.r, false); deepPost(dd); return; }
   const r = hashRoute(hh); go(r || { tab: "today" }, false); });
 try { history.replaceState(R, ""); } catch (e) {}
@@ -426,8 +460,8 @@ function header() {
   $("top").innerHTML = `
     <button type="button" class="brand" data-act="home" aria-label="${esc(t("brand"))}">${LOGO}<b>${t("brand")}</b></button>
     <span class="hdate">${esc(dateLine())}</span>
-    <button type="button" class="chip-btn" data-act="loc" aria-label="${esc(t("chooseloc"))}">${ic("pin")}<span>${esc(cname(c))}</span></button>
-    <button type="button" class="icon-btn lang-btn" data-act="lang" aria-label="${esc(t("langswitch"))}">${bn() ? "EN" : "বাং"}</button>
+    <button type="button" class="chip-btn" data-act="loc" aria-label="${esc(cname(c) + ", " + t("chooseloc"))}">${ic("pin")}<span>${esc(cname(c))}</span></button>
+    <button type="button" class="icon-btn lang-btn" data-act="lang" aria-label="${(bn() ? "EN" : "বাং") + ", " + esc(t("langswitch"))}">${bn() ? "EN" : "বাং"}</button>
     <button type="button" class="icon-btn" data-act="go" data-tab="more" data-sub="settings" aria-label="${esc(t("settings"))}">${ic("gear")}</button>`;
 }
 function nav() {
@@ -450,6 +484,13 @@ function render(anim) {
   else if (R.tab === "duas") f = vDuas;
   
   else f = { guide: vGuide, hadith: vHadith, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy") }[R.sub] || vMore;
+  const g = routeGroup(R);
+  if (g && !lazyDone.has(g)) { // page data not loaded yet: show a short loading state, then draw the page
+    v.innerHTML = `<div class="lazy-wait" role="status"><span class="spin" aria-hidden="true"></span>${esc(t("pgloading"))}</div>`;
+    need(g).then(() => { if (routeGroup(R) === g) render(anim); },
+      () => { if (routeGroup(R) === g) v.innerHTML = `<div class="lazy-wait" role="alert"><p>${esc(t("pgfail"))}</p><button type="button" class="btn soft" data-act="lazyretry">${esc(t("retry"))}</button></div>`; });
+    return;
+  }
   v.innerHTML = f() + siteFoot();
   if (anim && !reduce) { v.classList.remove("enter"); [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); void v.offsetWidth; v.classList.add("enter"); }
   else v.classList.remove("enter");
@@ -946,7 +987,6 @@ function refreshStudy() {
    A separate section next to Qur'an study (assets/stories.js). Every part of a story is labelled by source type, Qur'an
    references open the reader, hadith references link to sunnah.com with their grading, and each story says what the
    sources do not tell us. All of it is a draft awaiting qualified review, and says so. */
-const ST = window.IE_STORIES;
 let sgGroup = "all", sgQuery = "";
 const quranSwitch = cur => `<div class="seg q-switch" role="group" aria-label="${esc(t("q_switch"))}">${[["study", t("study_nav"), "quran", ""], ["stories", t("stories_nav"), "quran", "stories"]].map(([k, l, tab, sub]) => `<button type="button" data-act="go" data-tab="${tab}"${sub ? ` data-sub="${sub}"` : ""} aria-pressed="${cur === k}">${l}</button>`).join("")}</div>`;
 const srcLabel = k => `<span class="sk sk-${k}">${t("sk_" + k)}</span>`;
@@ -1087,7 +1127,6 @@ let hCat = "all";
    "Read more" (the whole text is always in the page; nothing is cut). Which cards are open survives filtering
    and language switching. */
 const hOpen = new Set();
-const HCOLL = Object.assign({}, NW ? NW.COLLECTIONS : {}, HD.COLLECTIONS);
 const hRef = x => `${HCOLL[x.c][st.lang]} ${num(x.label || x.n)}`;
 /* Bangla translations quote some Arabic phrases inline; mark those runs as Arabic so they render right to left. */
 const arRuns = s => esc(s).replace(/([؀-ۿ][؀-ۿً-ٰٟ\s،؛:\-]*[؀-ۿً-ٰٟ])/g, '<span class="ar-in" lang="ar" dir="rtl">$1</span>');
@@ -1119,7 +1158,6 @@ function hadithList() {
 }
 /* An-Nawawi's Forty (Phase 5.3): a separate collection in assets/nawawi.js, numbered 1–42 as an-Nawawi numbered it.
    Numbers 15 and 36 are the same HadeethEnc entries as two general records, so their text is read from there. */
-const NW_N = NW ? NW.HADITH.length : 0;
 const unPUA = s => String(s).replace(/[\uE000-\uF8FF]/g, ""); // a private-use glyph in one HadeethEnc text; removed on display only
 function nwRec(r) {
   if (!r.shared) return r;
@@ -1183,8 +1221,21 @@ function nwGo(n) {
 function vMore() {
   const s = snap || snapshot(), hj = hijriNow(s);
   const items = [["guide", "guide", t("guide_s")], ["hadith", "hadith", t("hadith_s")], ["names", "names", t("names_s")], ["calendar", "calendar", hText(hj)], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
-  return `<div class="page-head"><h2>${t("more")}</h2></div>
+  return `<div class="page-head"><h2>${t("more")}</h2></div>${installCard()}
   <ul class="card menu">${items.map(([k, icn, sub]) => `<li><button type="button" data-act="go" data-tab="more" data-sub="${k}"><span class="ic">${ic(icn)}</span><span class="grow"><b>${t(k === "names" ? "names99" : k)}</b><small>${esc(sub)}</small></span>${ic("chev", "chev")}</button></li>`).join("")}</ul>`;
+}
+/* Install as an app (Oct 2026). Chrome/Edge/Samsung Internet: our own button opens the browser's install dialog.
+   iPhone/iPad Safari has no install API, so it gets the two-step instruction instead. Hidden once installed. */
+let installEvt = null;
+const standalone = () => { try { return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) { return false; } };
+const iosLike = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; if (R.tab === "more" && !R.sub) render(false); });
+addEventListener("appinstalled", () => { installEvt = null; toast(t("inst_done")); if (R.tab === "more" && !R.sub) render(false); });
+function installCard() {
+  if (NATIVE || standalone() || !phone()) return ""; // phones only
+  const ios = !installEvt && iosLike();
+  if (!installEvt && !ios) return "";
+  return `<section class="card pad install"><img src="icons/icon-192.png" alt="" width="44" height="44"><span class="grow"><b>${t("inst_t")}</b><small>${t(ios ? "inst_ios" : "inst_s")}</small></span>${ios ? "" : `<button type="button" class="btn" data-act="install">${t("inst_btn")}</button>`}</section>`;
 }
 let nQuery = "";
 const nameMatch = (x, q) => !q || [x.tl, x.bt, x.en, x.bn, x.ar, x.id, String(x.n), num(x.n)].concat(skel(x.ar)).join(" ").toLowerCase().includes(q);
@@ -1376,6 +1427,7 @@ function shLink() {
 /* Deep links: #dua/<index>, #name/<1–99>, #hadith/<id>, #nawawi/<1–42>, #story/<id>. */
 function deepParse(h) {
   let m;
+  { const g = hashGroup(h); if (g && !lazyDone.has(g)) return null; } // its data is not loaded yet (see deepWait)
   if ((m = h.match(/^story\/([\w-]+)$/)) && window.IE_STORIES && IE_STORIES.get(m[1])) return { kind: "story", key: m[1], r: { tab: "quran", sub: "stories", story: m[1] } };
   if ((m = h.match(/^verse\/(\d+):(\d+)-(\d+)$/)) && QM.meta[+m[1] - 1] && +m[2] >= 1 && +m[2] <= +m[3] && +m[3] <= QM.meta[+m[1] - 1][3]) return { kind: "verse", key: m[1] + ":" + m[2] + "-" + m[3], r: { tab: "quran", sub: "all", surah: +m[1], ayah: +m[2] } };
   if ((m = h.match(/^dua\/(\d+)$/)) && DUAS[+m[1]]) return { kind: "dua", key: +m[1], r: { tab: "duas" } };
@@ -1499,7 +1551,7 @@ function vCalendar() {
     const label = `${calLong(i)}, ${hLong(i.h)}${i.today ? ", " + t("todayl") : ""}${i.wh ? ", " + t("wd_badge") : ""}${i.evs.length ? ", " + i.evs.map(L).join(", ") : ""}${i.plan && i.plan.f ? ", " + t("fp_planned") : ""}`;
     cells += `<button type="button" class="c${i.today ? " today" : ""}${i.major.length ? " ev" : ""}${i.wh ? " wh" : ""}${i.h && i.h.d === 1 ? " h1" : ""}${i.plan && i.plan.f ? " fp" : ""}" data-act="calday" data-k="${i.k}" aria-label="${esc(label)}" aria-pressed="${i.k === calSel}"${i.today ? ' aria-current="date"' : ""} tabindex="${i.k === calSel ? 0 : -1}"><b aria-hidden="true">${num(d)}</b><small aria-hidden="true">${i.h ? (i.h.d === 1 ? esc(HM[st.lang][i.h.m - 1].split(/[\s']/)[0]) : num(i.h.d)) : ""}</small></button>`;
   }
-  const hm = [...hms].map(k => { const [mm, yy] = k.split("/"); return `${HM[st.lang][mm - 1]} ${num(yy)}`; }).join(" – ");
+  const hm = [...hms].map(k => { const [mm, yy] = k.split("/"); return `<span class="nw">${esc(HM[st.lang][mm - 1])} ${num(yy)}</span>`; }).join(" – "); // each month name stays on one line
   const up = []; let [a, b, c] = [s.p.year, s.p.month, s.p.day];
   for (let i = 0; i < 400 && up.length < 4; i++) { const [a1, b1, c1] = shiftDay(a, b, c, i), h = hijri(localNoon(a1, b1, c1)); for (const e of eventsOn(h)) if (!e.minor) up.push({ e, i, h, g: new Date(Date.UTC(a1, b1 - 1, c1, 12)) }); }
   // Next White Days: the next run of Hijri 13–15 that has not finished yet.
@@ -1507,7 +1559,7 @@ function vCalendar() {
   const df = o => new Intl.DateTimeFormat(loc, Object.assign({ timeZone: "UTC" }, o));
   return `<div class="page-head">${back()}<h2>${t("calendar")}</h2></div>
   <section class="card pad cal-card" aria-labelledby="cal-title">
-    <div class="cal-head"><button type="button" class="icon-btn" data-act="cal" data-d="-1" aria-label="${esc(t("prevm"))}">${ic("back")}</button><div class="t" aria-live="polite"><b id="cal-title">${esc(title)}</b><small>${esc(hm)}</small></div><button type="button" class="icon-btn" data-act="cal" data-d="1" aria-label="${esc(t("nextm"))}">${ic("chev")}</button></div>
+    <div class="cal-head"><button type="button" class="icon-btn" data-act="cal" data-d="-1" aria-label="${esc(t("prevm"))}">${ic("back")}</button><div class="t" aria-live="polite"><b id="cal-title">${esc(title)}</b><small>${hm}</small></div><button type="button" class="icon-btn" data-act="cal" data-d="1" aria-label="${esc(t("nextm"))}">${ic("chev")}</button></div>
     <div class="cal-tools"><button type="button" class="btn ghost sm" data-act="caltoday">${t("cal_today")}</button><p class="note cal-hint">${t("cal_hint")}</p></div>
     <div class="cal" role="group" aria-labelledby="cal-title" aria-describedby="cal-method">${head}${cells}</div>
     <div id="cal-pop" class="cal-pop" role="tooltip" hidden></div>
@@ -1707,7 +1759,6 @@ function vAbout() {
   <p class="note">Islam Everyday · ${t("version")} ${num("1.0.0")}</p>`;
 }
 /* Terms of Use and Privacy Policy (assets/legal.js). Plain sections; the contact link is the public GitHub Issues page. */
-const LG = window.IE_LEGAL || null;
 /* Footer on every page: copyright and the legal links, so the policies are always one tap away. */
 const siteFoot = () => `<footer class="site-foot"><span>© ${num(2026)} ${bn() ? "সামিউর রহমান" : "Samiur Rahman"}</span><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="privacy">${t("privacy")}</button><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="terms">${t("terms")}</button><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="about">${t("about")}</button></footer>`;
 function vLegal(kind) {
@@ -1842,6 +1893,7 @@ document.addEventListener("click", e => {
   switch (a) {
     case "tab": if (d.tab === R.tab && !R.sub && !R.surah && !R.study) { window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); break; } go({ tab: d.tab }); break;
     case "go": go({ tab: d.tab, sub: d.sub || null }); break;
+    case "install": if (installEvt) { const ev = installEvt; installEvt = null; ev.prompt(); (ev.userChoice || Promise.resolve()).then(() => render(false), () => render(false)); } break;
     case "home": go({ tab: "today" }); break;
     case "back": if (depth > 0) { try { history.back(); break; } catch (x) {} } go(R.story ? { tab: "quran", sub: "stories" } : { tab: R.tab }, false); break;
     case "lang": switchLang(() => { st.lang = bn() ? "en" : "bn"; }); break;
@@ -1901,6 +1953,7 @@ document.addEventListener("click", e => {
     case "stg": stGroup = d.k; stTheme = "all"; refreshStudy(); break;
     case "stt": stTheme = d.k; refreshStudy(); break;
     case "qf": qFilter = d.k; document.querySelectorAll('[data-act="qf"]').forEach(x => x.setAttribute("aria-pressed", x.dataset.k === qFilter)); $("surah-list").innerHTML = listRows(); break;
+    case "lazyretry": render(true); break;
     case "retry": { const i = R.surah || (votdPick && votdPick.s); if (i) { delete QERR["ar:" + i]; delete QERR[st.lang + ":" + i]; delete QERR["bnt:" + i]; } render(false); break; }
     case "markread": { const i = R.surah; const was = st.read.includes(i); st.read = was ? st.read.filter(x => x !== i) : st.read.concat(i); save(); if (!was) { const rc = b.getBoundingClientRect(); burst(rc.left + rc.width / 2, rc.top); buzz(20); } b.classList.toggle("soft", !was); b.textContent = !was ? "✓ " + t("readmark") : t("markread"); break; }
     case "bm": { const id = d.id, on = st.bm.includes(id); st.bm = on ? st.bm.filter(x => x !== id) : st.bm.concat(id); save(); b.setAttribute("aria-pressed", !on); toast(on ? t("bmremoved") : t("bmadded")); break; }
@@ -1999,10 +2052,19 @@ document.addEventListener("change", e => {
 
 /* ---------------- boot ---------------- */
 const LOGO = `<svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="104" fill="#0E6B5C"/><clipPath id="ie-door"><path d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392Z"/></clipPath><g clip-path="url(#ie-door)"><rect width="512" height="512" fill="#167C68"/><circle cx="256" cy="392" r="84" fill="#F2BE5C"/></g><path d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392Z" fill="none" stroke="#F6EEDC" stroke-width="40" stroke-linejoin="round"/><path d="M118 393H394" stroke="#F6EEDC" stroke-width="40" stroke-linecap="round"/></svg>`;
-if (d0) deepPre(d0);
-render(true);
-if (d0) deepPost(d0);
+const g0 = !d0 && hashGroup(h0);
+if (g0 && !lazyDone.has(g0)) { // opened from a shared link: show that page loading, then open the item
+  R = Object.assign({ sub: null, surah: 0, ayah: 0, study: 0, story: null }, { stories: { tab: "quran", sub: "stories" }, names: { tab: "more", sub: "names" }, hadith: { tab: "more", sub: "hadith" } }[g0]);
+  render(true); deepWait(h0);
+} else {
+  if (d0) deepPre(d0);
+  render(true);
+  if (d0) deepPost(d0);
+}
+if (!phone()) Object.keys(LAZY).forEach(g => need(g).catch(() => {})); // desktop: load all page data now
 if (!NATIVE && "serviceWorker" in navigator && document.querySelector('link[rel="manifest"]') && window.top === window) {
-  try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {}
+  // Registered after the page has loaded, so its precache (about 1 MB, for offline use) never competes with the first screen.
+  const reg = () => { try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {} };
+  if (document.readyState === "complete") setTimeout(reg, 1500); else addEventListener("load", () => setTimeout(reg, 1500), { once: true });
 }
 })();

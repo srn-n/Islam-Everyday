@@ -5,6 +5,8 @@ import { read, exists, loadBrowser } from "./helpers.mjs";
 
 const SCRIPTS = ["assets/quran-meta.js", "assets/data.js", "assets/votd.js", "assets/names.js", "assets/bnfix.js", "assets/xtrack.js", "assets/hadith.js", "assets/glossary.js", "assets/app.js", "sw.js"];
 
+const lazyList = () => { const m = read("assets/app.js").match(/const LAZY = (\{[^\n]+\});/); return Object.values(JSON.parse(m[1].replace(/(\w+):/g, '"$1":'))).flat().map(n => `assets/${n}.js`); };
+
 test("all scripts parse", () => { for (const f of SCRIPTS) assert.doesNotThrow(() => new vm.Script(read(f), { filename: f }), f); });
 
 test("data.js exposes the expected data", () => {
@@ -25,9 +27,12 @@ test("every UI string the app uses exists in English and Bangla", () => {
 test("index.html loads every script and stylesheet it needs, all local", () => {
   const html = read("index.html");
   const refs = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(m => m[1]);
-  for (const f of ["assets/fonts.css", "assets/app.css", "assets/quran-meta.js", "assets/data.js", "assets/votd.js", "assets/names.js", "assets/app.js"]) assert.ok(refs.includes(f), f);
+  for (const f of ["assets/fonts.css", "assets/app.css", "assets/quran-meta.js", "assets/data.js", "assets/votd.js", "assets/app.js"]) assert.ok(refs.includes(f), f);
+  // Oct 2026: page data (99 Names, Stories, Study, Hadith, Guide, Legal) is loaded on demand by app.js; every file exists and is precached.
+  const sw = read("sw.js");
+  for (const f of lazyList()) { assert.ok(exists(f), f); assert.ok(sw.includes(`"${f}"`), "precached " + f); assert.ok(!refs.includes(f), "not blocking first paint " + f); }
   for (const r of refs) { assert.doesNotMatch(r, /^https?:/, `remote asset ${r}`); assert.ok(exists(r), `missing ${r}`); }
-  assert.ok(html.indexOf("assets/names.js") < html.indexOf("assets/app.js") && html.indexOf("assets/votd.js") < html.indexOf("assets/app.js"));
+  assert.ok(html.indexOf("assets/votd.js") < html.indexOf("assets/app.js"));
 });
 
 test("fonts.css points at bundled font files with licences", () => {

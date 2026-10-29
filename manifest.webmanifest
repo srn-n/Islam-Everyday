@@ -6,7 +6,7 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#EEF3F1",
   "theme_color": "#0E6B5C",
   "icons": [
@@ -43,6 +43,18 @@
   ],
   "shortcuts": [
     {
+      "name": "Today: prayer times",
+      "short_name": "Today",
+      "url": "./#today",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
       "name": "Qur'an",
       "short_name": "Qur'an",
       "url": "./#quran",
@@ -65,6 +77,18 @@
           "type": "image/png"
         }
       ]
+    },
+    {
+      "name": "Duas",
+      "short_name": "Duas",
+      "url": "./#duas",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ],
   "id": "./",
@@ -72,5 +96,17 @@
     "lifestyle",
     "education",
     "books"
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "screenshots": [
+    {
+      "src": "icons/screenshot-today.webp",
+      "sizes": "360x780",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Today: prayer times and the next prayer"
+    }
   ]
 }

@@ -8,6 +8,8 @@ const XT = () => loadBrowser("assets/xtrack.js").IE_XTRACK;
 const plain = x => JSON.parse(JSON.stringify(x));
 
 /* ---------- Hadith ---------- */
+const lazyList = () => { const m = read("assets/app.js").match(/const LAZY = (\{[^\n]+\});/); return Object.values(JSON.parse(m[1].replace(/(\w+):/g, '"$1":'))).flat().map(n => `assets/${n}.js`); };
+
 test("hadith: 40 canonical records (24 from Phase 5, 16 added in Phase 5.3), each with a verified reference, grade, source and both translations", () => {
   assert.equal(HD.HADITH.length, 40);
   const ids = new Set(), heIds = new Set();
@@ -143,7 +145,8 @@ test("tracker UI: selected date, previous/next, picker limited to stored days, e
 test("phase 5 scripts load before app.js and are precached; caches moved to v6", () => {
   const html = read("index.html"), sw = read("sw.js");
   for (const f of ["assets/hadith.js", "assets/glossary.js"]) {
-    assert.ok(exists(f)); assert.ok(html.indexOf(f) > 0 && html.indexOf(f) < html.indexOf("assets/app.js"), f); assert.ok(sw.includes(`"${f}"`), f);
+    // Oct 2026: page data may instead be loaded on demand by app.js (LAZY); it must still be precached for offline use.
+    assert.ok(exists(f)); assert.ok((html.indexOf(f) > 0 && html.indexOf(f) < html.indexOf("assets/app.js")) || lazyList().includes(f), f); assert.ok(sw.includes(`"${f}"`), f);
   }
   assert.match(sw, /islam-everyday-app-v6/); assert.match(sw, /islam-everyday-data-v6/);
   assert.ok(quranMeta().meta.length === 114);

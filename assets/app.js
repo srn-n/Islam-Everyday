@@ -35,7 +35,7 @@ const save = () => { clearTimeout(saveT); saveT = setTimeout(() => { try { local
 
 /* ---------------- helpers ---------------- */
 const $ = id => document.getElementById(id);
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 /* Face 7.1: the honorific ﷺ is set in the Arabic font (span.saw), as elsewhere in the app, so it never falls back to
    a missing glyph inside Latin or Bangla text. */
 const sawS = h => String(h).replace(/ﷺ/g, '<span class="saw" lang="ar">ﷺ</span>');
@@ -475,7 +475,7 @@ function openSheet(html, returnTo) {
   if (!wasOpen) sheetReturn = returnTo || document.activeElement;
   sh.innerHTML = `<div class="grab"></div><button type="button" class="icon-btn sheet-x" data-act="closesheet" aria-label="${esc(t("close"))}">${ic("x")}</button>` + html;
   const h = sh.querySelector("h2, h3"); if (h) { h.id = h.id || "sheet-title"; sh.setAttribute("aria-labelledby", h.id); } else sh.removeAttribute("aria-labelledby");
-  sh.classList.add("on"); $("scrim").classList.add("on"); sh.setAttribute("aria-hidden", "false");
+  sh.inert = false; sh.classList.add("on"); $("scrim").classList.add("on"); sh.setAttribute("aria-hidden", "false");
   $("view").setAttribute("aria-hidden", "true");
   const f = sh.querySelector("[data-autofocus]") || sh.querySelector(".sheet-x");
   setTimeout(() => { if (sh.classList.contains("on") && !sh.contains(document.activeElement)) f.focus({ preventScroll: true }); }, 30);
@@ -483,7 +483,7 @@ function openSheet(html, returnTo) {
 }
 function closeSheet() {
   const sh = $("sheet"); if (!sh.classList.contains("on")) return;
-  sh.classList.remove("on"); $("scrim").classList.remove("on"); sh.setAttribute("aria-hidden", "true"); $("view").removeAttribute("aria-hidden");
+  sh.classList.remove("on"); $("scrim").classList.remove("on"); sh.setAttribute("aria-hidden", "true"); sh.inert = true; /* a closed sheet keeps its content in the DOM: make it unreachable by Tab */ $("view").removeAttribute("aria-hidden");
   const r = sheetReturn; sheetReturn = null;
   if (r && document.contains(r) && r.focus) r.focus({ preventScroll: true });
 }

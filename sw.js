@@ -37,7 +37,12 @@ self.addEventListener("fetch", e => {
     e.respondWith(caches.open(DATA).then(c => c.match(r, { ignoreSearch: true }).then(m => m || caches.match(r).then(m2 => m2 || fetch(r, { cache: "no-cache" }).then(res => { if (res.ok) c.put(r, res.clone()); return res; })))));
     return;
   }
-  const key = r.mode === "navigate" ? "index.html" : r;
-  e.respondWith(fetch(r).then(res => { if (res.ok) { const cl = res.clone(); caches.open(APP).then(c => c.put(key, cl)); } return res; })
+  const nav = r.mode === "navigate", key = nav ? "index.html" : r;
+  // Only the app shell may be stored as "index.html": a navigation to any other page on this site (a .md file, a 404,
+  // a link someone sent) must never overwrite the offline shell. Non-navigation responses are stored under their own URL.
+  const scope = new URL(self.registration.scope).pathname;
+  const isShell = res => res.ok && res.type === "basic" && (res.headers.get("content-type") || "").startsWith("text/html")
+    && (path === scope || path === scope + "index.html");
+  e.respondWith(fetch(r).then(res => { if (nav ? isShell(res) : (res.ok && res.type === "basic")) { const cl = res.clone(); caches.open(APP).then(c => c.put(key, cl)); } return res; })
     .catch(() => caches.match(key).then(m => m || caches.match(r))));
 });

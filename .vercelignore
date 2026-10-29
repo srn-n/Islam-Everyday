@@ -1,0 +1,7 @@
+# Development-only folders: not part of the app, so they are not published to the live site.
+# (They stay in the public GitHub repo; this only keeps the deployed site to what the app actually loads.)
+tests/
+tools/
+scripts/
+node_modules/
+*.log

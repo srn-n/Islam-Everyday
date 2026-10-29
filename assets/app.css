@@ -1167,7 +1167,7 @@ ul.sg-legend li{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
    phones only the logo is shown (the name stays available to screen readers through the button's label). */
 .top .brand{overflow:hidden;flex:0 1 auto}
 .top .brand b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (max-width:374px){.top .brand b{display:none}}
+@media (max-width:413px){.top .brand b{display:none}} /* below this the name only fits truncated ("Islam Eve…"): show the logo alone */
 @media (max-width:360px){.cal .c.h1 small{font-size:.6rem;letter-spacing:-.01em}}
 /* UI review fix (Face 7.1): tablets and narrow desktops (700–1023px) use a wider single column instead of the
    phone-width one, so pages no longer sit in a narrow strip with large empty margins. */

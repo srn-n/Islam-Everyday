@@ -2103,9 +2103,11 @@ if (g0 && !lazyDone.has(g0)) { // opened from a shared link: show that page load
 if (!phone()) Object.keys(LAZY).forEach(g => need(g).catch(() => {})); // desktop: load all page data now
 (() => { const sp = $("splash"); if (!sp) return;
   let first = true; try { first = !sessionStorage.getItem("ie.splash"); sessionStorage.setItem("ie.splash", "1"); } catch (e) {}
-  const still = reduce || document.documentElement.getAttribute("data-motion") === "off";
-  const wait = first && !still ? Math.max(0, 1600 - performance.now()) : 0;
-  setTimeout(() => { sp.classList.add("out"); setTimeout(() => sp.remove(), 700); }, wait); })();
+  // First open in a session: about 5 seconds in all (the door opens at 4.45 s), so the studio name can be read.
+  // Later loads: as soon as the app is ready. A tap, click or key skips it.
+  const wait = first ? Math.max(0, 4450 - performance.now()) : 0;
+  let done = false; const go = () => { if (done) return; done = true; sp.classList.add("out"); setTimeout(() => sp.remove(), 700); };
+  setTimeout(go, wait); sp.addEventListener("pointerdown", go); addEventListener("keydown", go, { once: true }); })();
 if (!NATIVE && "serviceWorker" in navigator && document.querySelector('link[rel="manifest"]') && window.top === window) {
   // Registered after the page has loaded, so its precache (about 1 MB, for offline use) never competes with the first screen.
   const reg = () => { try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {} };

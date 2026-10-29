@@ -27,13 +27,14 @@ test("the splash is in the page itself, themed, and needs no script to play", ()
 test("the splash respects reduced motion and the app's Motion off setting", () => {
   assert.match(css, /@media \(prefers-reduced-motion:reduce\)\{\.splash \*\{animation:none!important\}/);
   assert.match(css, /:root\[data-motion="off"\] \.splash \*\{animation:none!important\}/);
-  assert.match(app, /const still = reduce \|\| document\.documentElement\.getAttribute\("data-motion"\) === "off";/);
 });
 
 test("the splash leaves after the first screen; only the first open in a session waits for dawn", () => {
   const i = app.indexOf('const sp = $("splash")'); assert.ok(i > app.indexOf("render(true);"), "after the first render");
-  assert.match(app, /first && !still \? Math\.max\(0, 1600 - performance\.now\(\)\) : 0/);
+  assert.match(app, /const wait = first \? Math\.max\(0, 4450 - performance\.now\(\)\) : 0;/);
   assert.match(app, /sp\.classList\.add\("out"\); setTimeout\(\(\) => sp\.remove\(\), 700\)/);
+  assert.match(app, /sp\.addEventListener\("pointerdown", go\); addEventListener\("keydown", go, \{ once: true \}\)/, "tap or key skips it");
+  assert.match(css, /\.sp-by\{[^}]*animation:sp-by 1s var\(--ease\) 2\.2s forwards\}/, "studio name has its own moment");
 });
 
 test("on-demand pages show the small doorway, not a spinner", () => {

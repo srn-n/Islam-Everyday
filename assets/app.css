@@ -1272,22 +1272,22 @@ a.opt{color:inherit;text-decoration:none}
 /* Splash (Oct 2026). The logo's mihrab doorway draws itself, night turns to dawn inside it as the sun rises, and the
    door opens into the app. Colours come from the theme (accent, and the sky tokens used by the Today hero), so it matches
    every light and dark theme. Pure CSS: it plays while the scripts load. */
-.splash{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:var(--ground);transition:opacity .55s var(--ease),visibility 0s linear .55s;animation:sp-failsafe .4s ease 12s forwards}
+.splash{cursor:pointer;position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:var(--ground);transition:opacity .55s var(--ease),visibility 0s linear .55s;animation:sp-failsafe .4s ease 12s forwards}
 .sp-in{display:flex;flex-direction:column;align-items:center;padding-bottom:6vh}
 .sp-door{width:clamp(108px,30vw,148px);height:auto;overflow:visible;transform-origin:50% 62%}
 .sp-s1{stop-color:var(--r-night)}.sp-s2{stop-color:var(--r-twi)}.sp-s3{stop-color:var(--r-late)}
 .sp-g1{stop-color:var(--r-late);stop-opacity:.7}.sp-g2{stop-color:var(--r-late);stop-opacity:0}
-.sp-sky{opacity:0;animation:sp-fade .8s var(--ease) .25s forwards}
-.sp-night{fill:var(--r-night);opacity:0;animation:sp-night 1.6s ease-in-out .25s forwards}
-.sp-stars circle{fill:#fff;opacity:0;animation:sp-twinkle 1.3s ease-in-out .35s forwards}
-.sp-stars circle:nth-child(2){animation-delay:.5s}.sp-stars circle:nth-child(3){animation-delay:.42s}.sp-stars circle:nth-child(4){animation-delay:.6s}.sp-stars circle:nth-child(5){animation-delay:.55s}
-.sp-sun{fill:var(--r-late);transform:translateY(130px);animation:sp-up 1s var(--ease) .45s forwards}
-.sp-glow{opacity:0;transform:translateY(130px);animation:sp-glowup 1s var(--ease) .45s forwards,sp-breathe 2.6s ease-in-out 1.9s infinite}
-.sp-arch,.sp-hz{fill:none;stroke:var(--accent);stroke-width:20;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:sp-draw .9s var(--ease) forwards}
-.sp-hz{animation-duration:.6s;animation-delay:.15s}
-.sp-name{margin:20px 0 0;font-family:var(--display);font-weight:400;font-size:clamp(1.55rem,6.4vw,2rem);line-height:1.1;color:var(--ink);letter-spacing:.2em;opacity:0;animation:sp-name .8s var(--ease) .8s forwards}
-.sp-by{margin:8px 0 0;font-size:.68rem;font-weight:600;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);opacity:0;animation:sp-fade .7s var(--ease) 1.05s forwards}
-.sp-line{display:block;width:96px;height:2px;margin-top:22px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--r-late),transparent) 0 0/200% 100% no-repeat;opacity:0;animation:sp-fade .4s ease 1.9s forwards,sp-sweep 1.5s linear 1.9s infinite}
+.sp-sky{opacity:0;animation:sp-fade 1s var(--ease) .75s forwards}
+.sp-night{fill:var(--r-night);opacity:0;animation:sp-night 2.6s ease-in-out .35s forwards}
+.sp-stars circle{fill:#fff;opacity:0;animation:sp-twinkle 2.2s ease-in-out .5s forwards}
+.sp-stars circle:nth-child(2){animation-delay:.75s}.sp-stars circle:nth-child(3){animation-delay:.62s}.sp-stars circle:nth-child(4){animation-delay:.9s}.sp-stars circle:nth-child(5){animation-delay:.82s}
+.sp-sun{fill:var(--r-late);transform:translateY(130px);animation:sp-up 1.8s var(--ease) .9s forwards}
+.sp-glow{opacity:0;transform:translateY(130px);animation:sp-glowup 1.8s var(--ease) .9s forwards,sp-breathe 2.6s ease-in-out 2.8s infinite}
+.sp-arch,.sp-hz{fill:none;stroke:var(--accent);stroke-width:20;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:sp-draw 1.3s var(--ease) forwards}
+.sp-hz{animation-duration:.9s;animation-delay:.2s}
+.sp-name{margin:20px 0 0;font-family:var(--display);font-weight:400;font-size:clamp(1.55rem,6.4vw,2rem);line-height:1.1;color:var(--ink);letter-spacing:.2em;opacity:0;animation:sp-name 1s var(--ease) 1.5s forwards}
+.sp-by{margin:12px 0 0;font-size:.8rem;font-weight:600;letter-spacing:.5em;text-transform:uppercase;color:var(--muted);opacity:0;animation:sp-by 1s var(--ease) 2.2s forwards}
+.sp-line{display:block;width:96px;height:2px;margin-top:22px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--r-late),transparent) 0 0/200% 100% no-repeat;opacity:0;animation:sp-fade .4s ease 3.3s forwards,sp-sweep 1.5s linear 3.3s infinite}
 .splash.out{opacity:0;visibility:hidden;pointer-events:none}
 .splash.out .sp-door{animation:sp-through .6s cubic-bezier(.55,0,.35,1) forwards}
 .splash.out .sp-name,.splash.out .sp-by,.splash.out .sp-line{opacity:0!important;transition:opacity .2s}
@@ -1296,9 +1296,10 @@ a.opt{color:inherit;text-decoration:none}
 @keyframes sp-up{to{transform:none}}
 @keyframes sp-glowup{to{opacity:1;transform:none}}
 @keyframes sp-breathe{0%,100%{opacity:1}50%{opacity:.55}}
-@keyframes sp-night{0%{opacity:0}18%,40%{opacity:.88}100%{opacity:0}}
+@keyframes sp-night{0%{opacity:0}12%,40%{opacity:.9}100%{opacity:0}}
 @keyframes sp-twinkle{0%{opacity:0}35%{opacity:.95}65%{opacity:.45}100%{opacity:0}}
 @keyframes sp-name{to{opacity:1;letter-spacing:.01em}}
+@keyframes sp-by{to{opacity:1;letter-spacing:.28em}}
 @keyframes sp-sweep{from{background-position:150% 0}to{background-position:-150% 0}}
 @keyframes sp-through{to{transform:scale(4.5);opacity:0}}
 @keyframes sp-failsafe{to{opacity:0;visibility:hidden;pointer-events:none}}
@@ -1308,11 +1309,12 @@ a.opt{color:inherit;text-decoration:none}
 .md-sun{fill:var(--r-late);animation:md-sun 1.8s ease-in-out infinite}
 @keyframes md-sun{0%,100%{transform:translateY(110px)}50%{transform:translateY(-6px)}}
 /* No movement: the finished picture, then a plain fade */
-@media (prefers-reduced-motion:reduce){.splash *{animation:none!important}.sp-arch,.sp-hz{stroke-dashoffset:0}.sp-sky,.sp-glow,.sp-name,.sp-by{opacity:1}.sp-sun,.sp-glow{transform:none}.sp-name{letter-spacing:.01em}.sp-stars,.sp-line,.sp-night{display:none}.md-sun{animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.splash *{animation:none!important}.sp-arch,.sp-hz{stroke-dashoffset:0}.sp-sky,.sp-glow,.sp-name,.sp-by{opacity:1}.sp-sun,.sp-glow{transform:none}.sp-name{letter-spacing:.01em}.sp-by{letter-spacing:.28em}.sp-stars,.sp-line,.sp-night{display:none}.md-sun{animation:none;transform:none}}
 :root[data-motion="off"] .splash *{animation:none!important}
 :root[data-motion="off"] :is(.sp-arch,.sp-hz){stroke-dashoffset:0}
 :root[data-motion="off"] :is(.sp-sky,.sp-glow,.sp-name,.sp-by){opacity:1}
 :root[data-motion="off"] :is(.sp-sun,.sp-glow){transform:none}
 :root[data-motion="off"] .sp-name{letter-spacing:.01em}
+:root[data-motion="off"] .sp-by{letter-spacing:.28em}
 :root[data-motion="off"] :is(.sp-stars,.sp-line,.sp-night){display:none}
 :root[data-motion="off"] .md-sun{animation:none;transform:none}

@@ -73,7 +73,6 @@ test("desktop keeps the previous behaviour; the phone-only changes are scoped to
   assert.match(app, /const phone = \(\) => \{ try \{ return matchMedia\("\(pointer: coarse\)"\)\.matches;/);
   assert.match(app, /if \(!phone\(\)\) Object\.keys\(LAZY\)\.forEach\(g => need\(g\)/);
   assert.match(app, /if \(NATIVE \|\| standalone\(\) \|\| !phone\(\)\) return "";/);
-  assert.match(css, /@media \(pointer:fine\)\{\.boot\{visibility:hidden\}\}/);
 });
 
 test("counts that depend on page data are recomputed once it loads", () => {

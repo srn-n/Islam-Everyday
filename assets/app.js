@@ -490,7 +490,7 @@ function render(anim) {
   else f = { guide: vGuide, hadith: vHadith, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy"), feedback: vFeedback }[R.sub] || vMore;
   const g = routeGroup(R);
   if (g && !lazyDone.has(g)) { // page data not loaded yet: show a short loading state, then draw the page
-    v.innerHTML = `<div class="lazy-wait" role="status"><span class="spin" aria-hidden="true"></span>${esc(t("pgloading"))}</div>`;
+    v.innerHTML = `<div class="lazy-wait" role="status"><svg class="mini-door" viewBox="96 76 320 348" aria-hidden="true"><defs><clipPath id="md-clip"><path d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392Z"/></clipPath></defs><g clip-path="url(#md-clip)"><circle class="md-sun" cx="256" cy="392" r="84"/></g><path class="md-arch" d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392M118 393H394"/></svg>${esc(t("pgloading"))}</div>`;
     need(g).then(() => { if (routeGroup(R) === g) render(anim); },
       () => { if (routeGroup(R) === g) v.innerHTML = `<div class="lazy-wait" role="alert"><p>${esc(t("pgfail"))}</p><button type="button" class="btn soft" data-act="lazyretry">${esc(t("retry"))}</button></div>`; });
     return;
@@ -1764,7 +1764,7 @@ function vAbout() {
 }
 /* Terms of Use and Privacy Policy (assets/legal.js). Plain sections; the contact link is the public GitHub Issues page. */
 /* Footer on every page: copyright and the legal links, so the policies are always one tap away. */
-const siteFoot = () => `<footer class="site-foot"><span>© ${num(2026)} ${bn() ? "সামিউর রহমান" : "Samiur Rahman"}</span><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="privacy">${t("privacy")}</button><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="terms">${t("terms")}</button><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="about">${t("about")}</button></footer>`;
+const siteFoot = () => `<footer class="site-foot"><span>© ${num(2026)} Simply Made Studio</span><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="privacy">${t("privacy")}</button><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="terms">${t("terms")}</button><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="about">${t("about")}</button></footer>`;
 /* Feedback (Oct 2026): by email, no server. Each link opens the user's email app with a message ready to send; nothing
    leaves the device until they press Send. The message carries only what is listed in fb_privacy: never location or records. */
 const APPV = "1.0.0", FB_EMAIL = "samiiiur@yahoo.com";
@@ -2101,6 +2101,11 @@ if (g0 && !lazyDone.has(g0)) { // opened from a shared link: show that page load
   if (d0) deepPost(d0);
 }
 if (!phone()) Object.keys(LAZY).forEach(g => need(g).catch(() => {})); // desktop: load all page data now
+(() => { const sp = $("splash"); if (!sp) return;
+  let first = true; try { first = !sessionStorage.getItem("ie.splash"); sessionStorage.setItem("ie.splash", "1"); } catch (e) {}
+  const still = reduce || document.documentElement.getAttribute("data-motion") === "off";
+  const wait = first && !still ? Math.max(0, 1600 - performance.now()) : 0;
+  setTimeout(() => { sp.classList.add("out"); setTimeout(() => sp.remove(), 700); }, wait); })();
 if (!NATIVE && "serviceWorker" in navigator && document.querySelector('link[rel="manifest"]') && window.top === window) {
   // Registered after the page has loaded, so its precache (about 1 MB, for offline use) never competes with the first screen.
   const reg = () => { try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {} };

@@ -68,7 +68,8 @@ test("the English explanation is a separate layer: shown for English only, never
   assert.match(f, /class="tafsir en-ex clamp/);
   assert.match(app, /\$\{votdExpl\(e, many\)\}/);
   // The translation line still comes only from the translation data.
-  assert.match(app, /const trText = ks\.map\(k => .*esc\(tr\.t\[k - 1\]\)\)/);
+  // (Face 7.1: English uses the Rowwad translation, otherwise the reader's translation; both are translation data.)
+  assert.match(app, /const trText = rw \? rw\.map\([^\n]*\n\s*: ks\.map\(k => .*esc\(tr\.t\[k - 1\]\)\)/);
 });
 
 /* ---------- English (India) / English (US) ---------- */

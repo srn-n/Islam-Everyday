@@ -133,7 +133,7 @@ test("service worker: the DATA cache version matches the Qur'an data, and the ap
 /* ---------- tracker / extra worship ---------- */
 test("extra worship is labelled as today's record, with a note when the tracker shows another date", () => {
   const app = read("assets/app.js"), x = app.slice(app.indexOf("function vExtra"), app.indexOf("/* ---------------- routing"));
-  assert.match(x, /<span class="badge">\$\{t\("t_today"\)\}<\/span>/);
+  assert.match(x, /<span class="badge[^"]*">\$\{t\("t_today"\)\}<\/span>/);
   assert.match(x, /trackKey\(s\) !== s\.key \? `<p class="note xw-note" role="note">\$\{t\("x_today_only"\)\}/);
   assert.match(app, /XT\.toggle\(st\.xlog, snap\.key, k\)/, "extra worship writes today's key only");
 });

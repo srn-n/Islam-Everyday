@@ -11,7 +11,7 @@ test("five prayers with the agreed fard counts in both schools", () => {
   for (const p of G.prayers) for (const sc of ["hanafi", "shafii"]) {
     const f = p[sc].filter(x => x.kind === "fard");
     assert.equal(f.length, 1, `${p.k}/${sc} one fard block`); assert.equal(f[0].n, FARD[p.k], `${p.k}/${sc} fard count`);
-    for (const x of p[sc]) { assert.ok(["fard", "wajib", "sm", "sg", "witr"].includes(x.kind)); assert.ok(["before", "fard", "after", "witr"].includes(x.when)); assert.ok(Number.isInteger(x.n) && x.n > 0); }
+    for (const x of p[sc]) { assert.ok(["fard", "wajib", "sm", "sg", "nafl", "witr"].includes(x.kind), `${p.k}/${sc} kind ${x.kind}`); /* nafl: Face 7.2 (Deoband 12335) */ assert.ok(["before", "fard", "after", "witr"].includes(x.when)); assert.ok(Number.isInteger(x.n) && x.n > 0); }
     // order: before -> fard -> after -> witr
     const rank = { before: 0, fard: 1, after: 2, witr: 3 }, r = p[sc].map(x => rank[x.when]);
     assert.deepEqual([...r], [...r].sort((a, b) => a - b), `${p.k}/${sc} order`);
@@ -29,7 +29,7 @@ test("every note, term and source is localized and resolvable", () => {
   for (const p of G.prayers) { assert.ok(nonblank(p.note.en) && nonblank(p.note.bn), p.k); assert.ok(p.src.length >= 3, `${p.k} sources`); for (const id of p.src) assert.ok(G.refs[id], `${p.k}: unknown source ${id}`); }
   for (const x of G.terms) { assert.ok(nonblank(x.en[0]) && nonblank(x.en[1]) && nonblank(x.bn[0]) && nonblank(x.bn[1]), x.k); for (const id of x.src) assert.ok(G.refs[id], `${x.k}: ${id}`); }
   for (const [k, n] of Object.entries(G.notes)) { assert.ok(nonblank(n.en) && nonblank(n.bn), k); for (const id of n.src || []) assert.ok(G.refs[id], `${k}: ${id}`); }
-  for (const [id, r] of Object.entries(G.refs)) { assert.ok(nonblank(r.en) && nonblank(r.bn), id); assert.match(r.url, /^https:\/\/(sunnah\.com|islamqa\.org|islamqa\.info|islamweb\.net)\//, id); }
+  for (const [id, r] of Object.entries(G.refs)) { assert.ok(nonblank(r.en) && nonblank(r.bn), id); assert.match(r.url, /^https:\/\/(sunnah\.com|islamqa\.org|islamqa\.info|islamweb\.net|darulifta-deoband\.com)\//, id); }
   assert.match(G.notes.review.en, /not a fatwa/i); assert.match(G.notes.review.en, /not yet been independently reviewed/i);
 });
 

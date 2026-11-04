@@ -1,21 +1,31 @@
-// Feedback by email (October 2026).
+// Feedback by email (October 2026); no email address shown anywhere (November 2026).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
 import { read, loadBrowser } from "./helpers.mjs";
 
 const app = read("assets/app.js");
+const shipped = () => ["README.md", "index.html", "manifest.webmanifest", ...readdirSync(new URL("../assets", import.meta.url)).filter(f => f.endsWith(".js")).map(f => "assets/" + f)];
 
-test("the current contact address is used everywhere; the old one is gone", () => {
-  const files = ["README.md", "index.html", ...readdirSync(new URL("../assets", import.meta.url)).filter(f => f.endsWith(".js")).map(f => "assets/" + f)];
-  for (const f of files) assert.doesNotMatch(read(f), /proton\.me/, f);
-  assert.match(app, /FB_EMAIL = "samiiiur@yahoo\.com"/);
-  const LG = loadBrowser("assets/legal.js").IE_LEGAL;
-  for (const l of ["en", "bn"]) {
-    assert.ok(JSON.stringify(LG.PRIVACY[l]).includes("samiiiur@yahoo.com"), "privacy " + l);
-    assert.ok(JSON.stringify(LG.TERMS[l]).includes("samiiiur@yahoo.com"), "terms " + l);
+test("no email address is written out anywhere in the app or README", () => {
+  for (const f of shipped()) {
+    assert.doesNotMatch(read(f), /proton\.me|samiiiur@|yahoo\.com"?\s*$/m, f);
+    assert.doesNotMatch(read(f), /[A-Za-z0-9._%+-]+@(yahoo|gmail|outlook|hotmail|proton)\.[a-z.]+/i, f);
   }
-  assert.equal(LG.UPDATED.en, "30 October 2026");
+});
+
+test("the address is used only inside the feedback mailto link", () => {
+  assert.match(app, /FB_TO = \(\) => \["samiiiur", "yahoo\.com"\]\.join\("@"\)/);
+  assert.equal((app.match(/FB_TO\(\)/g) || []).length, 1, "used in exactly one place");
+  assert.match(app, /return `mailto:\$\{FB_TO\(\)\}\?subject=/);
+  assert.doesNotMatch(app, /data-act="fbcopy"|case "fbcopy"/, "no copy-address button");
+});
+
+test("legal pages point to More → Feedback, in English and Bangla", () => {
+  const LG = loadBrowser("assets/legal.js").IE_LEGAL;
+  assert.ok(JSON.stringify(LG.PRIVACY.en).includes("More → Feedback") && JSON.stringify(LG.TERMS.en).includes("More → Feedback"));
+  assert.ok(JSON.stringify(LG.PRIVACY.bn).includes("আরও → মতামত") && JSON.stringify(LG.TERMS.bn).includes("আরও → মতামত"));
+  assert.equal(LG.UPDATED.en, "4 November 2026");
 });
 
 test("Feedback page is a route, in the More menu and the desktop side menu", () => {
@@ -27,10 +37,10 @@ test("Feedback page is a route, in the More menu and the desktop side menu", () 
 
 test("every feedback string exists in English and Bangla", () => {
   const { I18N } = loadBrowser("assets/data.js").DINSATHI;
-  const keys = ["feedback", "feedback_s", "fb_intro", "fb_tip", "fb_privacy", "fb_noapp", "fb_copy", "fb_copied", "fb_github"];
+  const keys = ["feedback", "feedback_s", "fb_intro", "fb_tip", "fb_privacy", "fb_github"];
   for (const k of ["mistake", "problem", "idea", "other"]) keys.push("fb_" + k, "fb_" + k + "_s", "fb_ask_" + k);
   for (const k of keys) assert.ok(I18N.en[k] && I18N.bn[k], k);
-  assert.ok(I18N.en.fb_noapp.includes("{e}") && I18N.bn.fb_noapp.includes("{e}"));
+  for (const k of ["fb_noapp", "fb_copy", "fb_copied"]) assert.equal(I18N.en[k], undefined, k + " removed");
 });
 
 test("the email never carries location, tracker records or settings", () => {

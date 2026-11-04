@@ -1767,7 +1767,7 @@ function vAbout() {
 const siteFoot = () => `<footer class="site-foot"><span>© ${num(2026)} Simply Made Studio</span><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="privacy">${t("privacy")}</button><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="terms">${t("terms")}</button><button type="button" class="linkish" data-act="go" data-tab="more" data-sub="about">${t("about")}</button></footer>`;
 /* Feedback (Oct 2026): by email, no server. Each link opens the user's email app with a message ready to send; nothing
    leaves the device until they press Send. The message carries only what is listed in fb_privacy: never location or records. */
-const APPV = "1.0.0", FB_EMAIL = "samiiiur@yahoo.com";
+const APPV = "1.0.0", FB_TO = () => ["samiiiur", "yahoo.com"].join("@"); // used only inside the mailto link, never shown
 const fbDevice = () => { const u = navigator.userAgent || "";
   const os = /iphone/i.test(u) ? "iPhone" : /ipad/i.test(u) || (/macintosh/i.test(u) && navigator.maxTouchPoints > 1) ? "iPad" : /android/i.test(u) ? "Android" : /windows/i.test(u) ? "Windows" : /mac os/i.test(u) ? "Mac" : /linux|cros/i.test(u) ? "Linux" : "";
   const br = /SamsungBrowser/.test(u) ? "Samsung Internet" : /Edg\//.test(u) ? "Edge" : /OPR\//.test(u) ? "Opera" : /Firefox|FxiOS/.test(u) ? "Firefox" : /Chrome|CriOS/.test(u) ? "Chrome" : /Safari/.test(u) ? "Safari" : "";
@@ -1778,7 +1778,7 @@ function fbMail(type, item) {
   if (item) { lines.push("Item: " + item.what + " - " + item.title); if (item.ref) lines.push("Reference: " + item.ref); if (item.link) lines.push("Link: " + item.link); }
   lines.push("Language: " + (st.lang === "bn" ? "Bangla" : "English"), "App version: " + APPV, "Device: " + fbDevice(), "", "----", t("fb_ask_" + type), "", "");
   const subj = "[Islam Everyday] " + L + (item ? ": " + item.title : "");
-  return `mailto:${FB_EMAIL}?subject=${encodeURIComponent(subj.slice(0, 140))}&body=${encodeURIComponent(lines.join("\r\n"))}`;
+  return `mailto:${FB_TO()}?subject=${encodeURIComponent(subj.slice(0, 140))}&body=${encodeURIComponent(lines.join("\r\n"))}`;
 }
 /* The item a share sheet is showing, for a "Report a mistake" email. */
 function fbItem(kind, o) {
@@ -1794,8 +1794,6 @@ function vFeedback() {
   <section class="card pad fb-notes">
     <p class="note">${ic("share", "fb-i")}${t("fb_tip")}</p>
     <p class="note">${ic("lock", "fb-i")}${t("fb_privacy")}</p>
-    <p class="note">${esc(t("fb_noapp")).replace("{e}", `<b class="fb-mail">${FB_EMAIL}</b>`)}</p>
-    <div class="row"><button type="button" class="btn ghost sm" data-act="fbcopy">${ic("copy")}<span>${t("fb_copy")}</span></button></div>
     <p class="note"><a href="https://github.com/srn-n/islam-everyday/issues" target="_blank" rel="noopener noreferrer">${t("fb_github")}</a></p>
   </section>`;
 }
@@ -2019,7 +2017,6 @@ document.addEventListener("click", e => {
     case "copydua": { const o = shItem("dua", +d.i); if (o) copyText(shText(o)); break; }
     case "shcopyitem": { const o = shItem(d.k, d.key); if (o) copyText(shText(o)); break; }
     case "share": shareSheet(d.k, d.key, b); break;
-    case "fbcopy": try { navigator.clipboard.writeText(FB_EMAIL).then(() => toast(t("fb_copied")), () => toast(t("copyfail"))); } catch (x) { toast(t("copyfail")); } break;
     case "shcopy": { const o = shCur && shItem(shCur.kind, shCur.key); if (o) copyText(shText(o)); break; }
     case "shlink": shLink(); break;
     case "shnative": shNative(); break;

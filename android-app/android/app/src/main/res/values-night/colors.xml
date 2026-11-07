@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark theme ground (Jade). -->
+    <color name="ground">#08120F</color>
+    <color name="colorAccent">#5DCAAE</color>
+</resources>

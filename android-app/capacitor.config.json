@@ -1,0 +1,23 @@
+{
+  "appId": "com.simplymadestudio.islameveryday",
+  "appName": "Islam Everyday",
+  "webDir": "www",
+  "loggingBehavior": "none",
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 3000,
+      "launchAutoHide": true,
+      "launchFadeOutDuration": 200,
+      "showSpinner": false
+    },
+    "SystemBars": {
+      "insetsHandling": "css",
+      "style": "DEFAULT"
+    }
+  }
+}

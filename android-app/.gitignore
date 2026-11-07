@@ -1,0 +1,8 @@
+node_modules/
+www/
+# The upload key and its passwords: never commit, keep two backups (see README).
+keys/
+*.jks
+*.keystore
+*.aab
+*.apk

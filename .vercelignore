@@ -5,3 +5,5 @@ tools/
 scripts/
 node_modules/
 *.log
+# The Android app project (built by GitHub Actions); not part of the website.
+android-app/

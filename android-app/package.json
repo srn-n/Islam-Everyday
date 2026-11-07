@@ -1,0 +1,24 @@
+{
+  "name": "islam-everyday-android",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Islam Everyday for Android (Capacitor). Simply Made Studio.",
+  "scripts": {
+    "copy-web": "node scripts/copy-web.mjs",
+    "sync": "node scripts/copy-web.mjs && cap sync android",
+    "open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/clipboard": "^8.0.1",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.0"
+  }
+}

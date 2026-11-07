@@ -44,12 +44,15 @@ Lives in the website code, switched on only inside the app (`NATIVE` in `assets/
 Files: `capacitor.config.json`, `scripts/copy-web.mjs`, `scripts/make-icons.mjs` (launcher icons and Play graphics from `brand/`),
 `android/app/src/main/res/values*/` (colours, launch theme), `android/app/src/main/java/.../MainActivity.java`.
 
-## Build on GitHub instead (no Android Studio needed)
+## Build on GitHub (no Android Studio needed)
 
-`.github/workflows/android.yml` (in the website repo) builds an **unsigned** bundle on every push to main that touches the
-app or the website, or by hand from the Actions tab (Run workflow). Download the artifact `islam-everyday-aab-unsigned`,
-then sign it with the upload key on your own machine (the key never goes to GitHub):
+`.github/workflows/android.yml` (website repo) builds on every push to main that touches the app or the website, or by hand
+(Actions tab → Android bundle → Run workflow). With the four repository secrets set (values in `keys\github-secrets.txt`),
+the artifact `islam-everyday-android` holds `IslamEveryday-<version>-signed.aab` (upload this to Play) and a signed `.apk`
+(install on a phone to test). The key is written only for the build and deleted at the end of each run.
 
-    jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore keys\islam-everyday-upload.jks -signedjar IslamEveryday-1.0.0.aab app-release.aab upload
+Without the secrets the files are unsigned; sign the bundle locally:
 
-(`jarsigner` comes with any JDK, including Android Studio's `jbr\bin`.) Raise `versionCode` before each Play upload, as above.
+    jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore keys\islam-everyday-upload.jks -signedjar IslamEveryday-1.0.0.aab IslamEveryday-1.0.0-unsigned.aab upload
+
+Raise `versionCode` in `android/app/build.gradle` before each Play upload.

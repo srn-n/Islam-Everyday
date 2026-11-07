@@ -1,6 +1,9 @@
-# Builds the Android app bundle (unsigned) on GitHub's servers, which can download the Android SDK and libraries.
-# Signing happens on your own machine with the upload key, which never goes to GitHub.
-# Result: Actions tab -> latest "Android bundle" run -> Artifacts -> islam-everyday-aab-unsigned.
+# Builds the Play Store bundle (AAB) and a test APK on GitHub's servers, from the same web code that runs on Vercel.
+# Runs on every push to main that touches the app or the website, or by hand from the Actions tab (Run workflow).
+# Signing: when the upload key is stored as repository secrets (ANDROID_KEYSTORE_BASE64, ANDROID_STORE_PASSWORD,
+# ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD), both files come out signed and ready. Without them they are unsigned
+# and you sign locally (android-app/README.md). The key file is deleted at the end of every run.
+# Result: Actions tab -> latest run -> Artifacts -> islam-everyday-android.
 name: Android bundle
 on:
   push:
@@ -9,10 +12,15 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    env:
+      HAS_SIGNING: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
     defaults:
       run:
         working-directory: android-app
@@ -25,6 +33,9 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+      - name: Website tests
+        working-directory: .
+        run: npm test
       - name: Android SDK 36
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
@@ -34,10 +45,39 @@ jobs:
           npm ci --no-audit --no-fund
           node scripts/copy-web.mjs ..
           npx cap sync android
-      - name: Build bundle
-        run: cd android && bash ./gradlew --no-daemon bundleRelease
+      - name: Prepare upload key
+        if: env.HAS_SIGNING == 'true'
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          mkdir -p keys
+          echo "$KEYSTORE_B64" | base64 -d > keys/islam-everyday-upload.jks
+          {
+            echo "storeFile=islam-everyday-upload.jks"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > keys/keystore.properties
+      - name: Build AAB and APK
+        run: cd android && bash ./gradlew --no-daemon bundleRelease assembleRelease
+      - name: Collect outputs
+        run: |
+          VN=$(sed -n 's/.*versionName "\(.*\)".*/\1/p' android/app/build.gradle)
+          S=$([ "$HAS_SIGNING" = true ] && echo signed || echo unsigned)
+          mkdir -p out
+          cp android/app/build/outputs/bundle/release/*.aab "out/IslamEveryday-$VN-$S.aab"
+          cp android/app/build/outputs/apk/release/*.apk "out/IslamEveryday-$VN-$S.apk"
+          if [ "$S" = signed ]; then jarsigner -verify out/*.aab > /dev/null && echo "AAB signature OK"; fi
+          (cd out && sha256sum * > SHA256SUMS.txt)
+          ls -la out
+      - name: Remove upload key
+        if: always()
+        run: rm -rf keys
       - uses: actions/upload-artifact@v4
         with:
-          name: islam-everyday-aab-unsigned
-          path: android-app/android/app/build/outputs/bundle/release/app-release.aab
+          name: islam-everyday-android
+          path: android-app/out/
           retention-days: 14

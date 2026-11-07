@@ -311,6 +311,8 @@ input[type="range"]{width:100%;accent-color:var(--accent)}
 
 /* duas */
 .dua{padding:16px;display:grid;gap:10px}
+/* Nov 2026 fix: one column that can shrink. Without it the list sized itself to its widest line and ran 13px past a 360px-wide phone, pushing the tab bar labels off screen. */
+#dua-list{grid-template-columns:minmax(0,1fr)}
 .dua .ref{font-size:.8rem;color:var(--muted)}
 .dua-head{display:flex;align-items:flex-start;gap:6px}
 .dua-head h3{flex:1;min-width:0;padding-top:8px}
@@ -544,9 +546,9 @@ details.fn>div{font-size:.9rem;line-height:1.7;padding-bottom:12px;color:var(--i
 .cites li{padding-left:2px}
 .cites small{display:block;color:var(--muted);font-size:.8rem;line-height:1.45}
 .ns-nav{justify-content:space-between;gap:10px}
-.credits{display:grid;gap:10px;margin-top:8px}
+.credits{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:8px} /* Nov 2026: long names and links wrap instead of widening a 320px phone */
 .credits dt{font-weight:600}
-.credits dd{color:var(--muted);font-size:.92rem}
+.credits dd{color:var(--muted);font-size:.92rem;overflow-wrap:anywhere}
 :lang(bn) h1,:lang(bn) h2,:lang(bn) .ns-title,html[lang="bn"] .sky h1,html[lang="bn"] .page-head h2,html[lang="bn"] .hc-day,html[lang="bn"] .np-l b,html[lang="bn"] .brand b{font-weight:500}
 @media (min-width:1024px){
   .sheet:has(.name-sheet){width:min(720px,calc(100vw - 48px));max-width:none}

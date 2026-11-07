@@ -44,3 +44,8 @@ test("safe areas use the app's values when present and the browser's otherwise",
   assert.doesNotMatch(css, /[^(,]env\(safe-area-inset-/);
   assert.match(css, /var\(--safe-area-inset-bottom,env\(safe-area-inset-bottom,0px\)\)/);
 });
+
+test("lists that hold long lines shrink to the phone instead of widening the page (320–360px)", () => {
+  assert.match(css, /#dua-list\{grid-template-columns:minmax\(0,1fr\)\}/);
+  assert.match(css, /\.credits\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
+});

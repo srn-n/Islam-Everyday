@@ -5,6 +5,7 @@ Phases 1–3 were built under the working name DinSathi; the project folder is s
 ## Android app support and smoother navigation (7 November 2026)
 
 ### Fixed
+- **Duas page on narrow phones (360px wide, common on Android):** the list sized itself to its widest line and ran 13px past the screen, pushing the tab bar labels off the bottom. It now shrinks to fit. The About page credits had the same problem at 320px.
 - **Tapping between sections no longer floods the history.** Before, every tab tap added a Back step (80 quick taps = 50 Back presses to leave). Now switching sections keeps one step above Today, tapping the page you are on adds nothing, and a tap made while a Back is in progress waits for it.
 
 ### Changed (phones and the Android app only; desktop unchanged)

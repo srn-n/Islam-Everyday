@@ -2,6 +2,22 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Android app support and smoother navigation (7 November 2026)
+
+### Fixed
+- **Tapping between sections no longer floods the history.** Before, every tab tap added a Back step (80 quick taps = 50 Back presses to leave). Now switching sections keeps one step above Today, tapping the page you are on adds nothing, and a tap made while a Back is in progress waits for it.
+
+### Changed (phones and the Android app only; desktop unchanged)
+- **Sections slide:** the page leaves quickly and the next one settles in, while the header and tab bar stay still. Quick repeated taps finish the current slide instead of queueing; reduced motion and Motion: off keep the instant change.
+- **The opening:** after the splash's door opens, the first page rises into place instead of having drawn itself unseen behind the splash.
+
+### Added (inside the Android app only)
+- Back button: closes an open sheet, steps back through pages, returns to Today, then closes the app with a short fade into the doorway (reversed on reopening).
+- The splash waits under Android's launch screen and starts from its colour; status bar icons follow the theme; safe areas come from the app.
+- Share an image through Android's share sheet; links point to the website; copy uses the app clipboard. Save as JPG and PDF are not offered in the app (Android's web view cannot download or print).
+- Light haptics on section changes and prayer ticks (off with Motion: off).
+- Tests: `tests/android.test.mjs`.
+
 ## Face 7.2: stories, duas, Prayer guide and 99 Names examples (25 October 2026)
 
 Local working-tree edits only: nothing was staged, committed, pushed or deployed.

@@ -41,6 +41,9 @@ const mq = (() => { try { return matchMedia("(min-width: 1024px)"); } catch (e) 
 const desk = () => !!mq.matches;
 /* Running inside the Android app (Capacitor)? Everything is bundled there, so no service worker is needed. */
 const NATIVE = (() => { try { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); } catch (e) { return false; } })();
+/* Android app (Nov 2026): calls into the bundled Capacitor plugins, without a bundler. nat() rejects off the app. */
+const nat = (p, m, o) => { try { return NATIVE ? window.Capacitor.nativePromise(p, m, o || {}) : Promise.reject(new Error("web")); } catch (e) { return Promise.reject(e); } };
+const natQ = (p, m, o) => { nat(p, m, o).catch(() => {}); };
 
 /* ---------------- state ---------------- */
 const KEY = "dinsathi.web.v1";
@@ -88,7 +91,8 @@ const sp = s => (st.lang === "en" ? LOC.spell(s, st.loc) : s);
 const num = x => bn() ? String(x).replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[d]) : String(x);
 const L = o => (bn() ? o.bn : o.en);
 const reduce = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } })();
-const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+const buzz = p => { if (NATIVE) { if (st.motion !== "off") natQ("Haptics", Array.isArray(p) ? "notification" : "impact", Array.isArray(p) ? { type: "SUCCESS" } : { style: "LIGHT" }); return; }
+  try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
 const pad2 = n => String(n).padStart(2, "0");
 
 const STAR = (c, R, r) => { let d = ""; for (let k = 0; k < 16; k++) { const a = (k * 22.5 - 90) * Math.PI / 180, q = k % 2 ? r : R; d += (k ? "L" : "M") + (c + q * Math.cos(a)).toFixed(2) + " " + (c + q * Math.sin(a)).toFixed(2); } return d + "Z"; };
@@ -155,6 +159,7 @@ const hostTheme = document.documentElement.getAttribute("data-host-theme");
 const darkMq = (() => { try { return matchMedia("(prefers-color-scheme: dark)"); } catch (e) { return { matches: false }; } })();
 const schemeNow = () => st.mode === "system" ? (hostTheme ? hostTheme : (darkMq.matches ? "dark" : "light")) : st.mode;
 const themeNow = () => schemeNow() === "dark" ? st.darkTheme : st.lightTheme;
+let barStyle = "";
 function applyTheme() {
   const r = document.documentElement, sc = schemeNow(), th = themeNow();
   r.setAttribute("data-theme", sc);
@@ -166,6 +171,7 @@ function applyTheme() {
   r.style.setProperty("--ar-scale", st.ar);
   const m = document.querySelector('meta[name="theme-color"]');
   if (m) m.content = getComputedStyle(r).getPropertyValue("--ground").trim() || "#EEF3F1";
+  if (NATIVE && barStyle !== sc) { barStyle = sc; natQ("SystemBars", "setStyle", { style: sc === "dark" ? "DARK" : "LIGHT" }); } // status bar icons: light on dark themes
 }
 // Following the system: redraw when the OS or browser switches between light and dark.
 try { darkMq.addEventListener("change", () => { if (st.mode === "system") { applyTheme(); render(false); } }); } catch (e) {}
@@ -428,12 +434,48 @@ else if (h0 === "stories" || h0 === "quran/stories") R = { tab: "quran", sub: "s
 else if (hashSub(h0)) R = { tab: "more", sub: hashSub(h0), surah: 0, ayah: 0 };
 else if (h0.startsWith("more/")) R = { tab: "more", sub: null, surah: 0, ayah: 0 }; // unknown or removed page (e.g. more/zakat) → More
 let depth = 0;
+/* Nov 2026 (Android app): history that behaves like a phone app's bottom bar. Switching between the four sections keeps
+   one entry above Today instead of one per tap, so Back from any section returns to Today and a second Back leaves.
+   Tapping the page you are already on adds nothing. While a Back is in flight, a new tap waits for it instead of racing it. */
+const RK = ["tab", "sub", "surah", "ayah", "study", "story"];
+const isRoot = x => !x.sub && !x.surah && !x.study && !x.story;
+const sameRoute = (a, b) => RK.every(k => (a[k] || 0) === (b[k] || 0));
+const lvl = x => (x.sub ? 1 : 0) + (x.surah || x.study || x.story ? 1 : 0);
+let backing = 0, after = null;
 function go(r, push = true) {
-  R = Object.assign({ tab: R.tab, sub: null, surah: 0, ayah: 0, study: 0, story: null }, r);
-  st.tab = R.tab; save();
+  const prev = R, next = Object.assign({ tab: R.tab, sub: null, surah: 0, ayah: 0, study: 0, story: null }, r);
+  if (push && backing) { after = r; return; }
+  if (push && sameRoute(prev, next)) { if (!R.ayah) window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); return; }
+  if (push && isRoot(prev) && isRoot(next)) {
+    const hs = history.state;
+    if (next.tab === "today" && hs && hs._root && depth > 0) { // back to the Today entry this section was opened from
+      backing = 1; setTimeout(() => { backing = 0; }, 600);
+      try { history.back(); return; } catch (e) { backing = 0; }
+    }
+    push = false;
+    try { if (prev.tab === "today" && next.tab !== "today") { history.pushState(Object.assign({}, next, { _root: 1 }), ""); depth++; }
+      else history.replaceState(Object.assign({}, next, hs && hs._root && next.tab !== "today" ? { _root: 1 } : {}), ""); } catch (e) {}
+  }
+  R = next; st.tab = R.tab; save();
   if (push) { try { history.pushState(R, ""); depth++; } catch (e) {} }
-  render(true);
-  if (!R.ayah) window.scrollTo(0, 0);
+  paint(prev, () => { if (!R.ayah) window.scrollTo(0, 0); });
+}
+/* Section changes on a phone (and in the app): the page slides a little and cross-fades, the header and tab bar stay
+   still. A tap during a slide finishes it at once rather than queueing slides. Desktop, reduced motion and Motion: off
+   keep the previous instant change. */
+let vt = null;
+const canVT = () => !!document.startViewTransition && !reduce && st.motion !== "off" && (NATIVE || phone()) && !document.hidden && !$("splash");
+function paint(prev, then, back) {
+  if (!canVT()) { render(true); then && then(); return; }
+  const a = TABS.indexOf(prev.tab), b = TABS.indexOf(R.tab), la = lvl(prev), lb = lvl(R);
+  const dir = back || lb < la || (lb === la && a !== b && b < a) ? "right" : "left";
+  if (vt) { try { vt.skipTransition(); } catch (e) {} }
+  const h = document.documentElement; h.dataset.vt = dir;
+  let t;
+  try { t = document.startViewTransition(() => { render(true, true); then && then(); }); } catch (e) { delete h.dataset.vt; render(true); then && then(); return; }
+  vt = t; t.ready.catch(() => {}); t.updateCallbackDone.catch(() => {}); // a skipped slide is not an error
+  const end = () => { if (vt === t) { vt = null; delete h.dataset.vt; } };
+  t.finished.then(end, end);
 }
 /* A route for a typed or linked hash (#stories, #more/guide, …), or null. */
 const hashRoute = h => TABS.includes(h) ? { tab: h } : h === "quran/all" ? { tab: "quran", sub: "all" } : (h === "stories" || h === "quran/stories") ? { tab: "quran", sub: "stories" }
@@ -450,7 +492,11 @@ addEventListener("hashchange", () => {
   if (r) { go(r, false); try { history.replaceState(R, ""); } catch (e) {} }
 });
 addEventListener("popstate", e => { depth = Math.max(0, depth - 1);
-  if (e.state && e.state.tab) { R = e.state; render(true); return; }
+  const wasBacking = backing; backing = 0;
+  if (e.state && e.state.tab) { const prev = R; R = Object.assign({}, e.state); delete R._root; st.tab = R.tab; save();
+    paint(prev, null, true);
+    if (wasBacking && after) { const a = after; after = null; go(a); } else after = null;
+    return; }
   // An entry without app state (for example one created by a link to #stories): route from its hash.
   const hh = (location.hash || "").slice(1); if (deepWait(hh)) return;
   const dd = deepParse(hh);
@@ -474,7 +520,7 @@ function nav() {
     TABS.map(id => `<button type="button" data-act="tab" data-tab="${id}"${id === R.tab ? ' aria-current="page"' : ""}>${ic(id)}<span>${t(id === "quran" ? "study_nav" : id)}</span></button>`).join("");
 }
 let post = [], heroAnim = false;
-function render(anim) {
+function render(anim, viaVT) {
   // A redraw of the same page (for example the Today page each minute) puts keyboard focus back on the same control.
   const fa = !anim && document.activeElement, fd = fa && $("view").contains(fa) && fa.dataset && fa.dataset.act ? fa.dataset : null;
   applyTheme(); header(); nav(); side();
@@ -496,7 +542,7 @@ function render(anim) {
     return;
   }
   v.innerHTML = f() + siteFoot();
-  if (anim && !reduce) { v.classList.remove("enter"); [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); void v.offsetWidth; v.classList.add("enter"); }
+  if (anim && !reduce && !viaVT) { v.classList.remove("enter"); [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); void v.offsetWidth; v.classList.add("enter"); }
   else v.classList.remove("enter");
   post.forEach(fn => fn());
   fitClamps();
@@ -539,7 +585,8 @@ function trapSheet(e) {
   if (e.shiftKey && (document.activeElement === first || !sh.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
   else if (!e.shiftKey && (document.activeElement === last || !sh.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
 }
-function copyText(txt) {
+function copyText(txt, ok) {
+  if (NATIVE) { nat("Clipboard", "write", { string: txt }).then(() => toast(t(ok || "copied")), () => toast(t("copyfail"))); return; }
   try { navigator.clipboard.writeText(txt).then(() => toast(t("copied")), () => toast(t("copyfail"))); }
   catch (e) { toast(t("copyfail")); }
 }
@@ -1307,7 +1354,8 @@ function nameSheet(i, opener) {
    Arabic), the meaning in the reader's language and the reference on the clipboard. Share offers a website link, and an image (JPG)
    for a dua or a Name, or a PDF (the browser's print window) for a hadith or a story. Images and PDFs are made on the device. */
 // Links point at the website this page was opened from; the installed app (or a page opened from a file) has no web address, so it offers no link.
-const SITE = !NATIVE && /^https?:$/.test(location.protocol) ? location.href.split("#")[0] : "";
+const WEB = "https://islam-everyday.vercel.app/"; // the app's links open the item on the website
+const SITE = NATIVE ? WEB : /^https?:$/.test(location.protocol) ? location.href.split("#")[0] : "";
 const shUrl = h => SITE ? SITE + "#" + h : "";
 const L3 = o => o ? (o[st.lang] || o.en || "") : "";
 function shItem(kind, key) {
@@ -1355,8 +1403,8 @@ function shareSheet(kind, key, opener) {
   const o = shItem(kind, key); if (!o) return; shCur = { kind, key };
   const opt = (act, icn, label) => `<button type="button" class="opt" data-act="${act}">${ic(icn)}<span>${esc(label)}</span></button>`;
   openSheet(`<div class="sh-sheet"><p class="eyebrow">${t("sh_" + (kind === "nawawi" ? "hadith" : kind))}</p><h3 class="sh-h">${t("sh_title")}</h3><p class="sh-t">${esc(o.title)}</p>
-    <div class="sh-opts">${o.img ? opt("shjpg", "image", t("sh_jpg")) + (canFiles() ? opt("shjpgshare", "share", t("sh_jpgshare")) : "") : ""}${o.pdf ? opt("shpdf", "doc", t("sh_pdf")) : ""}${SITE ? opt("shlink", "link", t("sh_link")) + (navigator.share ? opt("shnative", "share", t("sh_native")) : "") : ""}${opt("shcopy", "copy", t("sh_text"))}<a class="opt" href="${esc(fbMail("mistake", fbItem(kind, o)))}" data-fb="item">${ic("flag")}<span>${esc(t("fb_mistake"))}</span></a></div>
-    ${o.pdf ? `<p class="note">${t("sh_pdf_n")}</p>` : ""}<p class="note">${t(SITE ? "sh_note" : "sh_note_app")}</p>
+    <div class="sh-opts">${o.img ? (NATIVE ? "" : opt("shjpg", "image", t("sh_jpg"))) + (NATIVE || canFiles() ? opt("shjpgshare", "share", t("sh_jpgshare")) : "") : ""}${o.pdf && !NATIVE ? opt("shpdf", "doc", t("sh_pdf")) : ""}${SITE ? opt("shlink", "link", t("sh_link")) + (NATIVE || navigator.share ? opt("shnative", "share", t("sh_native")) : "") : ""}${opt("shcopy", "copy", t("sh_text"))}<a class="opt" href="${esc(fbMail("mistake", fbItem(kind, o)))}" data-fb="item">${ic("flag")}<span>${esc(t("fb_mistake"))}</span></a></div>
+    ${o.pdf && !NATIVE ? `<p class="note">${t("sh_pdf_n")}</p>` : ""}<p class="note">${t(NATIVE ? "sh_note_nat" : SITE ? "sh_note" : "sh_note_app")}</p>
     ${kind === "name" ? `<div class="row"><button type="button" class="btn ghost" data-act="name" data-i="${+key}">${ic("back")} ${t("sh_backname")}</button></div>` : ""}</div>`, opener);
   delete $("sheet").dataset.name; // a Name sheet still loading its verses must not redraw over this one
 }
@@ -1400,9 +1448,15 @@ async function shJpg(share) {
   let blob = null; try { blob = await shImage(o); } catch (e) {}
   if (!blob) { toast(t("sh_fail")); return; }
   const name = "islam-everyday-" + o.hash.replace("/", "-") + ".jpg";
+  if (share && NATIVE) { try { await natShareFile(blob, name, o.title); } catch (e) { if (!/cancel/i.test(String(e && e.message))) toast(t("sh_fail")); } return; }
   if (share) { try { await navigator.share({ files: [new File([blob], name, { type: "image/jpeg" })], title: o.title }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
   const u = URL.createObjectURL(blob), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(u), 5000); toast(t("sh_saved"));
+}
+async function natShareFile(blob, name, title) {
+  const data = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(",")[1]); fr.onerror = rej; fr.readAsDataURL(blob); });
+  const w = await nat("Filesystem", "writeFile", { path: "share/" + name, data, directory: "CACHE", recursive: true });
+  await nat("Share", "share", { title, files: [w.uri], dialogTitle: t("sh_title") });
 }
 /* The PDF: the item is laid out in a print-only area and the browser's print window opens, where "Save as PDF" is a printer. */
 function shPdf() {
@@ -1422,10 +1476,12 @@ function shPdf() {
 }
 function shNative() {
   const o = shCur && shItem(shCur.kind, shCur.key); if (!o || !SITE) return;
+  if (NATIVE) { natQ("Share", "share", { title: o.title, text: o.title, url: shUrl(o.hash), dialogTitle: t("sh_title") }); return; }
   try { navigator.share({ title: o.title, text: o.title, url: shUrl(o.hash) }).catch(() => {}); } catch (e) {}
 }
 function shLink() {
   const o = shCur && shItem(shCur.kind, shCur.key); if (!o || !SITE) return;
+  if (NATIVE) { copyText(shUrl(o.hash), "sh_linkok"); return; }
   try { navigator.clipboard.writeText(shUrl(o.hash)).then(() => toast(t("sh_linkok")), () => toast(t("copyfail"))); } catch (e) { toast(t("copyfail")); }
 }
 /* Deep links: #dua/<index>, #name/<1–99>, #hadith/<id>, #nawawi/<1–42>, #story/<id>. */
@@ -1923,11 +1979,11 @@ function holdPos(get, off) {
 
 /* ---------------- events ---------------- */
 document.addEventListener("click", e => {
-  if (NATIVE) { const a = e.target.closest('a[target="_blank"]'); if (a && /^https?:/.test(a.href) && new URL(a.href).origin !== location.origin) { e.preventDefault(); location.href = a.href; return; } } // opens in the phone's browser
+  if (NATIVE) { const a = e.target.closest('a[target="_blank"]'); if (a && /^https?:/.test(a.href)) { const u = new URL(a.href); e.preventDefault(); location.href = u.origin !== location.origin ? a.href : WEB + u.pathname.replace(/^\//, "") + u.search; return; } } // opens in the phone's browser
   const b = e.target.closest("[data-act]"); if (!b) { return; }
   const a = b.dataset.act, d = b.dataset;
   switch (a) {
-    case "tab": if (d.tab === R.tab && !R.sub && !R.surah && !R.study) { window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); break; } go({ tab: d.tab }); break;
+    case "tab": if (d.tab === R.tab && !R.sub && !R.surah && !R.study) { window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); break; } if (NATIVE) buzz(8); go({ tab: d.tab }); break;
     case "go": go({ tab: d.tab, sub: d.sub || null }); break;
     case "install": if (installEvt) { const ev = installEvt; installEvt = null; ev.prompt(); (ev.userChoice || Promise.resolve()).then(() => render(false), () => render(false)); } break;
     case "home": go({ tab: "today" }); break;
@@ -2098,13 +2154,46 @@ if (g0 && !lazyDone.has(g0)) { // opened from a shared link: show that page load
   if (d0) deepPost(d0);
 }
 if (!phone()) Object.keys(LAZY).forEach(g => need(g).catch(() => {})); // desktop: load all page data now
-(() => { const sp = $("splash"); if (!sp) return;
+(() => { const sp = $("splash"), h = document.documentElement;
   let first = true; try { first = !sessionStorage.getItem("ie.splash"); sessionStorage.setItem("ie.splash", "1"); } catch (e) {}
   // First open in a session: about 5 seconds in all (the door opens at 4.45 s), so the studio name can be read.
   // Later loads: as soon as the app is ready. A tap, click or key skips it.
-  const wait = first ? Math.max(0, 4450 - performance.now()) : 0;
-  let done = false; const go = () => { if (done) return; done = true; sp.classList.add("out"); setTimeout(() => sp.remove(), 700); };
-  setTimeout(go, wait); sp.addEventListener("pointerdown", go); addEventListener("keydown", go, { once: true }); })();
+  let done = false; const go = () => { if (done || !sp) return; done = true; sp.classList.add("out"); setTimeout(() => sp.remove(), 700);
+    // Phone and app: the page rises into place as the door opens, instead of having drawn itself unseen behind the splash.
+    if ((NATIVE || phone()) && !reduce && st.motion !== "off") { const v = $("view"); setTimeout(() => { v.classList.remove("enter"); [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); void v.offsetWidth; v.classList.add("enter"); }, 140); } };
+  const arm = t0 => setTimeout(go, first ? Math.max(0, 4450 - (performance.now() - t0)) : 0);
+  if (sp) { sp.addEventListener("pointerdown", go); addEventListener("keydown", go, { once: true }); }
+  if (!NATIVE) { if (sp) arm(0); return; }
+  // In the app the splash waits, still, under Android's launch screen (theme-boot.js adds sp-hold); it starts the moment that screen fades.
+  let rel = false; const release = () => { if (rel) return; rel = true; natQ("SplashScreen", "hide", { fadeOutDuration: 200 }); h.classList.remove("sp-hold"); if (sp) arm(performance.now()); };
+  setTimeout(release, 0); })(); // the first screen is already drawn into the page; Android paints it as its launch screen fades (3 s failsafe in capacitor.config.json)
+/* Android app: the Back button and leaving the app. Back closes an open sheet, then steps back through pages, then returns
+   to Today; on Today the app closes into its door (a short fade into the doorway) and Android takes it to the background.
+   Coming back reverses that fade. Presses while it is closing are ignored. */
+if (NATIVE) (() => {
+  const h = document.documentElement; let closing = false;
+  const shut = () => {
+    if (closing) return; closing = true;
+    if (reduce || st.motion === "off" || $("splash")) { natQ("App", "minimizeApp"); closing = false; return; }
+    if (!$("bye")) { const d = document.createElement("div"); d.id = "bye"; d.className = "bye"; d.setAttribute("aria-hidden", "true");
+      d.innerHTML = '<svg viewBox="96 76 320 348"><path pathLength="1" d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392"/><path pathLength="1" d="M118 393H394"/></svg>'; document.body.appendChild(d); }
+    requestAnimationFrame(() => { h.classList.add("closing"); setTimeout(() => natQ("App", "minimizeApp"), 300); });
+  };
+  const reopen = () => { if (!h.classList.contains("closing")) { closing = false; return; } requestAnimationFrame(() => { h.classList.remove("closing"); setTimeout(() => { closing = false; }, 320); }); };
+  try {
+    window.Capacitor.addListener("App", "backButton", () => {
+      if (closing) return;
+      if (document.body.classList.contains("printing")) return;
+      if ($("splash")) { shut(); return; }
+      if ($("sheet").classList.contains("on")) { closeSheet(); return; }
+      if (depth > 0) { try { history.back(); return; } catch (e) {} }
+      if (!isRoot(R)) { go(R.story ? { tab: "quran", sub: "stories" } : { tab: R.tab }, false); try { history.replaceState(R, ""); } catch (e) {} return; }
+      if (R.tab !== "today") { go({ tab: "today" }, false); try { history.replaceState(R, ""); } catch (e) {} return; }
+      shut();
+    });
+    window.Capacitor.addListener("App", "resume", reopen);
+  } catch (e) {}
+})();
 if (!NATIVE && "serviceWorker" in navigator && document.querySelector('link[rel="manifest"]') && window.top === window) {
   // Registered after the page has loaded, so its precache (about 1 MB, for offline use) never competes with the first screen.
   const reg = () => { try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {} };

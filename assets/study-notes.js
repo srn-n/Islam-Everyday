@@ -225,7 +225,7 @@
 },
 "text": {
 "en": "The Qur'an calls him “one of Our slaves” given mercy and knowledge, and does not name him. Sahih al-Bukhari's account of this journey names him al-Khidr (see Qur'an Stories).",
-"bn": "কুরআন তাঁকে ‘আমার বান্দাদের একজন’ বলেছে, যাঁকে রহমত ও জ্ঞান দেওয়া হয়েছিল, নাম বলেনি। সহীহ বুখারীর বর্ণনায় তাঁর নাম খিযির (কুরআনের কাহিনি দেখুন)।"
+"bn": "কুরআন তাঁকে ‘আমার বান্দাদের একজন’ বলেছে, যাঁকে রহমত ও জ্ঞান দেওয়া হয়েছিল, নাম বলেনি। সহিহ বুখারির বর্ণনায় তাঁর নাম খিযির (কুরআনের কাহিনি দেখুন)।"
 },
 "ref": "18:65",
 "src": "q"
@@ -1315,7 +1315,7 @@
 {
 "term": {
 "en": "Al-Karim",
-"bn": "আল-কারীম"
+"bn": "আল-কারিম"
 },
 "text": {
 "en": "The Generous: the surah reminds us of this name exactly where we might take His kindness for granted.",
@@ -1603,7 +1603,7 @@
 },
 "text": {
 "en": "“The makers of the trench”: persecutors who burned believers. The Qur'an tells only what is in these verses; a related account is in Sahih Muslim 3005 (see Qur'an Stories).",
-"bn": "“কুণ্ডের অধিপতিরা”: যে নির্যাতনকারীরা মুমিনদের পুড়িয়েছিল। কুরআন এই আয়াতগুলোর বাইরে কিছু বলেনি; সম্পর্কিত একটি বর্ণনা সহীহ মুসলিম ৩০০৫-এ আছে (কুরআনের কাহিনি দেখুন)।"
+"bn": "“কুণ্ডের অধিপতিরা”: যে নির্যাতনকারীরা মুমিনদের পুড়িয়েছিল। কুরআন এই আয়াতগুলোর বাইরে কিছু বলেনি; সম্পর্কিত একটি বর্ণনা সহিহ মুসলিম ৩০০৫-এ আছে (কুরআনের কাহিনি দেখুন)।"
 },
 "ref": "85:4–8",
 "src": "q"

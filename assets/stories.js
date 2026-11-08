@@ -829,7 +829,7 @@
 ],
 "text": {
 "en": "In a narration from Ubayy ibn Ka'b in Sahih al-Bukhari, the Prophet ﷺ tells this story in more detail. It names the servant al-Khidr, and explains that the journey began after Musa said he was the most learned person and Allah told him there was a servant more learned than him.",
-"bn": "সহীহ বুখারীতে উবাই ইবনে কা‘ব (রা.)-এর বর্ণনায় নবী ﷺ এই ঘটনা আরও বিস্তারিত বলেছেন। সেখানে বান্দার নাম খিযির বলা হয়েছে, আর ব্যাখ্যা করা হয়েছে, মূসা নিজেকে সবচেয়ে জ্ঞানী বললে আল্লাহ তাঁকে জানান, তাঁর চেয়ে বেশি জ্ঞানী এক বান্দা আছেন — সেখান থেকেই সফরের শুরু।"
+"bn": "সহিহ বুখারিতে উবাই ইবনে কা‘ব (রা.)-এর বর্ণনায় নবী ﷺ এই ঘটনা আরও বিস্তারিত বলেছেন। সেখানে বান্দার নাম খিযির বলা হয়েছে, আর ব্যাখ্যা করা হয়েছে, মূসা নিজেকে সবচেয়ে জ্ঞানী বললে আল্লাহ তাঁকে জানান, তাঁর চেয়ে বেশি জ্ঞানী এক বান্দা আছেন — সেখান থেকেই সফরের শুরু।"
 }
 }
 ],
@@ -1110,7 +1110,7 @@
 "hadith": [],
 "unknown": {
 "en": "The Qur'an does not say what Ayyub's illness was, how long it lasted, or describe his wife's role beyond 38:44. Many long popular accounts of his suffering are not from the Qur'an and are not in sahih hadith used here.",
-"bn": "কুরআন আইয়ুবের রোগ কী ছিল, কতদিন স্থায়ী ছিল বা ৩৮:৪৪-এর বাইরে তাঁর স্ত্রীর ভূমিকা বলেনি। তাঁর কষ্ট নিয়ে প্রচলিত অনেক দীর্ঘ গল্প কুরআন থেকে নয়, এখানে ব্যবহৃত সহীহ হাদিসেও নেই।"
+"bn": "কুরআন আইয়ুবের রোগ কী ছিল, কতদিন স্থায়ী ছিল বা ৩৮:৪৪-এর বাইরে তাঁর স্ত্রীর ভূমিকা বলেনি। তাঁর কষ্ট নিয়ে প্রচলিত অনেক দীর্ঘ গল্প কুরআন থেকে নয়, এখানে ব্যবহৃত সহিহ হাদিসেও নেই।"
 },
 "why": {
 "en": "Ayyub's prayer is gentle: he names his pain honestly and names Allah's mercy, without complaint against Allah. Patience here is not silence; it is turning to Allah again and again.",
@@ -1938,7 +1938,7 @@
 ],
 "unknown": {
 "en": "The narration does not name the boy, the king, the monk or the land. Many commentators connect it with “the makers of the trench” in Surah al-Buruj (85:4–8), but the narration in Sahih Muslim does not state that link itself, so the app presents it only as a commentators' view.",
-"bn": "বর্ণনায় বালক, বাদশাহ, আবেদ বা দেশের নাম নেই। অনেক মুফাসসির একে সূরা আল-বুরুজের ‘কুণ্ডের অধিপতিদের’ (৮৫:৪–৮) সঙ্গে যুক্ত করেন, কিন্তু সহীহ মুসলিমের বর্ণনা নিজে এই সংযোগ বলেনি, তাই অ্যাপ এটিকে শুধু মুফাসসিরদের মত হিসেবে উল্লেখ করে।"
+"bn": "বর্ণনায় বালক, বাদশাহ, আবেদ বা দেশের নাম নেই। অনেক মুফাসসির একে সূরা আল-বুরুজের ‘কুণ্ডের অধিপতিদের’ (৮৫:৪–৮) সঙ্গে যুক্ত করেন, কিন্তু সহিহ মুসলিমের বর্ণনা নিজে এই সংযোগ বলেনি, তাই অ্যাপ এটিকে শুধু মুফাসসিরদের মত হিসেবে উল্লেখ করে।"
 },
 "why": {
 "en": "The boy never claims any power for himself; every healing is credited to Allah. His goal is not survival but that people come to know their Lord — and that happens.",
@@ -2530,7 +2530,7 @@
 "তিনি বললেন: খাবার তৈরি করো, বাতি জ্বালাও, আর বাচ্চারা রাতের খাবার চাইলে তাদের ঘুম পাড়িয়ে দাও।",
 "স্ত্রী খাবার তৈরি করলেন, বাতি জ্বালালেন, আর বাচ্চাদের ঘুম পাড়ালেন। তারপর বাতি ঠিক করার ভান করে উঠে তা নিভিয়ে দিলেন। অন্ধকারে স্বামী-স্ত্রী এমনভাবে হাত নাড়লেন যেন তারাও মেহমানের সঙ্গে খাচ্ছেন, যাতে মেহমান তৃপ্তি নিয়ে খান, তাদের খাবার নিচ্ছেন বলে সংকোচ বোধ না করেন। সে রাতে দুজনেই ক্ষুধার্ত অবস্থায় ঘুমিয়ে পড়লেন।",
 "সকালে লোকটি নবী ﷺ-এর কাছে গেলে তিনি বললেন: গত রাতে তোমাদের দুজনের কাজে আল্লাহ হেসেছেন — অথবা বিস্মিত হয়েছেন।",
-"আর আল্লাহ এমন মানুষদের নিয়ে আয়াত নাযিল করলেন, যারা “তাদেরকে নিজেদের উপর অগ্ৰাধিকার দেয় নিজেরা অভাবগ্ৰস্ত হলেও” (৫৯:৯)।"
+"আর আল্লাহ এমন মানুষদের নিয়ে আয়াত নাজিল করলেন, যারা “তাদেরকে নিজেদের উপর অগ্ৰাধিকার দেয় নিজেরা অভাবগ্ৰস্ত হলেও” (৫৯:৯)।"
 ]
 },
 "parts": [
@@ -2541,7 +2541,7 @@
 ],
 "text": {
 "en": "A man came to the Prophet ﷺ. He sent word to his wives, but they had nothing except water. The Prophet ﷺ asked who would take this man as a guest. A man of the Ansar said he would, took him home and told his wife to honour the Prophet's guest. She said they had nothing except their children's food. He told her to prepare the food, light the lamp, and put the children to sleep if they asked for supper. She did, then got up as if to fix the lamp and put it out, and the two of them made as if they were eating while the guest ate, and they went to bed hungry. In the morning the Prophet ﷺ told the man that Allah had laughed, or wondered, at what the two of them had done that night, and Allah revealed the verse that says they “give them preference over themselves even though they may be in dire need” (59:9).",
-"bn": "এক ব্যক্তি নবী ﷺ-এর কাছে এলো। তিনি তাঁর স্ত্রীদের কাছে খবর পাঠালেন, কিন্তু তাদের কাছে পানি ছাড়া কিছুই ছিল না। নবী ﷺ জিজ্ঞেস করলেন, কে এই ব্যক্তিকে মেহমান হিসেবে নেবে? এক আনসারি বললেন, আমি। তিনি তাকে বাড়িতে নিয়ে স্ত্রীকে বললেন, রাসূলের মেহমানের সমাদর করো। স্ত্রী বললেন, আমাদের কাছে শুধু বাচ্চাদের খাবার আছে। তিনি বললেন, খাবার তৈরি করো, বাতি জ্বালাও, আর বাচ্চারা রাতের খাবার চাইলে তাদের ঘুম পাড়িয়ে দাও। স্ত্রী তা-ই করলেন; তারপর বাতি ঠিক করার ভান করে উঠে তা নিভিয়ে দিলেন, আর দুজন এমন ভাব করলেন যেন তারাও খাচ্ছেন, অথচ মেহমান খেলেন আর তারা ক্ষুধার্ত অবস্থায় ঘুমিয়ে পড়লেন। সকালে নবী ﷺ লোকটিকে বললেন, গত রাতে তোমাদের দুজনের কাজে আল্লাহ হেসেছেন বা বিস্মিত হয়েছেন; আর আল্লাহ সেই আয়াত নাযিল করলেন, যাতে বলা হয়েছে, “তারা তাদেরকে নিজেদের উপর অগ্ৰাধিকার দেয় নিজেরা অভাবগ্ৰস্ত হলেও” (৫৯:৯)।"
+"bn": "এক ব্যক্তি নবী ﷺ-এর কাছে এলো। তিনি তাঁর স্ত্রীদের কাছে খবর পাঠালেন, কিন্তু তাদের কাছে পানি ছাড়া কিছুই ছিল না। নবী ﷺ জিজ্ঞেস করলেন, কে এই ব্যক্তিকে মেহমান হিসেবে নেবে? এক আনসারি বললেন, আমি। তিনি তাকে বাড়িতে নিয়ে স্ত্রীকে বললেন, রাসূলের মেহমানের সমাদর করো। স্ত্রী বললেন, আমাদের কাছে শুধু বাচ্চাদের খাবার আছে। তিনি বললেন, খাবার তৈরি করো, বাতি জ্বালাও, আর বাচ্চারা রাতের খাবার চাইলে তাদের ঘুম পাড়িয়ে দাও। স্ত্রী তা-ই করলেন; তারপর বাতি ঠিক করার ভান করে উঠে তা নিভিয়ে দিলেন, আর দুজন এমন ভাব করলেন যেন তারাও খাচ্ছেন, অথচ মেহমান খেলেন আর তারা ক্ষুধার্ত অবস্থায় ঘুমিয়ে পড়লেন। সকালে নবী ﷺ লোকটিকে বললেন, গত রাতে তোমাদের দুজনের কাজে আল্লাহ হেসেছেন বা বিস্মিত হয়েছেন; আর আল্লাহ সেই আয়াত নাজিল করলেন, যাতে বলা হয়েছে, “তারা তাদেরকে নিজেদের উপর অগ্ৰাধিকার দেয় নিজেরা অভাবগ্ৰস্ত হলেও” (৫৯:৯)।"
 }
 }
 ],

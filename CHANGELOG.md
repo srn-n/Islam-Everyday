@@ -2,6 +2,15 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Bangla that sounds like people talk (9 November 2026)
+
+### Changed
+- **Interface Bangla rewritten in an everyday register.** About 300 of the 620 interface strings, plus the Prayer guide's own text, now use the words people actually use ("সেভ করুন", "আপডেট", "লোকেশন", "যাচাই করেননি") instead of formal or literal ones ("সংরক্ষণ করুন", "হালনাগাদ", "অবস্থান", "স্বতন্ত্রভাবে পর্যালোচনা করেননি"). Still "আপনি", still precise about sources and review status.
+- **One spelling per word** across the interface and the app's own writing: নামাজ (not নামায), হাদিস, সহিহ, বুখারি, যিকির, নাজিল, আজান. Text inside “ ” quoted from published Qur'an and hadith translations, and the Qur'an, hadith and tafsir data files, are unchanged.
+- **Times in Bangla say the part of the day** as people say it: "ভোর ৪:৫৪", "বিকাল ৪:২৩", "রাত ৮:৫৭" instead of "৪:৫৪ এএম". English is unchanged.
+- Counts read naturally: "৫ ওয়াক্তের মধ্যে ৩ ওয়াক্ত আজ পড়া হয়েছে"; the Duas filter chip reads "সেভ করা".
+- Tests: `tests/bangla.test.mjs` (one spelling, matching placeholders).
+
 ## Android app support and smoother navigation (7 November 2026)
 
 ### Fixed

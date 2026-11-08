@@ -31,7 +31,7 @@ const meta = {
   review: "not-independently-reviewed",
   reviewText: {
     en: "None of these explanations has yet been independently reviewed by a qualified scholar. Explanations are paraphrased from the works cited under each name; reflections are written for this app and are not rulings.",
-    bn: "এই ব্যাখ্যাগুলোর কোনোটিই এখনো কোনো যোগ্য আলেম স্বতন্ত্রভাবে পর্যালোচনা করেননি। প্রতিটি নামের নিচে উল্লিখিত গ্রন্থ থেকে ব্যাখ্যাগুলো সংক্ষেপে নেওয়া; ভাবনাগুলো এই অ্যাপের জন্য লেখা, কোনো ফতোয়া নয়।"
+    bn: "এই ব্যাখ্যাগুলোর কোনোটিই এখনো কোনো যোগ্য আলেম যাচাই করেননি। প্রতিটি নামের নিচে উল্লিখিত গ্রন্থ থেকে ব্যাখ্যাগুলো সংক্ষেপে নেওয়া; ভাবনাগুলো এই অ্যাপের জন্য লেখা, কোনো ফতোয়া নয়।"
   },
   order: "Jami' at-Tirmidhi 3507",
   researched: "2026-10",

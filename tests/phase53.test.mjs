@@ -390,5 +390,5 @@ test("credits list the new sources and every credit row is its own array entry",
   // Face 7 (intentional): zakat was removed from the UI, so its credit row is gone.
   for (const k of ["An-Nawawi's Forty Hadith", "Prohibited-time notes", "40 narrations"]) assert.ok(f.includes(k), k);
   assert.ok(!f.includes('["Zakat",'), "no zakat credit row");
-  for (const k of ["ইমাম নববীর চল্লিশ হাদীস", "নিষিদ্ধ সময়ের সতর্কতা", "৪০টি হাদীস"]) assert.ok(f.includes(k), k);
+  for (const k of ["ইমাম নববীর চল্লিশ হাদিস", "নিষিদ্ধ সময়ের সতর্কতা", "৪০টি হাদিস"]) assert.ok(f.includes(k), k);
 });

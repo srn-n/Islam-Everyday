@@ -83,7 +83,7 @@ test("approximate margins are worded as approximate in both languages", () => {
 
 test("zakat validation message names every reason a value is ignored", () => {
   assert.match(I18N.en.zk_invalid, /not valid numbers, were negative or were unrealistically large/);
-  assert.match(I18N.bn.zk_invalid, /অবাস্তব/);
+  assert.match(I18N.bn.zk_invalid, /অস্বাভাবিক বড়/); /* Nov 2026: casual Bangla wording */
   assert.match(read("assets/zakat.js"), /n > MAX/);
 });
 

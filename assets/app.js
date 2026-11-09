@@ -202,9 +202,13 @@ function prayerTimes(y, m, d, lat, lng, tz, method, asrF) {
   o.isha = M.im ? o.maghrib + M.im / 60 : adj(ang(M.i, 18, 1));
   return o;
 }
+/* Date formatters are cached (Nov 2026): building an Intl.DateTimeFormat is slow, and the Today page alone asked for
+   hundreds per redraw (prayer times for three days, the tracker, Hijri dates), which made switching to it lag on phones. */
+const DTFC = new Map();
+function DTF(loc, o) { const k = loc + "|" + JSON.stringify(o); let f = DTFC.get(k); if (!f) { f = new Intl.DateTimeFormat(loc, o); DTFC.set(k, f); } return f; }
 function zoneParts(zone, date) {
   const p = {};
-  const f = new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" });
+  const f = DTF("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" });
   for (const x of f.formatToParts(date)) if (x.type !== "literal") p[x.type] = +x.value;
   return p;
 }
@@ -322,7 +326,7 @@ const pName = (k, fri) => k === "dhuhr" && fri ? t("jumuah") : t(k);
 function hijri(date) {
   const dt = new Date(date.getTime() + st.hadj * 864e5);
   try {
-    const f = new Intl.DateTimeFormat("en-u-ca-islamic-umalqura-nu-latn", { day: "numeric", month: "numeric", year: "numeric", timeZone: city().zone });
+    const f = DTF("en-u-ca-islamic-umalqura-nu-latn", { day: "numeric", month: "numeric", year: "numeric", timeZone: city().zone });
     const p = {}; for (const x of f.formatToParts(dt)) if (x.type !== "literal") p[x.type] = parseInt(x.value, 10);
     return p.day && p.month ? { d: p.day, m: p.month, y: p.year } : null;
   } catch (e) { return null; }
@@ -353,7 +357,7 @@ const glossLine = text => { if (bn() || !GL) return ""; const g = GL.forText(tex
 const KEEP_DAYS = 120;
 let tSel = null;                                   // selected date key, or null for today
 const trackKey = s => tSel ? XT.clamp(tSel, XT.shift(s.key, -(KEEP_DAYS - 1)), s.key) : s.key;
-const longDay = k => { const [y, m, d] = XT.parts(k); return new Intl.DateTimeFormat(LT(), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(y, m - 1, d, 12))); };
+const longDay = k => { const [y, m, d] = XT.parts(k); return DTF(LT(), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(y, m - 1, d, 12))); };
 function trackDay(s) {
   const k = trackKey(s), min = XT.shift(s.key, -(KEEP_DAYS - 1)), ago = XT.diff(k, s.key), o = st.log[k] || {}, n = PRAYERS.filter(p => o[p]).length;
   const rel = ago === 0 ? t("t_today") : ago === 1 ? t("t_yday") : t("t_past");
@@ -374,7 +378,7 @@ function trackDay(s) {
    recorded, hollow = not recorded); the one control for each prayer is the list below. The day headings are date
    pickers for that list (data-act="tsel"), labelled as such, and show today and the selected day by frame and text. */
 function fardGraph(s) {
-  const tk = trackKey(s), days = lastDays(s, 7).reverse(), fmt = new Intl.DateTimeFormat(LT(), { weekday: "short", timeZone: "UTC" });
+  const tk = trackKey(s), days = lastDays(s, 7).reverse(), fmt = DTF(LT(), { weekday: "short", timeZone: "UTC" });
   const dnum = k => num(XT.parts(k)[2]);
   const head = days.map(k => { const [yy, mm, dd] = XT.parts(k), isT = k === s.key, sel = k === tk, o = st.log[k] || {}, c = PRAYERS.filter(p => o[p]).length;
     return `<button type="button" class="fg-day${isT ? " today" : ""}${sel ? " sel" : ""}" data-act="tsel" data-k="${k}" aria-pressed="${sel}" aria-label="${esc(t("fg_pick").replace("{d}", longDay(k)))}, ${esc(`${num(c)}/${num(5)}`)}"><span class="fg-wd">${esc(fmt.format(new Date(Date.UTC(yy, mm - 1, dd, 12))))}</span><b>${dnum(k)}</b>${isT ? `<small class="sr">${t("t_today")}</small><i class="fg-tbar" aria-hidden="true"></i>` : ""}</button>`; }).join("");
@@ -660,7 +664,7 @@ function vToday() {
   const per = skyPeriod(s), n = PRAYERS.filter(k => done[k]).length, ok = timesOk(s.d0), fri = isFriD(s.d0);
   const ps = s.ps = prayerState(s), cur = ps.cur, nx = ps.next;
   const hj = hijriNow(s);
-  const greg = new Intl.DateTimeFormat(LT(), { timeZone: s.c.zone, weekday: "long", day: "numeric", month: "long" }).format(new Date(s.now));
+  const greg = DTF(LT(), { timeZone: s.c.zone, weekday: "long", day: "numeric", month: "long" }).format(new Date(s.now));
   // sun / moon position along the arc
   let f;
   if (s.now >= s.d0.abs("sunrise") && s.now < s.d0.abs("maghrib")) f = (s.now - s.d0.abs("sunrise")) / (s.d0.abs("maghrib") - s.d0.abs("sunrise"));
@@ -802,7 +806,7 @@ function dayViz(s) {
 }
 /* The Hijri day begins at maghrib, so after maghrib the Today page and menus show the next Hijri date. */
 function hijriNow(s) { return hijri(new Date(s.now + (s.now >= s.d0.abs("maghrib") ? 864e5 : 0))); }
-let votdPick = null;
+let votdPick = null, votdP = null; // votdP: the verse file arriving (the app's splash waits for it)
 const COUNTS = QM.meta.map(m => m[3]);
 /* Verse for today: whole ayah (never truncated) in Arabic and the selected translation. */
 function votdBody(e) {
@@ -815,7 +819,9 @@ function votdBody(e) {
   const foot = `<div class="verse-foot">${ref}<button type="button" class="btn soft" data-act="surah" data-s="${i}" data-a="${e.a}">${t("readsurah")}</button></div>`;
   if (!qReady(i)) {
     if (qFailed(i)) return `${head}<p class="note">${t("fail")}</p><div><button type="button" class="btn" data-act="retry">${t("retry")}</button></div>${foot}`;
-    qEnsure(i).catch(() => {}).then(() => { if (R.tab === "today" && !R.sub) render(false); });
+    // Only the verse card is redrawn when the file arrives: a whole-page redraw here landed on the opening animation.
+    votdP = qEnsure(i).catch(() => {}).then(() => { if (R.tab !== "today" || R.sub) return; const c = document.querySelector("#view .a-verse");
+      if (!c || !qReady(i)) { render(false); return; } c.innerHTML = `<h3 class="sec-title" id="votd-h">${t("votd")}</h3>${votdBody(e)}`; fitClamps(); });
     return `${head}<p class="note" aria-busy="true">${t("loading")}</p>${foot}`;
   }
   const tr = QS[st.lang + ":" + i], ar = QS["ar:" + i], many = ks.length > 1;
@@ -860,14 +866,24 @@ function votdExpl(e, many) {
 }
 /* Generic "Read more": a .clamp box shows a preview of its .clamp-body; when the content (nearly) fits, it is shown whole
    and the button is hidden. Used by the verse explanation and the Hadith cards. Re-run after any change. */
-function fitClamps() {
-  document.querySelectorAll(".clamp").forEach(c => {
-    if (c.classList.contains("open")) return;
-    c.classList.remove("fits");
-    const b = c.querySelector(".clamp-body");
-    if (b && b.scrollHeight <= b.clientHeight + 48) c.classList.add("fits");
-  });
+/* Measuring a card lays it out. On a phone the long lists (Duas, Hadith) skip laying out cards far below the screen
+   (content-visibility in app.css), so the first cards are measured now and the rest just before they scroll into
+   view; measuring them all at once made opening those pages lag. Desktop measures everything at once. */
+let fitIO = null; const fitQ = new WeakMap();
+function fitCards(cards, fit) {
+  if (!phone() || !window.IntersectionObserver) { cards.forEach(fit); return; }
+  if (!fitIO) fitIO = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; const f = fitQ.get(e.target); fitIO.unobserve(e.target); fitQ.delete(e.target); if (f && e.target.isConnected) f(e.target); }), { rootMargin: "50% 0px" });
+  // The first 8 cards (more than fill the screen, and never skipped: app.css) are measured now, so none on screen changes
+  // after it is shown; the rest when they come within half a screen.
+  [...cards].forEach((c, i) => { if (i < 8) { fitQ.delete(c); fitIO.unobserve(c); fit(c); } else { fitQ.set(c, fit); fitIO.unobserve(c); fitIO.observe(c); } });
 }
+const fitClamp = c => {
+  if (c.classList.contains("open")) return;
+  c.classList.remove("fits");
+  const b = c.querySelector(".clamp-body");
+  if (b && b.scrollHeight <= b.clientHeight + 48) c.classList.add("fits");
+};
+function fitClamps() { fitCards(document.querySelectorAll(".clamp"), fitClamp); }
 function toggleClamp(b, open) {
   const c = b.closest(".clamp"); c.classList.toggle("open", open);
   b.setAttribute("aria-expanded", open); b.textContent = t(open ? "readless" : "readmore");
@@ -888,22 +904,31 @@ function moonSvg(day, lat) {
   return `<svg class="hc-moon" viewBox="0 0 64 64" aria-hidden="true"><circle class="mn-glow" cx="${c}" cy="${c}" r="31"/><circle class="mn-dark" cx="${c}" cy="${c}" r="${R}"/><path class="mn-lit" d="${d}"${lat < 0 ? ` transform="matrix(-1 0 0 1 ${2 * c} 0)"` : ""}/></svg>`;
 }
 let justTicked = null;
-function animateArc(f) {
+let arcF = null;
+const arcWait = () => { const sp = $("splash"); return !!sp && !sp.classList.contains("out") && (NATIVE || phone()); };
+function animateArc(f, force) {
   const p = $("arcpath"), o = $("orb"), tr = $("trail"); if (!p || !p.getTotalLength) return;
   const Ln = p.getTotalLength();
   const gl = $("glow");
   const mg = $("moonG");
   const setP = x => { const pt = p.getPointAtLength(Ln * x); o.setAttribute("cx", pt.x.toFixed(1)); o.setAttribute("cy", pt.y.toFixed(1)); if (mg) mg.setAttribute("transform", `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)})`); if (gl) { gl.setAttribute("cx", pt.x.toFixed(1)); gl.setAttribute("cy", pt.y.toFixed(1)); } tr.setAttribute("stroke-dasharray", `${(x * 100).toFixed(2)} 100`); };
-  if (reduce || !heroAnim) { setP(f); return; }
+  if (reduce || st.motion === "off") { setP(f); return; }
+  if (arcWait()) { setP(0); arcF = f; return; } // behind the splash: drawn as the door opens (see boot)
+  if (!heroAnim && !force) { setP(f); return; }
+  // The path is sampled once, so each frame only moves the dot (getPointAtLength on every frame forced a layout each time).
+  const N = 90, pts = []; for (let j = 0; j <= N; j++) { const q = p.getPointAtLength(Ln * f * j / N); pts.push([q.x, q.y]); }
+  const at = x => { const u = Math.max(0, Math.min(N, x * N)), j = Math.min(N - 1, Math.floor(u)), r = u - j, a = pts[j], c = pts[j + 1]; return [a[0] + (c[0] - a[0]) * r, a[1] + (c[1] - a[1]) * r]; };
+  const put = x => { const [px, py] = at(x), sx = px.toFixed(1), sy = py.toFixed(1); o.setAttribute("cx", sx); o.setAttribute("cy", sy); if (mg) mg.setAttribute("transform", `translate(${sx} ${sy})`); if (gl) { gl.setAttribute("cx", sx); gl.setAttribute("cy", sy); } tr.setAttribute("stroke-dasharray", `${(x * f * 100).toFixed(2)} 100`); };
   const t0 = performance.now(), D = 1500;
-  const step = now => { const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3); setP(f * e); if (k < 1) requestAnimationFrame(step); };
+  const step = now => { const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3); if (k < 1) { put(e); requestAnimationFrame(step); } else setP(f); };
   requestAnimationFrame(step);
 }
 setInterval(() => {
   if (R.tab !== "today" || !snap || document.hidden) return;
   const now = Date.now();
   const ps = snap.ps, cur = ps && ps.cur;
-  if (now >= snap.next.at || (ps && now >= ps.next.at) || (cur && now >= cur.end) || zoneParts(snap.c.zone, new Date(now)).minute !== snap.p.minute) { render(false); return; }
+  // The minute redraw waits while the splash is up (it would land on the opening animation); the countdown still ticks.
+  if (!$("splash") && (now >= snap.next.at || (ps && now >= ps.next.at) || (cur && now >= cur.end) || zoneParts(snap.c.zone, new Date(now)).minute !== snap.p.minute)) { render(false); return; }
   const c = $("count-next"); if (c && ps) c.textContent = countdown(ps.next.at - now);
 }, 1000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden && R.tab === "today") render(false); });
@@ -1155,15 +1180,14 @@ function duaList() {
    the reader with the translator's notes; marked as not yet reviewed by a qualified scholar. */
 const duaExtra = d => !d.k ? "" : `<div class="dua-x">${d.fe && !bn() ? `<details class="fn rw-notes"><summary>${t("rw_notes")}</summary><div lang="en">${esc(d.fe).replace(/\n\s*/g, "<br>")}</div></details>` : ""}${d.ne ? `<p class="note">${esc(bn() ? d.nb : d.ne)}</p>` : ""}<p class="note">${(d.links || []).map(([e, b2, u]) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${esc(bn() ? b2 : e)}</a>`).join(" · ")}${d.read ? ` · <button type="button" class="linkish" data-act="surah" data-s="${d.read[0]}" data-a="${d.read[1]}">${t("dk_read")}</button>` : ""}</p><p class="note dua-rev">${t("dk_review")}</p></div>`;
 /* Marks cards whose content (nearly) fits the preview, so they show in full with no "Read more" button. Re-run after any change. */
-function fitDuas() {
-  document.querySelectorAll("#dua-list .dua").forEach(c => {
-    if (c.classList.contains("open")) return;
-    c.classList.remove("fits");
-    const b = c.querySelector(".dua-body");
-    // A dua that is only a couple of lines longer than the preview is shown whole rather than hidden behind a button.
-    if (b && b.scrollHeight <= b.clientHeight + 64) c.classList.add("fits");
-  });
-}
+const fitDua = c => {
+  if (c.classList.contains("open")) return;
+  c.classList.remove("fits");
+  const b = c.querySelector(".dua-body");
+  // A dua that is only a couple of lines longer than the preview is shown whole rather than hidden behind a button.
+  if (b && b.scrollHeight <= b.clientHeight + 64) c.classList.add("fits");
+};
+function fitDuas() { fitCards(document.querySelectorAll("#dua-list .dua"), fitDua); }
 function vDuas() {
   post.push(fitDuas);
   return `
@@ -1567,7 +1591,7 @@ function calInfo(y, m, d, s) {
   const wh = !!(h && h.d >= 13 && h.d <= 15), tash = !!(h && h.m === 12 && h.d >= 11 && h.d <= 13);
   return { y, m, d, k, h, evs, major: evs.filter(e => !e.minor), wh, tash, ram: !!(h && h.m === 9), today: k === s.key, plan: st.fplan[k] || null };
 }
-const calLong = i => new Intl.DateTimeFormat(calLoc(), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(i.y, i.m - 1, i.d, 12)));
+const calLong = i => DTF(calLoc(), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(i.y, i.m - 1, i.d, 12)));
 const hLong = h => h ? `${num(h.d)} ${HM[st.lang][h.m - 1]} ${num(h.y)} ${t("ah")}` : "";
 function calMethod() {
   const a = st.hadj;
@@ -1591,7 +1615,7 @@ function calDetail(i) {
 }
 /* Fasting planner list: the next few days the user has marked (today onwards), from the notes saved on this device. */
 function calFasts(s) {
-  const df = o => new Intl.DateTimeFormat(calLoc(), Object.assign({ timeZone: "UTC" }, o));
+  const df = o => DTF(calLoc(), Object.assign({ timeZone: "UTC" }, o));
   const fps = Object.keys(st.fplan).filter(k => /^\d{4}-\d\d-\d\d$/.test(k) && k >= s.key && st.fplan[k] && st.fplan[k].f).sort().slice(0, 4)
     .map(k => { const [a1, b1, c1] = XT.parts(k); return { k, n: st.fplan[k].n || "", g: new Date(Date.UTC(a1, b1 - 1, c1, 12)) }; });
   return fps.length ? `<ul class="cp-fasts">${fps.map(x => `<li><button type="button" class="chip" data-act="calgo" data-k="${x.k}">${esc(df({ weekday: "short", day: "numeric", month: "short" }).format(x.g))}${x.n ? ` · <span class="cp-n">${esc(x.n)}</span>` : ""}</button></li>`).join("")}</ul>` : `<p class="note">${t("fp_none")}</p>`;
@@ -1603,8 +1627,8 @@ function vCalendar() {
   if (!calSel || !calSel.startsWith(y + "-" + pad2(m) + "-")) calSel = (y === s.p.year && m === s.p.month) ? s.key : dkey(y, m, 1);
   const lead = (first.getUTCDay() + 6) % 7; // Monday first
   const loc = calLoc();
-  const title = new Intl.DateTimeFormat(loc, { month: "long", year: "numeric", timeZone: "UTC" }).format(first);
-  const wdf = (k, f) => new Intl.DateTimeFormat(loc, { weekday: f, timeZone: "UTC" }).format(new Date(Date.UTC(2024, 0, 1 + k)));
+  const title = DTF(loc, { month: "long", year: "numeric", timeZone: "UTC" }).format(first);
+  const wdf = (k, f) => DTF(loc, { weekday: f, timeZone: "UTC" }).format(new Date(Date.UTC(2024, 0, 1 + k)));
   const head = Array.from({ length: 7 }, (_, k) => `<span class="wd${k === 4 ? " fri" : ""}" aria-hidden="true" title="${esc(wdf(k, "long"))}">${wdf(k, "short")}</span>`).join("");
   let cells = '<span class="c pad" aria-hidden="true"></span>'.repeat(lead);
   const hms = new Set(); let sel = null;
@@ -1619,7 +1643,7 @@ function vCalendar() {
   for (let i = 0; i < 400 && up.length < 4; i++) { const [a1, b1, c1] = shiftDay(a, b, c, i), h = hijri(localNoon(a1, b1, c1)); for (const e of eventsOn(h)) if (!e.minor) up.push({ e, i, h, g: new Date(Date.UTC(a1, b1 - 1, c1, 12)) }); }
   // Next White Days: the next run of Hijri 13–15 that has not finished yet.
   const wd = []; for (let i = 0; i < 60 && wd.length < 3; i++) { const [a1, b1, c1] = shiftDay(a, b, c, i), h = hijri(localNoon(a1, b1, c1)); if (h && h.d >= 13 && h.d <= 15 && (!wd.length || wd[wd.length - 1].h.m === h.m)) wd.push({ g: new Date(Date.UTC(a1, b1 - 1, c1, 12)), h, k: dkey(a1, b1, c1), y: a1, m: b1, d: c1 }); else if (wd.length) break; }
-  const df = o => new Intl.DateTimeFormat(loc, Object.assign({ timeZone: "UTC" }, o));
+  const df = o => DTF(loc, Object.assign({ timeZone: "UTC" }, o));
   return `<div class="page-head">${back()}<h2>${t("calendar")}</h2></div>
   <section class="card pad cal-card" aria-labelledby="cal-title">
     <div class="cal-head"><button type="button" class="icon-btn" data-act="cal" data-d="-1" aria-label="${esc(t("prevm"))}">${ic("back")}</button><div class="t" aria-live="polite"><b id="cal-title">${esc(title)}</b><small>${hm}</small></div><button type="button" class="icon-btn" data-act="cal" data-d="1" aria-label="${esc(t("nextm"))}">${ic("chev")}</button></div>
@@ -1929,7 +1953,7 @@ function side() {
 }
 function dateLine() {
   const s = snapshot();
-  const g = new Intl.DateTimeFormat(LT(), { timeZone: s.c.zone, weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(s.now));
+  const g = DTF(LT(), { timeZone: s.c.zone, weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(s.now));
   return g + " · " + hText(hijri(new Date(s.now + (s.now >= s.d0.abs("maghrib") ? 864e5 : 0))));
 }
 function readerEmpty() {
@@ -2163,13 +2187,22 @@ if (!phone()) Object.keys(LAZY).forEach(g => need(g).catch(() => {})); // deskto
   // Later loads: as soon as the app is ready. A tap, click or key skips it.
   let done = false; const go = () => { if (done || !sp) return; done = true; sp.classList.add("out"); setTimeout(() => sp.remove(), 700);
     // Phone and app: the page rises into place as the door opens, instead of having drawn itself unseen behind the splash.
-    if ((NATIVE || phone()) && !reduce && st.motion !== "off") { const v = $("view"); setTimeout(() => { v.classList.remove("enter"); [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); void v.offsetWidth; v.classList.add("enter"); }, 140); } };
+    if ((NATIVE || phone()) && !reduce && st.motion !== "off") { const v = $("view"); setTimeout(() => { v.classList.remove("enter"); [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); void v.offsetWidth; v.classList.add("enter");
+      if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), 180); } }, 140); }
+    else if (arcF != null) { const f = arcF; arcF = null; animateArc(f, true); } };
   const arm = t0 => setTimeout(go, first ? Math.max(0, 4450 - (performance.now() - t0)) : 0);
   if (sp) { sp.addEventListener("pointerdown", go); addEventListener("keydown", go, { once: true }); }
   if (!NATIVE) { if (sp) arm(0); return; }
   // In the app the splash waits, still, under Android's launch screen (theme-boot.js adds sp-hold); it starts the moment that screen fades.
   let rel = false; const release = () => { if (rel) return; rel = true; natQ("SplashScreen", "hide", { fadeOutDuration: 200 }); h.classList.remove("sp-hold"); if (sp) arm(performance.now()); };
-  setTimeout(release, 0); })(); // the first screen is already drawn into the page; Android paints it as its launch screen fades (3 s failsafe in capacitor.config.json)
+  // Released after two frames, once the first screen has been painted: Android's launch screen then fades onto a finished
+  // page and the door's first frames do not also have to paint everything under it. 1.5 s failsafe; 3 s in capacitor.config.json.
+  // It also waits (at most 0.9 s) for the fonts and the Verse for today, so neither re-lays out the page mid-animation.
+  let fr = Promise.resolve(); try { if (document.fonts) fr = document.fonts.ready; } catch (e) {}
+  // After the verse is in, layout is run once so its Arabic font starts loading, and that is waited for too.
+  const settled = Promise.all([fr, votdP]).then(() => { try { void document.body.offsetHeight; return document.fonts && document.fonts.ready; } catch (e) {} });
+  Promise.race([settled, new Promise(r => setTimeout(r, 900))]).then(() => requestAnimationFrame(() => requestAnimationFrame(release)));
+  setTimeout(release, 1500); })();
 /* Android app: the Back button and leaving the app. Back closes an open sheet, then steps back through pages, then returns
    to Today; on Today the app closes into its door (a short fade into the doorway) and Android takes it to the background.
    Coming back reverses that fade. Presses while it is closing are ignored. */

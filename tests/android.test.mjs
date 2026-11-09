@@ -60,3 +60,20 @@ test("privacy policy covers the Android app (location, no network, backup, feedb
   for (const w of ["লোকেশনের অনুমতি", "ইন্টারনেটে কিছু যায় না", "ব্যাকআপ", "ইমেইল অ্যাপ", "Google Play"]) assert.ok(bn.includes(w), w);
   assert.equal(LG.PRIVACY.en.length, LG.PRIVACY.bn.length, "same number of sections");
 });
+
+test("smooth opening: the splash waits for fonts and the verse, and nothing redraws the whole page under it", () => {
+  assert.match(app, /requestAnimationFrame\(\(\) => requestAnimationFrame\(release\)\)/, "released after the first painted frame");
+  assert.match(app, /Promise\.all\(\[fr, votdP\]\)/, "waits for fonts and the Verse for today");
+  assert.match(app, /document\.querySelector\("#view \.a-verse"\)/, "the verse arriving redraws only its card");
+  assert.doesNotMatch(app, /qEnsure\(i\)\.catch\(\(\) => \{\}\)\.then\(\(\) => \{ if \(R\.tab === "today" && !R\.sub\) render\(false\); \}\)/);
+  assert.match(app, /if \(arcWait\(\)\) \{ setP\(0\); arcF = f; return; \}/, "the sun arc waits for the door to open");
+  assert.match(app, /if \(!\$\("splash"\) && \(now >= snap\.next\.at/, "the minute redraw waits for the splash");
+});
+
+test("faster pages on phones: cached date formatters, lazily measured long lists, fewer blurs", () => {
+  assert.doesNotMatch(app.replace(/f = new Intl\.DateTimeFormat\(loc, o\)/, ""), /new Intl\.DateTimeFormat\(/, "every date formatter goes through the cache (DTF)");
+  assert.match(app, /function fitCards\(cards, fit\)/);
+  assert.match(css, /#dua-list>\.dua:nth-child\(n\+9\),\.hd-list>\.card\.hadith:nth-child\(n\+9\)\{content-visibility:auto;contain-intrinsic-height:auto 360px\}/);
+  assert.doesNotMatch(css, /contain-intrinsic-size:auto \d/, "a one-value contain-intrinsic-size would also fix the width");
+  assert.match(css, /@media \(pointer:coarse\)\{@supports[^{]*\{\s*\.top \.chip-btn,\.top \.icon-btn,\.seg,\.tnav,\.tpick \.field\{-webkit-backdrop-filter:none;backdrop-filter:none\}/);
+});

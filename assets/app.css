@@ -1355,3 +1355,16 @@ html.native .shell,html.native nav.tabs{transition:transform .28s cubic-bezier(.
 html.closing .shell{transform:scale(.96)}
 html.closing nav.tabs{transform:translateY(12px)}
 ::view-transition{pointer-events:none}
+/* Phones (Nov 2026): long lists lay out only the cards near the screen, so Duas and Hadith open without a long pause.
+   The size is a first guess for a card not yet shown; once shown, the browser remembers its real size (auto). */
+@media (pointer:coarse){
+  /* the first 8 are always laid out: they are measured as soon as the page is drawn (fitCards in app.js) */
+  #dua-list>.dua:nth-child(n+9),.hd-list>.card.hadith:nth-child(n+9){content-visibility:auto;contain-intrinsic-height:auto 360px}
+  .hd-list>.card.hadith:nth-child(n+9){contain-intrinsic-height:auto 560px}
+}
+/* Phones (Nov 2026): only the header and the tab bar blur what is behind them. The chips, buttons and segmented controls
+   keep their glass colour but not a blur of their own: they sit on the already-blurred header or on a plain page, so
+   their blur was barely visible, yet each one was redrawn on every scrolled frame. */
+@media (pointer:coarse){@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  .top .chip-btn,.top .icon-btn,.seg,.tnav,.tpick .field{-webkit-backdrop-filter:none;backdrop-filter:none}
+}}

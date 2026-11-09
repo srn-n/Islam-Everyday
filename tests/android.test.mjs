@@ -1,7 +1,7 @@
 // Android app and phone navigation (Nov 2026): history, section slides, Back button, opening and closing.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { read } from "./helpers.mjs";
+import { read, loadBrowser } from "./helpers.mjs";
 const app = read("assets/app.js"), css = read("assets/app.css"), boot = read("assets/theme-boot.js");
 
 test("switching sections keeps one history entry above Today, and a repeat tap adds nothing", () => {
@@ -48,4 +48,15 @@ test("safe areas use the app's values when present and the browser's otherwise",
 test("lists that hold long lines shrink to the phone instead of widening the page (320–360px)", () => {
   assert.match(css, /#dua-list\{grid-template-columns:minmax\(0,1fr\)\}/);
   assert.match(css, /\.credits\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
+});
+
+test("privacy policy covers the Android app (location, no network, backup, feedback) in both languages", () => {
+  const LG = loadBrowser("assets/legal.js").IE_LEGAL;
+  const sec = (l, h) => LG.PRIVACY[l].find(([head]) => head === h);
+  const en = JSON.stringify(sec("en", "The Android app"));
+  const bn = JSON.stringify(sec("bn", "অ্যান্ড্রয়েড অ্যাপ"));
+  assert.ok(en && bn, "Android section present in en and bn");
+  for (const w of ["location permission", "No network requests", "backup", "Feedback opens your own email app", "Google Play"]) assert.ok(en.includes(w), w);
+  for (const w of ["লোকেশনের অনুমতি", "ইন্টারনেটে কিছু যায় না", "ব্যাকআপ", "ইমেইল অ্যাপ", "Google Play"]) assert.ok(bn.includes(w), w);
+  assert.equal(LG.PRIVACY.en.length, LG.PRIVACY.bn.length, "same number of sections");
 });

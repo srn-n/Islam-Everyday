@@ -25,7 +25,7 @@ test("legal pages point to More → Feedback, in English and Bangla", () => {
   const LG = loadBrowser("assets/legal.js").IE_LEGAL;
   assert.ok(JSON.stringify(LG.PRIVACY.en).includes("More → Feedback") && JSON.stringify(LG.TERMS.en).includes("More → Feedback"));
   assert.ok(JSON.stringify(LG.PRIVACY.bn).includes("আরও → মতামত") && JSON.stringify(LG.TERMS.bn).includes("আরও → মতামত"));
-  assert.equal(LG.UPDATED.en, "4 November 2026");
+  assert.equal(LG.UPDATED.en, "10 November 2026");
 });
 
 test("Feedback page is a route, in the More menu and the desktop side menu", () => {

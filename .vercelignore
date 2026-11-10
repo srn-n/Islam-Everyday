@@ -7,3 +7,6 @@ node_modules/
 *.log
 # The Android app project (built by GitHub Actions); not part of the website.
 android-app/
+# Notes for AI coding agents; not part of the site.
+AGENTS.md
+CLAUDE.md

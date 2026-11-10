@@ -66,7 +66,7 @@ No build step and no dependencies. Node.js 18 or newer.
 
 ```bash
 npm start        # static server on http://localhost:8090 (scripts/serve.mjs, sends no-store)
-npm test         # node:test suite, no browser, no network (169 tests as of 10 Nov 2026)
+npm test         # node:test suite, no browser, no network (180 tests as of 11 Nov 2026)
 ```
 
 Browser suites (Playwright, run separately against a running server; install Playwright outside the repo):
@@ -89,8 +89,8 @@ Bangla, light and dark themes, and `prefers-reduced-motion`.
 A static single-page app: `index.html` loads plain scripts (no modules, no framework) in this order:
 `theme-boot.js` (in `<head>`, applies theme before first paint), then `quran-meta.js`, `data.js`, `votd.js`,
 `votd-en.js`, `votd-day.js`, `en-rwwad.js`, `locale.js`, `dayviz.js`, `zakat.js`, `bnfix.js`, `xtrack.js`,
-`glossary.js`, `app.js`. Large libraries (`hadith.js`, `nawawi.js`, `stories.js`, `study-notes.js`, `name-stories.js`,
-`legal.js`, `names.js`, `guide.js`, `study.js`) are loaded on demand through `LAZY` / `need(group)` at the top of
+`glossary.js`, `heroes.js`, `sound.js`, `app.js`. Large libraries (`hadith.js`, `nawawi.js`, `stories.js`, `study-notes.js`, `name-stories.js`,
+`legal.js`, `names.js`, `guide.js`, `study.js`, `salah.js`) are loaded on demand through `LAZY` / `need(group)` at the top of
 `app.js`. Qur'an text is fetched per surah from
 `data/quran/{ar,en,bn,bnt}/NNN.json`.
 
@@ -177,16 +177,27 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 ## 9. Current state (update this with every change)
 
-*Last updated: 10 November 2026.*
+*Last updated: 11 November 2026.*
 
-- Latest commit: `af5acab` "Smooth app opening and faster section switching on phones" (pushed). Working tree clean.
-- Website live and current. `npm test`: 169 pass.
-- Android build for `af5acab` downloaded, verified (signed with the upload key) and stored in `IslamEverydayApp`.
-  This is the build to upload to Play. `versionCode` stays 1 until the first upload.
+- Latest pushed commit: `b8e2aa6`. **Uncommitted in the working tree: the 11 November interface rework** (see the log
+  below); the owner commits and pushes it.
+- `npm test`: 180 pass.
+- The Android build in `IslamEverydayApp` is for `af5acab` and does NOT contain the rework. After the owner pushes,
+  a new build must be downloaded, verified and tested on a phone before anything is uploaded to Play. The rework adds
+  a native plugin (`@capacitor/local-notifications`), a small Java plugin (`RingerPlugin`), new drawables and a new
+  launch-screen icon, none of which has been compiled or run on a device yet.
+- New Android permissions come with the notifications plugin's own manifest: `POST_NOTIFICATIONS`,
+  `RECEIVE_BOOT_COMPLETED`, `WAKE_LOCK`, `SCHEDULE_EXACT_ALARM`. Play Console: Data safety stays "no data collected";
+  the exact-alarm permission may need a declaration (or remove it with `tools:node="remove"` in the app manifest;
+  reminders then arrive within a few minutes instead of on the minute).
 - Play Console: nothing uploaded yet.
 
 **Next tasks, in order**
 
+0. Owner: commit and push the rework; get the new build. On the phone check in particular: the launch screen's doorway
+   lines up with the page's doorway (no jump), the slide between sections, reminders arriving with the app closed,
+   sounds going quiet when the phone is put on silent, vibration strengths, share-as-image still working (the
+   FileProvider path was narrowed), and the How to pray player.
 1. Test the `.apk` on a real Android phone: opening animation smoothness, Duas/Hadith opening speed, Back button and
    back gesture (Android 14–16), closing/reopening animation, rapid tab taps, light/dark theme and status bar,
    "My location" permission, share a dua as image, Copy link, Feedback opens the mail app, Bangla times, 360 px width.
@@ -208,6 +219,35 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 ## 10. Agent log (newest first)
 
 Add a new entry at the top for every change: date, summary, files, tests, open items.
+
+### 2026-11-11: interface rework (uncommitted; owner to push)
+- **Slides and feel** (`assets/app.css`, end of file; `assets/app.js` click handler): view-transition slide with a
+  spring (`--bounce`, `--bounce-2`), spring on the tab marker/switches/cards, a tick and (app) light buzz on every
+  press except controls that give their own feedback (`SELF_FX`). Children are not animated during a slide on purpose
+  (the new page is a live snapshot; animating inside it repaints every frame).
+- **Splash** (`index.html`, `app.css`, `app.js`, `theme-boot.js`): arch drawn from frame 0, shorter timeline (door at
+  3.1 s), simpler exit, promise line (`.sp-promise`, language from `html[data-lang]` set in theme-boot). App: the web
+  doorway is absolutely centred at 120px to match `res/drawable/splash_door.xml` (launch screen icon).
+- **Hero lines** (`tools/heroes/source.mjs` + `build.mjs` → `assets/heroes.js`, generated; `skyQuote`, `hadithHero`,
+  `quranHero` in app.js). Qur'an text is copied from `data/quran` by the build (a test compares them); hadiths are the
+  app's own plain-word renderings, labelled as such. To change the list, edit `source.mjs` and run
+  `node tools/heroes/build.mjs`. Daily index = days since 1970 in the city's date; weeks start on Thursday.
+- **Reminders** (`nfPlan`, `nfRun`, `nfSet` in app.js; `sw.js` notificationclick): Capacitor LocalNotifications in the
+  app (10 days ahead, re-scheduled on open/resume and whenever city, method, Asr, Hijri adjustment or language
+  changes); on the web only while the page is open. No push server (rule 6 holds).
+- **Sound and vibration** (`assets/sound.js`; settings `st.vib`, `st.snd`, `st.vol`, `st.amb`, `st.ambK`): Web Audio
+  noise synthesis only. `RingerPlugin.java` reports the phone's ringer mode; silent/vibrate mutes sound. `buzz()` now
+  depends only on `st.vib` (it used to follow Interaction motion).
+- **How to pray** (`assets/salah.js`, lazy group `pray`, route `#more/pray`, `vPray`/`prayGo` in app.js): poses are
+  joint angles; `steps(school)` builds the sequence. Content is unreviewed (docs/scholar-review.md, 11 Nov items).
+- **Fixes:** `.chips{scroll-padding-inline:16px}` ("All" chip alignment); scrim blur on phones; adhan note moved to
+  the times card. **From Codex's security review (10 Nov):** `file_paths.xml` narrowed to `cache/share/`; privacy
+  policy now names saved coordinates in Android backups, reminders and sounds (dated 11 November 2026). Backup itself
+  was left ON (owner's decision still open: excluding WebView storage would also drop tracker history from backups).
+- Tests: `tests/rework.test.mjs` added; `studio.test.mjs` and `feedback.test.mjs` updated for the new timings and
+  date. `npm test` 180 pass. Browser (Chrome, touch emulation, 320/360/412 px, English and Bangla, light and dark):
+  no overflow, no script errors, rapid tab taps end on the right page. **Not tested:** anything native (plugin
+  wiring, launch icon alignment, notifications, ringer mode, haptic strengths) and how the sounds actually sound.
 
 ### 2026-11-10: agent context file
 - Added `AGENTS.md` (this file) and `CLAUDE.md` (points to it); `.vercelignore` keeps both off the live site.

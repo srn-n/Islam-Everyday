@@ -14,11 +14,11 @@
         <item name="android:windowBackground">@color/ground</item>
     </style>
 
-    <!-- Launch screen: just the ground colour. The page's own splash (the doorway drawing itself) starts as this fades,
-         from the same colour, so there is one continuous opening rather than two logos. -->
+    <!-- Launch screen: the ground colour with the doorway in the centre (drawable/splash_door). The page's own splash
+         shows the same doorway in the same place, so the opening is one continuous picture with no empty moment. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/ground</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door</item>
         <item name="windowSplashScreenAnimationDuration">0</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:windowBackground">@color/ground</item>

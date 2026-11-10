@@ -25,6 +25,8 @@
   r.setAttribute("data-glass", gl === "subtle" || gl === "high" || gl === "solid" ? gl : "balanced");
   r.setAttribute("data-motion", mo === "off" || mo === "playful" ? mo : "subtle");
   r.style.colorScheme = dark ? "dark" : "light";
+  // Nov 2026: the splash shows its one line of text in the chosen language before app.js runs.
+  r.setAttribute("data-lang", st.lang === "bn" ? "bn" : "en");
   // Android app (Nov 2026): app-only styles, and the splash holds its first frame until Android's launch screen fades (app.js).
   try { if (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) r.className += " native sp-hold"; } catch (e) {}
 })();

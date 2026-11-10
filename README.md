@@ -413,6 +413,9 @@ assets/legal.js            Terms of Use and Privacy Policy (English and Bangla)
 assets/dayviz.js           Day-chart label layout
 assets/theme-boot.js       Applies appearance, theme, glass and motion before first paint
 assets/glossary.js         Word help for older English words (shown outside the translation)
+assets/heroes.js           Verses and hadiths for the Today, Hadith and Qur'an heroes and the reminders (generated: tools/heroes/)
+assets/sound.js            Touch sounds and five background sounds, generated on the device (no audio files)
+assets/salah.js            How to pray: animated figure, steps and notes for five schools (draft, unreviewed)
 data/quran/                Per-surah Arabic, English, Bangla and Bangla short tafsir (bnt), editions.json, coverage.json, en-corrections.json
 docs/translation-audit.md  English translation audit: edition decision, evidence, corrections, review items
 docs/scholar-review.md     Review pack for a qualified scholar: hadith, 180 passages, flagged verses, checklist

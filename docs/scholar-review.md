@@ -450,3 +450,11 @@ Method: sunrise, solar transit (Dhuhr) and sunset are calculated for the user's 
 5. Should the English explanation also be offered in the full Qur'an reader? (Only the 267 Verse-for-today verses are bundled now.)
 6. Should the HadeethEnc English typo in an-Nawawi no. 35 ("our brothers") be reported to HadeethEnc (their term 5)?
 7. Are the 15/10/15-minute windows for the prohibited times acceptable, or should they follow a particular school's figures?
+
+
+## Added 11 November 2026 (interface rework)
+
+1. **Hero hadiths** (`tools/heroes/source.mjs` → `assets/heroes.js`): 20 hadiths are given as their meaning in plain English and Bangla, written for the app from the Arabic at each reference (references opened on sunnah.com on 10–11 November 2026; Sahih Muslim 233 could not be opened that day and was cited from memory). Please check each rendering against the Arabic, and the grades given for Tirmidhi 428 and 478, Abu Dawud 418 and 3660.
+2. **Choice of verses for each prayer** (for example 17:78 for Fajr, 2:238 and 103:1–3 for Asr, 11:114 for Maghrib, 30:17–18 for Dhuhr and Maghrib): is each a sound association?
+3. **How to pray** (`assets/salah.js`): the step texts, the notes on each of the five schools (Hanafi, Maliki, Shafi'i, Hanbali, Ja'fari) and the named teaching texts were written from general knowledge of those schools and were NOT checked line by line against the books. Every statement there needs review by someone qualified in that school, including the transliterated phrases and the positions the figure shows.
+4. **Reminder for times to avoid voluntary prayer**: uses the same 15/10/15-minute windows as the Today card (open question 7 above).

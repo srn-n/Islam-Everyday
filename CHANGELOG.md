@@ -2,6 +2,29 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Interface rework: slides, reminders, sounds, hero lines, How to pray (11 November 2026)
+
+### Added
+- **A verse or hadith for the current prayer** on the Today card, a different one every day (5 to 6 for each prayer, and 6 for Jumu'ah on Fridays), with its reference. It replaces the note about adhan times, which moved to the foot of the Prayer times card. Qur'an verses are the app's own translations, unchanged; hadiths are given as their meaning in plain words and say so (`assets/heroes.js`, built by `tools/heroes/build.mjs`).
+- **Hadith page:** a hero hadith on learning and passing on hadith (Sunan Abi Dawud 3660, sahih). The well-known "forty hadiths" narration was not used: hadith scholars grade it weak, as an-Nawawi says in the introduction to his Forty.
+- **Qur'an page:** a weekly line on understanding the Qur'an, not only reading or listening (16 verses and 2 hadiths, in order, changing each Thursday).
+- **Reminders** (Settings → Reminders, and a card on Today): the five prayers with that day's line, the three times to avoid voluntary prayer with when each ends, and the week's Qur'an line every Thursday at 8 pm. In the Android app they are scheduled on the phone for 10 days ahead and renewed on every open, so they arrive when the app is closed. On the website there is no server, so they appear only while the site is open.
+- **Sound and vibration** (Settings): vibration strength (off, light, medium, strong); touch sounds; five background sounds (wind, rain, water drops, river, ocean waves) with an on/off switch; volume. All sound is generated on the device from filtered noise: no audio files, no music, no instruments (`assets/sound.js`). In the Android app, sound follows the phone's sound profile (silent or vibrate mutes it); vibration is independent.
+- **How to pray** (More → How to pray, also linked from the Prayer guide): an animated figure walks through a two-rak'ah prayer, with captions, Play/Pause and step controls, for the Hanafi, Maliki, Shafi'i, Hanbali and Ja'fari schools (`assets/salah.js`). Labelled as a draft that no scholar has reviewed.
+- The splash shows the three promises at the foot of the screen: No account · No ads · No data collected (English and Bangla).
+
+### Changed (phones and the Android app; desktop layout unchanged)
+- **Section changes are a real slide with a small spring**; the tab marker, switches and cards answer a press with the same spring. Every press gives a light tick and, in the app, a light buzz (both can be turned off).
+- **Opening:** the doorway is on screen from the first frame (it used to draw itself over an empty screen for the first second), the names follow sooner, and the door opens at 3.1 s instead of 4.45 s with a simpler fade. In the Android app the launch screen now shows the same doorway in the same place, so the hand-over is continuous.
+- A sheet (a Name of Allah, sharing, location) now blurs the page behind it.
+
+### Fixed
+- **Filter rows (Duas, Hadith, Qur'an):** the first chip ("All") was pulled to the very edge of the screen by scroll snapping; it now lines up with the page margin.
+- **Android (from a security review):** only the folder used for "Share as image" can be handed to another app (it was all of external storage and the cache); the privacy policy now says plainly that a saved location is part of Android's backup, and covers reminders and sounds.
+
+### Tests
+- `tests/rework.test.mjs` (11 tests); `npm test`: 180 pass.
+
 ## Bangla that sounds like people talk (9 November 2026)
 
 ### Changed

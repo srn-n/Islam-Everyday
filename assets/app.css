@@ -1273,25 +1273,25 @@ a.opt{color:inherit;text-decoration:none}
 /* Splash (Oct 2026). The logo's mihrab doorway draws itself, night turns to dawn inside it as the sun rises, and the
    door opens into the app. Colours come from the theme (accent, and the sky tokens used by the Today hero), so it matches
    every light and dark theme. Pure CSS: it plays while the scripts load. */
-.splash{cursor:pointer;position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:var(--ground);transition:opacity .55s var(--ease),visibility 0s linear .55s;animation:sp-failsafe .4s ease 12s forwards}
+.splash{cursor:pointer;position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:var(--ground);transition:opacity .42s cubic-bezier(.4,0,.2,1) .08s,visibility 0s linear .5s;animation:sp-failsafe .4s ease 12s forwards}
 .sp-in{display:flex;flex-direction:column;align-items:center;padding-bottom:6vh}
 .sp-door{width:clamp(108px,30vw,148px);height:auto;overflow:visible;transform-origin:50% 62%}
 .sp-s1{stop-color:var(--r-night)}.sp-s2{stop-color:var(--r-twi)}.sp-s3{stop-color:var(--r-late)}
 .sp-g1{stop-color:var(--r-late);stop-opacity:.7}.sp-g2{stop-color:var(--r-late);stop-opacity:0}
-.sp-sky{opacity:0;animation:sp-fade 1s var(--ease) .75s forwards}
-.sp-night{fill:var(--r-night);opacity:0;animation:sp-night 2.6s ease-in-out .35s forwards}
-.sp-stars circle{fill:#fff;opacity:0;animation:sp-twinkle 2.2s ease-in-out .5s forwards}
-.sp-stars circle:nth-child(2){animation-delay:.75s}.sp-stars circle:nth-child(3){animation-delay:.62s}.sp-stars circle:nth-child(4){animation-delay:.9s}.sp-stars circle:nth-child(5){animation-delay:.82s}
-.sp-sun{fill:var(--r-late);transform:translateY(130px);animation:sp-up 1.8s var(--ease) .9s forwards}
-.sp-glow{opacity:0;transform:translateY(130px);animation:sp-glowup 1.8s var(--ease) .9s forwards,sp-breathe 2.6s ease-in-out 2.8s infinite}
-.sp-arch,.sp-hz{fill:none;stroke:var(--accent);stroke-width:20;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:sp-draw 1.3s var(--ease) forwards}
-.sp-hz{animation-duration:.9s;animation-delay:.2s}
-.sp-name{margin:20px 0 0;font-family:var(--display);font-weight:400;font-size:clamp(1.55rem,6.4vw,2rem);line-height:1.1;color:var(--ink);letter-spacing:.2em;opacity:0;animation:sp-name 1s var(--ease) 1.5s forwards}
-.sp-by{margin:12px 0 0;font-size:.8rem;font-weight:600;letter-spacing:.5em;text-transform:uppercase;color:var(--muted);opacity:0;animation:sp-by 1s var(--ease) 2.2s forwards}
-.sp-line{display:block;width:96px;height:2px;margin-top:22px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--r-late),transparent) 0 0/200% 100% no-repeat;opacity:0;animation:sp-fade .4s ease 3.3s forwards,sp-sweep 1.5s linear 3.3s infinite}
+.sp-sky{opacity:0;animation:sp-fade .8s var(--ease) .1s forwards}
+.sp-night{fill:var(--r-night);opacity:0;animation:sp-night 1.9s ease-in-out 0s forwards}
+.sp-stars circle{fill:#fff;opacity:0;animation:sp-twinkle 1.7s ease-in-out .12s forwards}
+.sp-stars circle:nth-child(2){animation-delay:.3s}.sp-stars circle:nth-child(3){animation-delay:.2s}.sp-stars circle:nth-child(4){animation-delay:.42s}.sp-stars circle:nth-child(5){animation-delay:.36s}
+.sp-sun{fill:var(--r-late);transform:translateY(130px);animation:sp-up 1.6s var(--ease) .2s forwards}
+.sp-glow{opacity:0;transform:translateY(130px);animation:sp-glowup 1.6s var(--ease) .2s forwards,sp-breathe 2.6s ease-in-out 1.9s infinite}
+/* Nov 2026: the doorway is drawn from the very first frame, so there is never an empty screen; the sky, sun and names follow. */
+.sp-arch,.sp-hz{fill:none;stroke:var(--accent);stroke-width:20;stroke-linecap:round;stroke-linejoin:round}
+.sp-name{margin:20px 0 0;font-family:var(--display);font-weight:400;font-size:clamp(1.55rem,6.4vw,2rem);line-height:1.1;color:var(--ink);letter-spacing:.12em;opacity:0;animation:sp-name .8s var(--ease) .3s forwards}
+.sp-by{margin:12px 0 0;font-size:.8rem;font-weight:600;letter-spacing:.5em;text-transform:uppercase;color:var(--muted);opacity:0;animation:sp-by .8s var(--ease) .85s forwards}
+.sp-line{display:block;width:96px;height:2px;margin-top:22px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--r-late),transparent) 0 0/200% 100% no-repeat;opacity:0;animation:sp-fade .4s ease 1.9s forwards,sp-sweep 1.5s linear 1.9s infinite}
 .splash.out{opacity:0;visibility:hidden;pointer-events:none}
-.splash.out .sp-door{animation:sp-through .6s cubic-bezier(.55,0,.35,1) forwards}
-.splash.out .sp-name,.splash.out .sp-by,.splash.out .sp-line{opacity:0!important;transition:opacity .2s}
+.splash.out .sp-door{animation:sp-through .5s cubic-bezier(.4,0,.2,1) forwards}
+.splash.out .sp-name,.splash.out .sp-by,.splash.out .sp-line,.splash.out .sp-promise{opacity:0!important;transition:opacity .2s}
 @keyframes sp-draw{to{stroke-dashoffset:0}}
 @keyframes sp-fade{to{opacity:1}}
 @keyframes sp-up{to{transform:none}}
@@ -1302,7 +1302,7 @@ a.opt{color:inherit;text-decoration:none}
 @keyframes sp-name{to{opacity:1;letter-spacing:.01em}}
 @keyframes sp-by{to{opacity:1;letter-spacing:.28em}}
 @keyframes sp-sweep{from{background-position:150% 0}to{background-position:-150% 0}}
-@keyframes sp-through{to{transform:scale(4.5);opacity:0}}
+@keyframes sp-through{to{transform:scale(1.55);opacity:0}}
 @keyframes sp-failsafe{to{opacity:0;visibility:hidden;pointer-events:none}}
 /* Pages that load on demand: the small doorway, its sun rising and setting */
 .lazy-wait .mini-door{width:44px;height:auto;overflow:visible}
@@ -1310,10 +1310,10 @@ a.opt{color:inherit;text-decoration:none}
 .md-sun{fill:var(--r-late);animation:md-sun 1.8s ease-in-out infinite}
 @keyframes md-sun{0%,100%{transform:translateY(110px)}50%{transform:translateY(-6px)}}
 /* No movement: the finished picture, then a plain fade */
-@media (prefers-reduced-motion:reduce){.splash *{animation:none!important}.sp-arch,.sp-hz{stroke-dashoffset:0}.sp-sky,.sp-glow,.sp-name,.sp-by{opacity:1}.sp-sun,.sp-glow{transform:none}.sp-name{letter-spacing:.01em}.sp-by{letter-spacing:.28em}.sp-stars,.sp-line,.sp-night{display:none}.md-sun{animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.splash *{animation:none!important}.sp-arch,.sp-hz{stroke-dashoffset:0}.sp-sky,.sp-glow,.sp-name,.sp-by,.sp-promise{opacity:1}.sp-sun,.sp-glow{transform:none}.sp-name{letter-spacing:.01em}.sp-by{letter-spacing:.28em}.sp-stars,.sp-line,.sp-night{display:none}.md-sun{animation:none;transform:none}}
 :root[data-motion="off"] .splash *{animation:none!important}
 :root[data-motion="off"] :is(.sp-arch,.sp-hz){stroke-dashoffset:0}
-:root[data-motion="off"] :is(.sp-sky,.sp-glow,.sp-name,.sp-by){opacity:1}
+:root[data-motion="off"] :is(.sp-sky,.sp-glow,.sp-name,.sp-by,.sp-promise){opacity:1}
 :root[data-motion="off"] :is(.sp-sun,.sp-glow){transform:none}
 :root[data-motion="off"] .sp-name{letter-spacing:.01em}
 :root[data-motion="off"] .sp-by{letter-spacing:.28em}
@@ -1328,10 +1328,14 @@ html[data-vt="left"]{--vtx:1}html[data-vt="right"]{--vtx:-1}
 ::view-transition-group(ie-top),::view-transition-group(ie-tabs){animation:none}
 ::view-transition-old(ie-top),::view-transition-old(ie-tabs){display:none}
 ::view-transition-new(ie-top),::view-transition-new(ie-tabs){animation:none}
-html[data-vt]::view-transition-old(root){animation:vt-out .16s cubic-bezier(.4,0,1,1) both}
-html[data-vt]::view-transition-new(root){animation:vt-in .3s cubic-bezier(.2,.8,.2,1) both}
-@keyframes vt-out{to{opacity:0;transform:translateX(calc(var(--vtx,1) * -18px))}}
-@keyframes vt-in{from{opacity:0;transform:translateX(calc(var(--vtx,1) * 22px))}}
+/* Nov 2026: a real slide. The old page moves away and fades; the new one slides in from the side it lives on and
+   settles with a small spring (a little more with Motion: Playful). Both are snapshots, so only transform and opacity
+   change: no layout or painting during the slide. */
+html[data-vt]::view-transition-old(root){animation:vt-out .24s cubic-bezier(.4,0,.7,.4) both}
+html[data-vt]::view-transition-new(root){animation:vt-in .5s var(--bounce) both}
+html[data-vt][data-motion="playful"]::view-transition-new(root){animation:vt-in .56s var(--bounce-2) both}
+@keyframes vt-out{to{opacity:0;transform:translateX(calc(var(--vtx,1) * -24%)) scale(.985)}}
+@keyframes vt-in{from{opacity:0;transform:translateX(calc(var(--vtx,1) * 46%))}}
 /* The door opening into the app: one composited layer on touch screens, so scaling it never repaints. */
 @media (pointer:coarse){.sp-door{will-change:transform}}
 /* Android app only (html.native, set by theme-boot.js). */
@@ -1368,3 +1372,106 @@ html.closing nav.tabs{transform:translateY(12px)}
 @media (pointer:coarse){@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
   .top .chip-btn,.top .icon-btn,.seg,.tnav,.tpick .field{-webkit-backdrop-filter:none;backdrop-filter:none}
 }}
+
+/* ================= Nov 2026: UI rework ================= */
+/* Springs: a soft one (about 4% overshoot) and a livelier one (about 9%), with a plain curve where linear() is not known. */
+:root{--bounce:cubic-bezier(.3,1.25,.5,1);--bounce-2:cubic-bezier(.34,1.56,.64,1)}
+@supports (animation-timing-function:linear(0,1)){:root{
+  --bounce:linear(0,.046,.155,.295,.442,.581,.703,.804,.884,.944,.986,1.013,1.029,1.037,1.038,1.036,1.032,1.026,1.021,1.015,1.011,1.007,1);
+  --bounce-2:linear(0,.075,.249,.457,.658,.826,.951,1.033,1.078,1.094,1.091,1.076,1.057,1.037,1.02,1.007,.999,.993,.991,.991,.992,.994,1)}}
+/* Phones and the app: a page that appears without a slide (first open, a link) rises with the same spring; the tab
+   marker and icons answer a press at once. Desktop keeps its own, earlier motion. */
+@media (pointer:coarse){
+  .view.enter>*{animation:rise-b .6s var(--bounce) both;animation-delay:calc(var(--i,0)*36ms)}
+  nav.tabs .ind{transition:transform .5s var(--bounce)}
+  nav.tabs button:active svg{transform:scale(.86);transition-duration:.08s}
+  nav.tabs button[aria-current="page"] svg{transition:transform .45s var(--bounce-2)}
+  .card.menu li>button:active,.hcal:active,button.card:active{transform:scale(.985)}
+  .card.menu li>button,.hcal,button.card{transition:transform .28s var(--bounce),background-color .2s}
+  .sheet{transition:transform .42s cubic-bezier(.2,.9,.25,1)}
+  .switch::after{transition:transform .34s var(--bounce-2)}
+}
+@keyframes rise-b{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
+:root[data-motion="off"] .view.enter>*{animation:none}
+@media (prefers-reduced-motion:reduce){.view.enter>*{animation:none}}
+/* Filter rows (All, Saved, categories): the row scrolls edge to edge, but its first chip rests on the page margin. Without
+   this the scroll snap pulled "All" to the very edge of the screen, out of line with everything else. */
+.chips{scroll-padding-inline:16px}
+/* A sheet (a Name of Allah, share, location…) blurs the page behind it on phones and in the app. */
+@media (pointer:coarse){@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  .scrim{background:rgba(5,15,12,.34);-webkit-backdrop-filter:blur(14px) saturate(1.15);backdrop-filter:blur(14px) saturate(1.15)}
+  :root[data-glass="solid"] .scrim{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(5,15,12,.5)}
+}}
+@media (prefers-reduced-transparency:reduce){.scrim{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
+/* Splash: the three promises, at the foot of the screen, in the chosen language */
+.sp-promise{position:absolute;left:0;right:0;bottom:calc(26px + var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px)));margin:0;padding:0 16px;text-align:center;font-size:.78rem;line-height:1.5;color:var(--muted);opacity:0;animation:sp-fade .7s var(--ease) 1.3s forwards}
+.sp-promise span{display:inline-flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 10px}
+.sp-promise b{font-weight:600;white-space:nowrap}
+.sp-promise i{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:.7}
+.sp-promise [lang="bn"],html[data-lang="bn"] .sp-promise [lang="en"]{display:none}
+html[data-lang="bn"] .sp-promise [lang="bn"]{display:inline-flex}
+/* Android app: the doorway sits exactly where Android's launch screen draws it (res/drawable/splash_door.xml: the same
+   arch, 120dp wide, centred), so the hand-over from the launch screen to the page is invisible. */
+html.native .sp-in{position:absolute;inset:0;display:block;padding:0}
+html.native .sp-door{position:absolute;left:50%;top:50%;width:120px;margin:-65.25px 0 0 -60px}
+html.native .sp-name,html.native .sp-by{position:absolute;left:0;right:0;margin:0;text-align:center}
+html.native .sp-name{top:calc(50% + 88px)}
+html.native .sp-by{top:calc(50% + 136px)}
+html.native .sp-line{position:absolute;left:50%;top:calc(50% + 172px);margin:0 0 0 -48px}
+/* Hero line on the Today card: the verse or hadith for the current prayer */
+.sky-quote{margin:14px 0 0;padding-top:12px;border-top:1px solid rgba(255,255,255,.22)}
+.sky-quote blockquote{margin:0;font-size:.93rem;line-height:1.55;text-wrap:pretty}
+.sky-quote figcaption{display:flex;align-items:center;flex-wrap:wrap;gap:2px 6px;margin-top:6px;font-size:.78rem}
+.sky-quote figcaption a,.sky-quote figcaption .linkish{color:inherit;font:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px;text-shadow:inherit}
+.sky-quote .hq-m{opacity:.85}
+.sky-quote .hq-i{margin-left:auto;width:32px;height:32px;display:grid;place-items:center;border:0;background:none;color:inherit;border-radius:50%;opacity:.85}
+.sky-quote .hq-i svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.fnm{font-size:.62em;opacity:.75;margin-left:1px}
+.a-times .adhan-note{padding:10px 16px 0;font-size:.8rem;color:var(--muted)}
+@media (min-width:1024px){.a-hero .sky-quote{max-width:560px}}
+/* Hero cards on the Hadith and Qur'an pages */
+.hero-q{background:linear-gradient(155deg,color-mix(in srgb,var(--accent) 10%,var(--surface)),var(--surface) 72%);border-color:color-mix(in srgb,var(--accent) 28%,var(--line))}
+.hero-q blockquote{margin:8px 0 0;font-size:1.04rem;line-height:1.62;font-weight:500;text-wrap:pretty}
+.hero-q .hero-ar{margin:8px 0 2px;font-size:calc(1.45rem*var(--ar-scale));line-height:2.05;text-align:right}
+.hero-q .hero-ref{margin:10px 0 8px;font-size:.86rem;color:var(--muted)}
+.hero-q .hero-ref a,.hero-q .hero-ref .linkish{color:var(--accent);font:inherit;font-weight:600}
+.hero-q .note{font-size:.8rem}
+/* Reminders card (Today) and the Sound and vibration rows (Settings) */
+.nf-card{display:flex;gap:12px;align-items:flex-start}
+.nf-ic{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--accent-2);color:var(--accent)}
+.nf-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nf-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.amb-kinds{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+.set input[type=range]{touch-action:pan-y}
+.switch[disabled]{opacity:.45}
+/* How to pray: the animated figure and its player */
+.pr-schools{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.pr-player{overflow:hidden}
+.pr-stage{position:relative;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 12%,var(--surface)),var(--surface-2) 78%);border-bottom:1px solid var(--line)}
+.pr-stage svg{display:block;width:100%;max-height:min(32vh,250px);margin-inline:auto}
+.pr-qibla,.pr-sc{position:absolute;top:10px;font-size:.74rem;font-weight:600;letter-spacing:.04em;color:var(--muted)}
+.pr-qibla{right:14px}.pr-sc{left:14px;color:var(--accent)}
+.sl-body,.sl-leg,.sl-foot,.sl-arm,.sl-fin,.sl-turn{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sl-body{stroke:var(--ink);stroke-width:24}.sl-leg{stroke:var(--ink);stroke-width:13}.sl-foot{stroke:var(--ink);stroke-width:9}
+.sl-head{fill:var(--ink)}
+.sl-arm{stroke:var(--accent);stroke-width:9}.sl-fin{stroke:var(--accent);stroke-width:4}
+.sl-mat{fill:color-mix(in srgb,var(--accent) 34%,var(--surface))}.sl-turbah{fill:var(--gold)}
+.sl-turn{stroke:var(--gold);stroke-width:2.6}
+.pr-bar{height:4px;background:var(--surface-2)}
+.pr-bar i{display:block;height:100%;background:var(--accent);transform-origin:0 50%;transform:scaleX(0);transition:transform .5s var(--ease)}
+[dir=rtl] .pr-bar i{transform-origin:100% 50%}
+.pr-cap{padding:14px 16px 4px;min-height:11.5rem}
+.pr-cap h3{font-family:var(--display);font-weight:400;font-size:1.4rem;line-height:1.25;margin:4px 0 6px}
+.pr-cap p{margin:0}
+.pr-say{margin-top:10px!important;padding:8px 12px;border-radius:12px;background:var(--surface-2);font-size:.92rem}
+.pr-ctl{display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 16px 16px}
+.pr-play{min-width:150px}.pr-play svg{width:20px;height:20px;fill:currentColor;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.pr-notes{margin:8px 0 0;padding-left:1.2em;display:grid;gap:8px}
+.pr-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:2px}
+.pr-list button{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:6px 8px;border:0;border-radius:12px;background:none;text-align:start;color:inherit;font:inherit}
+.pr-list .n{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);font-size:.8rem;font-weight:600}
+.pr-list button[aria-current]{background:var(--accent-2);font-weight:600}
+.pr-list button[aria-current] .n{background:var(--accent);color:var(--on-accent)}
+.pr-link{width:100%;text-align:start;margin-bottom:14px}
+.pr-link .ic{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--on-accent)}
+.pr-link .ic svg{width:20px;height:20px;fill:currentColor}

@@ -9,20 +9,20 @@ const LOC = window.IE_LOCALE, VE = window.IE_VOTD_EN, DV = window.IE_DAYVIZ;
 /* Phone speed (Oct 2026): page data that the Today screen does not need is loaded only when its page opens, so a phone
    downloads about a third of the scripts before the first screen appears. LAZY lists each group's files in load order;
    bindLazy() picks up the globals they define. The service worker still precaches all of them for offline use. */
-const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"] };
-let NM, NAMES = [], GD, HD, NW, SD, ST, LG = null, HCOLL = {}, NW_N = 0;
+const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"], pray: ["salah"] };
+let NM, NAMES = [], GD, HD, NW, SD, ST, SL = null, LG = null, HCOLL = {}, NW_N = 0;
 const lazyDone = new Set(), lazyP = {}, lazyFiles = new Set();
 /* Phones (touch screen) get the on-demand loading; computers with a mouse keep the previous behaviour: everything is
    loaded straight after the first screen, so their pages open with no "Loading…" step. */
 const phone = () => { try { return matchMedia("(pointer: coarse)").matches; } catch (e) { return false; } };
 function bindLazy() {
   NM = window.DINSATHI_NAMES; NAMES = NM ? NM.names : []; GD = window.IE_GUIDE; HD = window.IE_HADITH; NW = window.IE_NAWAWI;
-  SD = window.IE_STUDY; ST = window.IE_STORIES; LG = window.IE_LEGAL || null;
+  SD = window.IE_STUDY; ST = window.IE_STORIES; LG = window.IE_LEGAL || null; SL = window.IE_SALAH || null;
   HCOLL = Object.assign({}, NW ? NW.COLLECTIONS : {}, HD ? HD.COLLECTIONS : {});
   NW_N = NW ? NW.HADITH.length : 0;
 }
 bindLazy();
-for (const g in LAZY) if ({ names: NM && window.IE_NAME_STORIES, guide: NM && GD, hadith: HD && NW, study: SD, stories: ST, legal: LG }[g]) lazyDone.add(g); // already on the page
+for (const g in LAZY) if ({ names: NM && window.IE_NAME_STORIES, guide: NM && GD, hadith: HD && NW, study: SD, stories: ST, legal: LG, pray: SL }[g]) lazyDone.add(g); // already on the page
 function need(g) {
   if (!g || lazyDone.has(g)) return Promise.resolve();
   if (!lazyP[g]) lazyP[g] = LAZY[g].reduce((p, n) => p.then(() => lazyFiles.has(n) ? 0 : new Promise((ok, no) => {
@@ -33,7 +33,7 @@ function need(g) {
 }
 /* Which group a route or a shared link needs (null: nothing extra). */
 const routeGroup = r => r.tab === "quran" ? (r.sub === "stories" ? "stories" : (r.sub === "all" || r.surah) ? null : "study")
-  : r.tab === "more" ? ({ names: "names", guide: "guide", hadith: "hadith", about: "legal", terms: "legal", privacy: "legal" }[r.sub] || null) : null;
+  : r.tab === "more" ? ({ names: "names", guide: "guide", hadith: "hadith", about: "legal", terms: "legal", privacy: "legal", pray: "pray" }[r.sub] || null) : null;
 const hashGroup = h => /^story\//.test(h) ? "stories" : /^name\//.test(h) ? "names" : /^(hadith|nawawi)\//.test(h) ? "hadith" : null;
 const PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"], ROWS = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
 const TABS = ["today", "quran", "duas", "more"];
@@ -48,7 +48,7 @@ const natQ = (p, m, o) => { nat(p, m, o).catch(() => {}); };
 /* ---------------- state ---------------- */
 const KEY = "dinsathi.web.v1";
 const DEF = { lang: "en", loc: "en-IN", mode: "system", lightTheme: "classic", darkTheme: "jade", glass: "balanced", motion: "subtle", scene: "landscape", city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
-  school: null, log: {}, xlog: {}, fplan: {}, gloss: false, last: null, read: [], bm: [], fav: [], tab: "today", hcol: "general", nwread: [],
+  school: null, vib: "light", snd: true, vol: 60, amb: false, ambK: "rain", nf: { pray: false, forb: false, thu: false }, nfAsk: false, pray: null, log: {}, xlog: {}, fplan: {}, gloss: false, last: null, read: [], bm: [], fav: [], tab: "today", hcol: "general", nwread: [],
   zk: { cur: "AUD", basis: "silver", w: "tola", price: "", v: {} } };
 let st = JSON.parse(JSON.stringify(DEF));
 try {
@@ -56,7 +56,10 @@ try {
   if (s && typeof s === "object") {
     st = Object.assign(st, s);
     st.zk = Object.assign({}, DEF.zk, s.zk || {});
+    st.nf = Object.assign({}, DEF.nf, s.nf && typeof s.nf === "object" ? s.nf : {});
   }
+  if (!["off", "light", "medium", "strong"].includes(st.vib)) st.vib = "light";
+  st.vol = Math.max(0, Math.min(100, +st.vol || 0));
   st.xlog = XT.clean(st.xlog);
   if (!st.fplan || typeof st.fplan !== "object" || Array.isArray(st.fplan)) st.fplan = {};
   if (st.hcol !== "nawawi") st.hcol = "general";
@@ -91,8 +94,17 @@ const sp = s => (st.lang === "en" ? LOC.spell(s, st.loc) : s);
 const num = x => bn() ? String(x).replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[d]) : String(x);
 const L = o => (bn() ? o.bn : o.en);
 const reduce = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } })();
-const buzz = p => { if (NATIVE) { if (st.motion !== "off") natQ("Haptics", Array.isArray(p) ? "notification" : "impact", Array.isArray(p) ? { type: "SUCCESS" } : { style: "LIGHT" }); return; }
-  try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+/* Vibration (Nov 2026): its own setting (off, light, medium, strong), independent of sound and of the phone's sound profile. */
+const VIBS = ["off", "light", "medium", "strong"], VIB = { light: [0.6, "LIGHT"], medium: [1, "MEDIUM"], strong: [1.7, "HEAVY"] };
+const buzz = p => { const v = VIB[st.vib]; if (!v) return;
+  if (NATIVE) { natQ("Haptics", Array.isArray(p) ? "notification" : "impact", Array.isArray(p) ? { type: "SUCCESS" } : { style: v[1] }); return; }
+  try { navigator.vibrate && navigator.vibrate(Array.isArray(p) ? p.map(x => Math.round(x * v[0])) : Math.max(4, Math.round(p * v[0]))); } catch (e) {} };
+/* Sounds (assets/sound.js): generated on the device, no music or instruments. fx(): the buzz and tick for something completed. */
+const SND = window.IE_SOUND || null;
+const fx = p => { buzz(p); if (SND) SND.done(); };
+let ringer = "normal"; // Android app: the phone's sound profile (normal | vibrate | silent); the app's sounds follow it
+function sndApply() { if (!SND) return; SND.setVolume(st.vol); SND.setTouch(st.snd); SND.setAmbient(st.amb ? st.ambK : null); }
+const sndProfile = () => NATIVE ? t(ringer !== "normal" ? "snd_muted" : "snd_prof_app") : t(SND && SND.supported() ? "snd_prof_web" : "snd_unsup");
 const pad2 = n => String(n).padStart(2, "0");
 
 const STAR = (c, R, r) => { let d = ""; for (let k = 0; k < 16; k++) { const a = (k * 22.5 - 90) * Math.PI / 180, q = k % 2 ? r : R; d += (k ? "L" : "M") + (c + q * Math.cos(a)).toFixed(2) + " " + (c + q * Math.sin(a)).toFixed(2); } return d + "Z"; };
@@ -119,6 +131,9 @@ const P = {
   locate: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7.5"/><path d="M12 1.8v2.7M12 19.5v2.7M1.8 12h2.7M19.5 12h2.7"/>',
   aa: '<path d="M3.5 18l4.5-12 4.5 12M5.3 13.5h5.4M14.5 18l3-8 3 8M15.6 15.5h3.8"/>',
   play: '<path d="M8 5.5v13l10-6.5z"/>',
+  pause: '<path d="M8.5 5.5v13M15.5 5.5v13"/>',
+  bell: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
+  prayfig: '<circle cx="12" cy="5" r="2.2"/><path d="M12 7.5v7M12 14.5l-3 5.5M12 14.5l3 5.5M8.5 10.5h7"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
   guide: '<path d="M5 20V10a7 7 0 0 1 14 0v10M3 20h18M12 13v7M9.5 16h5"/>',
   hadith: '<path d="M7 3.5h10a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 11.5h6M9 15h3.5"/>',
@@ -431,7 +446,7 @@ function vExtra(s) {
 /* ---------------- routing ---------------- */
 let R = { tab: TABS.includes(st.tab) ? st.tab : "today", sub: null, surah: 0, ayah: 0 };
 /* Face 7: zakat removed from the UI (route, nav, More, About). st.zk and assets/zakat.js are kept untouched; old #more/zakat links fall back to More. */
-const SUBS = ["guide", "hadith", "names", "calendar", "settings", "about", "terms", "privacy", "feedback"];
+const SUBS = ["guide", "pray", "hadith", "names", "calendar", "settings", "about", "terms", "privacy", "feedback"];
 const hashSub = h => SUBS.includes(h) ? h : (h.startsWith("more/") && SUBS.includes(h.slice(5)) ? h.slice(5) : null);
 const h0 = (location.hash || "").slice(1), d0 = deepParse(h0); // Face 7.3: a shared link to one item
 if (d0) R = Object.assign({ sub: null, surah: 0, ayah: 0, study: 0, story: null }, d0.r);
@@ -540,7 +555,7 @@ function render(anim, viaVT) {
   else if (R.tab === "quran") f = R.sub === "all" || R.surah ? (desk() ? vQuranDesk : (R.surah ? vReader : vQuran)) : (desk() ? vStudyDesk : (R.study ? vStudyDetail : vStudy));
   else if (R.tab === "duas") f = vDuas;
   
-  else f = { guide: vGuide, hadith: vHadith, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy"), feedback: vFeedback }[R.sub] || vMore;
+  else f = { guide: vGuide, pray: vPray, hadith: vHadith, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy"), feedback: vFeedback }[R.sub] || vMore;
   const g = routeGroup(R);
   if (g && !lazyDone.has(g)) { // page data not loaded yet: show a short loading state, then draw the page
     v.innerHTML = `<div class="lazy-wait" role="status"><svg class="mini-door" viewBox="96 76 320 348" aria-hidden="true"><defs><clipPath id="md-clip"><path d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392Z"/></clipPath></defs><g clip-path="url(#md-clip)"><circle class="md-sun" cx="256" cy="392" r="84"/></g><path class="md-arch" d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392M118 393H394"/></svg>${esc(t("pgloading"))}</div>`;
@@ -658,6 +673,36 @@ function heroScene() {
 }
 
 /* ---------------- TODAY ---------------- */
+/* Hero lines (Nov 2026): a verse or hadith for the current prayer (assets/heroes.js), a different one each day; on
+   Fridays the Dhuhr slot shows the Jumu'ah list. Qur'an text is the app's own translation, unchanged; hadiths are
+   given as their meaning and say so. The same line is used for that prayer's reminder. */
+const HR = window.IE_HEROES || null;
+const dayNoD = D => Math.floor((D.base + D.tz * 36e5 + 432e5) / 864e5);
+const heroFor = (k, D) => HR ? HR.forPrayer(k === "dhuhr" && isFriD(D) ? "jumuah" : k, dayNoD(D)) : null;
+const heroRef = x => x.k === "q" ? `${sname(x.s)} ${num(x.s)}:${num(x.a)}${x.b > x.a ? "–" + num(x.b) : ""}` : (x.ref[st.lang] || x.ref.en);
+const heroPlain = x => x.k === "q" ? "“" + x[st.lang].join(" ") + "”" : x[st.lang];
+const heroNote = x => heroPlain(x) + " — " + heroRef(x);
+const heroHtml = x => x.k === "q" ? "“" + x[st.lang].map(v => esc(v).replace(/\s*\[([০-৯\d]+)\]/g, '<sup class="fnm">$1</sup>')).join(" ") + "”" : escS(x[st.lang]);
+const heroRefEl = x => x.k === "q" ? `<button type="button" class="linkish" data-act="surah" data-s="${x.s}" data-a="${x.a}">${esc(heroRef(x))}</button>`
+  : `<a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(heroRef(x))}</a>`;
+function skyQuote(cur, nx) {
+  const p = cur || nx, x = p && heroFor(p.k, p.D); if (!x) return "";
+  return `<figure class="sky-quote" id="sky-quote"><blockquote lang="${st.lang}">${heroHtml(x)}</blockquote><figcaption>${heroRefEl(x)}${x.k === "h" ? ` <span class="hq-m">· ${t("hq_meaning")}</span>` : ""}<button type="button" class="hq-i" data-act="heroinfo" aria-label="${esc(t("hq_about"))}">${ic("info")}</button></figcaption></figure>`;
+}
+function hadithHero() {
+  const x = HR && HR.HADITH_HERO; if (!x) return "";
+  return `<section class="card pad hero-q" aria-label="${esc(t("hh_eyebrow"))}"><p class="eyebrow">${t("hh_eyebrow")}</p><blockquote lang="${st.lang}">${heroHtml(x)}</blockquote><p class="hero-ref">${heroRefEl(x)} · ${t("hq_sahih")}</p><p class="note">${t("hq_hnote")}</p></section>`;
+}
+function quranHero() {
+  if (!HR) return ""; const s = snap || snapshot(), x = HR.forWeek(HR.dayNo(s.p.year, s.p.month, s.p.day));
+  return `<section class="card pad hero-q" aria-label="${esc(t("qh_eyebrow"))}"><p class="eyebrow">${t("qh_eyebrow")}</p>${x.k === "q" ? `<p class="ar hero-ar" lang="ar" dir="rtl">${x.ar.join(" ")}</p>` : ""}<blockquote lang="${st.lang}">${heroHtml(x)}</blockquote><p class="hero-ref">${heroRefEl(x)}${x.k === "h" ? ` · ${t("hq_meaning")}` : ""}</p><p class="note">${t("qh_note")}</p></section>`;
+}
+/* Reminders card on Today (phones and the app): shown until answered once; Settings has the full controls. */
+function nfCard() {
+  if (st.nfAsk || nfAny() || desk() || !nfCan()) return "";
+  return `<section class="card pad nf-card" aria-labelledby="nf-h"><span class="nf-ic" aria-hidden="true">${ic("bell")}</span><div class="grow"><h3 class="sec-title" id="nf-h">${t("nf_card_t")}</h3><p class="note">${t("nf_card_b")}${NATIVE ? "" : " " + t("nf_web")}</p>
+    <div class="nf-acts"><button type="button" class="btn sm" data-act="nfon">${t("nf_on")}</button><button type="button" class="btn ghost sm" data-act="nflater">${t("nf_later")}</button></div></div></section>`;
+}
 let snap = null;
 function vToday() {
   const s = snap = snapshot(), tm = s.d0.tm, ex = extras(s), done = st.log[s.key] || {};
@@ -702,9 +747,11 @@ function vToday() {
         <span class="np-r"><span class="np-k">${t("startsat")}</span><b class="tnum">${clock(hOf(nx.at, nx.D))}</b><span class="np-day">${nx.tomorrow ? t("tomorrow_c") : t("t_today")}</span></span>
       </div>
       <p class="dates">${esc(greg)}<br>${esc(hText(hj))}</p>
-      <p class="adhan-note">${t("adhannote")}</p>
+      ${skyQuote(cur, nx)}
     </div>
   </section>
+
+  ${nfCard()}
 
   <section class="card a-times">
     <div class="row pad" style="padding-bottom:0"><h3 class="grow">${t("ptimes")}</h3><span class="note">${esc(L(METHODS[st.method]).short)}${+st.asr === 2 ? " · " + t("hanafi") : ""}</span></div>
@@ -715,6 +762,7 @@ function vToday() {
       // Face 7.1: the rows are information only (name, time, current/next). Completion lives in the Prayer tracker alone.
       return `<li class="${k === "sunrise" ? "minor" : ""}${isC ? " is-cur" : ""}${isN ? " is-next" : ""}"${isC ? ' aria-current="time"' : ""}><span class="nm">${pName(k, fri)}${isC ? `<span class="badge cur">${t("curb")}</span>` : ""}${isN ? `<span class="badge nxt">${t("nextb")}</span>` : ""}</span><span class="tm">${clock(hrs)}${when ? `<small class="when">${when}</small>` : ""}</span></li>`; }).join("")}</ol>
     ${fri ? `<p class="note jum-note" role="note">${t("jum_note")}</p>` : ""}
+    <p class="adhan-note">${t("adhannote")}</p>
     <p class="note times-foot">${t("pm_hint")} <a href="#trk-h" class="linkish">${t("pm_go")}</a></p>
   </section>
 
@@ -1044,6 +1092,7 @@ function studyList(sel) {
   const g = [["all", t("all") + " (" + num(SD.SURAHS.length) + ")"]].concat(SD.GROUPS.map(x => [x[0], (bn() ? x[2] : x[1]) + " (" + num(SD.SURAHS.filter(s => s.group === x[0]).length) + ")"]));
   return `<div class="page-head"><h2>${t("study_nav")}</h2></div>
   ${quranSwitch("study")}
+  ${quranHero()}
   <section class="card pad st-intro"><p><b>${t("st_title")}</b></p><p class="note">${t("st_intro")}</p><p class="note st-draft" role="note">${t("st_draft")}</p></section>
   <div class="st-actions">
     ${last ? `<button type="button" class="card pad row st-cont" data-act="surah" data-s="${last.s}" data-a="${last.a}"><span class="grow"><span class="eyebrow">${t("cont")}</span><br><b>${esc(sname(last.s))}</b> <span class="note">${num(last.s)}:${num(last.a)}</span></span>${ic("chev", "chev")}</button>` : ""}
@@ -1276,6 +1325,7 @@ function vHadith() {
   const nw = NW && st.hcol === "nawawi";
   const sel = `<div class="seg hd-col" role="group" aria-label="${esc(t("hc_label"))}">${[["general", t("hc_gen").replace("{n}", num(HD.HADITH.length))], ["nawawi", t("hc_nw").replace("{n}", num(NW_N))]].filter(([k]) => k === "general" || NW).map(([k, l]) => `<button type="button" data-act="hcol" data-k="${k}" aria-pressed="${st.hcol === k}">${esc(l)}</button>`).join("")}</div>`;
   if (nw) return `<div class="page-head">${back()}<h2>${t("hadith")}</h2></div>
+  ${hadithHero()}
   ${sel}
   <section class="card pad hd-intro nw-intro"><h3 class="sec-title">${t("nw_title")}</h3><p>${t("nw_intro")}</p>
     <div class="nw-prog"><span id="nw-prog" aria-live="polite">${nwProg()}</span><span class="bar" aria-hidden="true"><i id="nw-bar" style="width:${(st.nwread.length / NW_N * 100).toFixed(1)}%"></i></span></div>
@@ -1284,6 +1334,7 @@ function vHadith() {
   <div id="hadith-list" class="hd-list">${nawawiList()}</div>`;
   const counts = Object.fromEntries(HD.CATEGORIES.map(c => [c[0], HD.HADITH.filter(h => h.cats.includes(c[0])).length]));
   return `<div class="page-head">${back()}<h2>${t("hadith")}</h2></div>
+  ${hadithHero()}
   ${NW ? sel : ""}
   <section class="card pad hd-intro"><p>${t("hd_intro")}</p><p class="note">${t("hd_review")}</p></section>
   <div class="chips hd-cats" role="group" aria-label="${esc(t("hd_cats"))}">${[["all", t("all") + " (" + num(HD.HADITH.length) + ")"]].concat(HD.CATEGORIES.map(c => [c[0], (bn() ? c[2] : c[1]) + " (" + num(counts[c[0]]) + ")"])).map(([k, l]) => `<button type="button" class="chip" data-act="hcat" data-k="${k}" aria-pressed="${hCat === k}">${esc(l)}</button>`).join("")}</div>
@@ -1298,7 +1349,7 @@ function nwGo(n) {
 /* ---------------- MORE + sub pages ---------------- */
 function vMore() {
   const s = snap || snapshot(), hj = hijriNow(s);
-  const items = [["guide", "guide", t("guide_s")], ["hadith", "hadith", t("hadith_s")], ["names", "names", t("names_s")], ["calendar", "calendar", hText(hj)], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["feedback", "mail", t("feedback_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
+  const items = [["guide", "guide", t("guide_s")], ["pray", "prayfig", t("pray_s")], ["hadith", "hadith", t("hadith_s")], ["names", "names", t("names_s")], ["calendar", "calendar", hText(hj)], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["feedback", "mail", t("feedback_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
   return `<div class="page-head"><h2>${t("more")}</h2></div>${installCard()}
   <ul class="card menu">${items.map(([k, icn, sub]) => `<li><button type="button" data-act="go" data-tab="more" data-sub="${k}"><span class="ic">${ic(icn)}</span><span class="grow"><b>${t(k === "names" ? "names99" : k)}</b><small>${esc(sub)}</small></span>${ic("chev", "chev")}</button></li>`).join("")}</ul>`;
 }
@@ -1564,6 +1615,7 @@ function vGuide() {
   <section class="card pad g-intro"><p>${t("g_intro")}</p>
     <div class="g-school"><p class="note" id="g-sch-l">${t("g_school")}</p><div class="seg" role="group" aria-labelledby="g-sch-l">${[["hanafi", t("hanafi_s")], ["shafii", t("shafii_s")]].map(([k, l]) => `<button type="button" data-act="school" data-k="${k}" aria-pressed="${sc === k}">${l}</button>`).join("")}</div></div>
     <p class="note">${t("g_schoolh")}</p></section>
+  <button type="button" class="card pad row pr-link" data-act="go" data-tab="more" data-sub="pray"><span class="ic" aria-hidden="true">${ic("play")}</span><span class="grow"><b>${t("pray")}</b><br><span class="note">${t("pr_link")}</span></span>${ic("chev", "chev")}</button>
   <section class="card pad">
     <h3 class="sec-title" id="g-sum">${t("g_summary")} · ${t(sc === "hanafi" ? "hanafi_s" : "shafii_s")}</h3>
     <div class="g-legend" aria-hidden="true">${KINDS.filter(k => GD.prayers.some(p => p[sc].some(x => x.kind === k))).map(k => `<span class="u u-${k}">${t("k_" + k)}</span>`).join("")}</div>
@@ -1578,6 +1630,54 @@ function vGuide() {
     <p style="margin-top:10px">${esc(L(GD.notes.scope))}</p></section>
   <section class="card pad"><h3 class="sec-title">${t("sources")}</h3>${gSources(GD.prayers.flatMap(p => p.src).concat(GD.terms.flatMap(x => x.src), GD.notes.maliki.src))}
     <p class="note" style="margin-top:10px">${esc(L(GD.notes.review))}</p></section>`;
+}
+
+/* ---------------- HOW TO PRAY (Nov 2026) ----------------
+   An animated walk through a two-rak'ah prayer for five schools (assets/salah.js, loaded on demand). The figure blends
+   from one position to the next (about a second), holds while the caption is read, and moves on; Play/Pause, step
+   buttons and the step list control it. With reduced motion or Motion: off the positions change without movement. */
+const PR = { i: 0, playing: false, raf: 0, tm: 0, cur: null, steps: [], done: false };
+const praySchool = () => SL.SCHOOLS.includes(st.pray) ? st.pray : (school() === "shafii" ? "shafii" : "hanafi");
+function prayStop() { cancelAnimationFrame(PR.raf); clearTimeout(PR.tm); PR.raf = 0; PR.tm = 0; }
+function prayCaption() {
+  const s = PR.steps[PR.i], n = PR.steps.length, set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+  set("pray-k", t("pr_step").replace("{k}", num(PR.i + 1)).replace("{n}", num(n)) + " · " + t("pr_rk").replace("{n}", num(s.rk)));
+  set("pray-t", L(s.t)); const d = $("pray-d"); if (d) d.innerHTML = escS(L(s.d));
+  const say = $("pray-say"); if (say) { say.hidden = !s.say; say.innerHTML = s.say ? `<b>${t("pr_say")}:</b> <span lang="ar-Latn">${esc(s.say)}</span>` : ""; }
+  const bar = $("pray-bar"); if (bar) bar.style.transform = `scaleX(${(PR.i + 1) / n})`;
+  const pb = $("pray-play"); if (pb) { const k = PR.playing ? "pr_pause" : PR.done ? "pr_again" : "pr_play"; pb.innerHTML = ic(PR.playing ? "pause" : "play") + `<span>${t(k)}</span>`; pb.setAttribute("aria-pressed", PR.playing); }
+  document.querySelectorAll(".pr-list button").forEach((b, i) => { if (i === PR.i) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current"); });
+}
+function prayGo(i, instant) {
+  prayStop(); const n = PR.steps.length; PR.i = i = Math.max(0, Math.min(n - 1, i));
+  const s = PR.steps[i], to = SL.POSE[s.pose], from = PR.cur || to, g = () => $("pray-g");
+  PR.done = false; prayCaption();
+  const hold = () => { PR.cur = to; const el = g(); if (!el) { PR.playing = false; return; } el.innerHTML = SL.draw(to, s);
+    if (PR.playing) PR.tm = setTimeout(() => { if (!g()) { PR.playing = false; return; } if (PR.i >= n - 1) { PR.playing = false; PR.done = true; prayCaption(); } else prayGo(PR.i + 1); }, 2400 + Math.min(3200, L(s.d).length * 24)); };
+  if (instant || reduce || st.motion === "off" || from === to) { hold(); return; }
+  const via = s.via && SL.POSE[s.via], keys = via ? [from, via, to] : [from, to], dur = via ? 1700 : 950, t0 = performance.now();
+  const ease = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const tick = now => { const el = g(); if (!el) { prayStop(); PR.playing = false; return; }
+    const x = Math.min(1, (now - t0) / dur), h = via && x >= 0.5 ? 1 : 0, p = via ? SL.mix(keys[h], keys[h + 1], ease(h ? x * 2 - 1 : x * 2)) : SL.mix(from, to, ease(x));
+    PR.cur = p; el.innerHTML = SL.draw(p, { turbah: s.turbah, finger: s.finger && x > 0.7, turn: x > 0.7 ? s.turn : 0 });
+    if (x < 1) PR.raf = requestAnimationFrame(tick); else hold(); };
+  PR.raf = requestAnimationFrame(tick);
+}
+function vPray() {
+  const sc = praySchool(); prayStop(); PR.steps = SL.steps(sc); PR.i = Math.min(PR.i, PR.steps.length - 1); PR.cur = null; PR.playing = false;
+  post.push(() => prayGo(PR.i, true));
+  return `<div class="page-head">${back()}<h2>${t("pray")}</h2></div>
+  <section class="card pad pr-intro"><p>${t("pr_intro")}</p>
+    <div class="pr-schools" role="group" aria-label="${esc(t("pr_school"))}">${SL.SCHOOLS.map(k => `<button type="button" class="chip" data-act="prschool" data-k="${k}" aria-pressed="${k === sc}">${esc(L(SL.NAMES[k]))}</button>`).join("")}</div></section>
+  <section class="card pr-player" aria-label="${esc(t("pray") + ": " + L(SL.NAMES[sc]))}">
+    <div class="pr-stage"><svg id="pray-fig" viewBox="70 0 200 196" role="img" aria-labelledby="pray-t"><g id="pray-g"></g></svg><span class="pr-qibla" aria-hidden="true">${t("pr_qibla")} →</span><span class="pr-sc" aria-hidden="true">${esc(L(SL.NAMES[sc]))}</span></div>
+    <div class="pr-bar" aria-hidden="true"><i id="pray-bar"></i></div>
+    <div class="pr-cap" aria-live="polite"><p class="eyebrow" id="pray-k"></p><h3 id="pray-t"></h3><p id="pray-d"></p><p class="pr-say" id="pray-say" hidden></p></div>
+    <div class="pr-ctl"><button type="button" class="icon-btn" data-act="prstep" data-d="-1" aria-label="${esc(t("pr_prev"))}">${ic("back")}</button><button type="button" class="btn pr-play" data-act="prplay" id="pray-play" aria-pressed="false"></button><button type="button" class="icon-btn" data-act="prstep" data-d="1" aria-label="${esc(t("pr_next"))}">${ic("chev")}</button></div>
+  </section>
+  <section class="card pad"><h3 class="sec-title">${t("pr_notes")} · ${esc(L(SL.NAMES[sc]))}</h3><ul class="pr-notes">${SL.NOTES[sc].map(x => `<li>${escS(L(x))}</li>`).join("")}</ul></section>
+  <section class="card pad"><h3 class="sec-title">${t("pr_steps")}</h3><ol class="pr-list">${PR.steps.map((s, i) => `<li><button type="button" data-act="prgo" data-i="${i}"><span class="n">${num(i + 1)}</span><span>${esc(L(s.t))}</span></button></li>`).join("")}</ol></section>
+  <section class="card pad"><p class="note st-draft" role="note">${t("pr_review")}</p><p class="note" style="margin-top:10px"><b>${t("pr_src")}:</b> ${SL.SOURCES[sc].map(esc).join("; ")}.</p></section>`;
 }
 
 let calM = null, calSel = null;
@@ -1786,6 +1886,20 @@ function vSettings() {
     <li><span class="lb">${t("motion")}<small>${t("motion_h")}</small></span><div style="width:100%">${segb("setmotion", st.motion, MOTION.map(k => [k, t("mo_" + k)]))}</div></li>
     <li><span class="lb">${t("location")}<small>${esc(cname(city()))}</small></span><button type="button" class="btn ghost" data-act="loc">${t("change")}</button></li>
   </ul>
+  <p class="eyebrow">${t("sv_head")}</p>
+  <ul class="card set">
+    <li><span class="lb">${t("vib")}<small>${t("vib_h")}</small></span><div style="width:100%">${segb("setvib", st.vib, VIBS.map(k => [k, t("vb_" + k)]))}</div></li>
+    <li><span class="lb">${t("snd")}<small>${t("snd_h")}</small></span><button type="button" class="switch" role="switch" data-act="snd" aria-checked="${!!st.snd}" aria-label="${esc(t("snd"))}"></button></li>
+    <li><span class="lb">${t("amb")}<small>${t("amb_h")}</small></span><button type="button" class="switch" role="switch" data-act="amb" aria-checked="${!!st.amb}" aria-label="${esc(t("amb"))}"></button></li>
+    <li class="set-block"><div class="amb-kinds" role="group" aria-label="${esc(t("amb_pick"))}">${(SND ? SND.KINDS : []).map(k => `<button type="button" class="chip" data-act="ambk" data-k="${k}" aria-pressed="${st.ambK === k}">${t("ab_" + k)}</button>`).join("")}</div></li>
+    <li><span class="lb">${t("vol")}</span><input id="vol" type="range" min="0" max="100" step="5" value="${st.vol}" aria-label="${esc(t("vol"))}"></li>
+    <li><p class="note" id="snd-prof">${sndProfile()}</p></li>
+  </ul>
+  <p class="eyebrow">${t("nf_head")}</p>
+  <ul class="card set">
+    ${["pray", "forb", "thu"].map(k => `<li><span class="lb">${t("nf_" + k)}<small>${t("nf_" + k + "_h")}</small></span><button type="button" class="switch" role="switch" data-act="nf" data-k="${k}" aria-checked="${!!st.nf[k]}" aria-label="${esc(t("nf_" + k))}"${nfCan() ? "" : " disabled"}></button></li>`).join("")}
+    <li><p class="note">${nfCan() ? (NATIVE ? t("nf_app").replace("{n}", num(NF_DAYS)) : t("nf_web")) : t("nf_unsup")}</p></li>
+  </ul>
   <p class="eyebrow">${t("ptimes")}</p>
   <ul class="card set">
     <li><label for="method">${t("method")}<select id="method" class="field" style="margin-top:6px">${Object.entries(METHODS).map(([k, m]) => `<option value="${k}"${k === st.method ? " selected" : ""}>${esc(L(m).name)}</option>`).join("")}</select></label></li>
@@ -1931,7 +2045,7 @@ function locate() {
     navigator.geolocation.getCurrentPosition(p => {
       const zone = (Intl.DateTimeFormat().resolvedOptions().timeZone) || city().zone;
       st.gps = { id: "gps", lat: +p.coords.latitude.toFixed(4), lng: +p.coords.longitude.toFixed(4), zone, en: "My location", bn: "আমার অবস্থান", g: "gps" };
-      st.city = "gps"; save(); closeSheet(); render(true); toast(t("locset"));
+      st.city = "gps"; save(); closeSheet(); render(true); toast(t("locset")); nfSync();
     }, () => toast(t("nogeo")), { enableHighAccuracy: false, timeout: 12000, maximumAge: 6e5 });
   } catch (e) { toast(t("nogeo")); }
 }
@@ -1978,6 +2092,7 @@ function openSurahDesk(s, a) {
    reading position: the first card or verse in view stays where it was on screen. */
 const KEEP_SEL = () => R.sub === "hadith" ? ".hadith" : R.tab === "duas" ? ".dua" : R.tab === "quran" && R.surah ? ".ayah" : R.sub === "names" ? ".name" : null;
 function switchLang(apply) {
+  nfSync(); // reminders are written in the chosen language
   const sel = KEEP_SEL(), y = scrollY;
   // The item being read: the one across a line a quarter of the way down the screen (below the sticky header).
   const line = Math.max(($("top") ? $("top").getBoundingClientRect().bottom : 0) + 40, innerHeight * 0.25);
@@ -2004,11 +2119,72 @@ function holdPos(get, off) {
   [120, 300, 700, 1200].forEach(ms => setTimeout(put, ms)); setTimeout(stop, 1300);
 }
 
+/* ---------------- reminders (Nov 2026) ----------------
+   Five prayer reminders a day (each with that day's hero line), the three sun-based times to avoid voluntary prayer
+   (with when each ends), and the week's Qur'an line every Thursday at 8 pm in the chosen city. All are worked out on
+   the device from the same prayer times as the Today page; nothing is sent to a server.
+   Android app: scheduled ahead for NF_DAYS days with Capacitor's LocalNotifications and renewed on every open, so they
+   arrive when the app is closed. Website: there is no server to push from, so they can only be shown while the page is
+   open (checked every 15 s). ids are stable per day and slot, so re-scheduling replaces rather than duplicates. */
+const NF_DAYS = 10;
+const nfAny = () => !!(st.nf.pray || st.nf.forb || st.nf.thu);
+const nfCan = () => { try { return NATIVE || "Notification" in window; } catch (e) { return false; } };
+const nfGranted = () => { try { return "Notification" in window && Notification.permission === "granted"; } catch (e) { return false; } };
+function nfPlan(days) {
+  if (!HR) return [];
+  const c = city(), now = Date.now(), p = zoneParts(c.zone, new Date(now)), out = [];
+  for (let i = 0; i < days; i++) {
+    const [y, m, d] = shiftDay(p.year, p.month, p.day, i), D = dayTimes(c, y, m, d); if (!timesOk(D)) continue;
+    const n = HR.dayNo(y, m, d), tm = D.tm;
+    if (st.nf.pray) PRAYERS.forEach((k, j) => { const x = heroFor(k, D); out.push({ id: n * 16 + j, at: D.abs(k), ch: "pray", title: `${pName(k, isFriD(D))} · ${clock(tm[k])}`, body: x ? heroNote(x) : "" }); });
+    if (st.nf.forb) [["fsun", D.abs("sunrise"), tm.sunrise + 0.25], ["fzaw", D.abs("dhuhr") - 6e5, tm.dhuhr], ["fset", D.abs("maghrib") - 9e5, tm.maghrib]]
+      .forEach(([w, at, end], j) => out.push({ id: n * 16 + 6 + j, at, ch: "forb", title: t("nf_forb_t"), body: t("nf_forb_b").replace("{w}", t(w)).replace("{e}", clock(end)) }));
+    if (st.nf.thu && new Date(Date.UTC(y, m - 1, d)).getUTCDay() === 4) out.push({ id: n * 16 + 10, at: D.base + 20 * 36e5, ch: "thu", title: t("nf_thu_t"), body: heroNote(HR.forWeek(n)) });
+  }
+  return out.filter(x => x.at > now + 5000).sort((a, b) => a.at - b.at);
+}
+let nfT = 0, webPlan = [];
+const nfSync = () => { clearTimeout(nfT); nfT = setTimeout(nfRun, 500); };
+function nfRun() {
+  if (!NATIVE) { webPlan = nfAny() && nfGranted() ? nfPlan(2) : []; return; }
+  nat("LocalNotifications", "getPending").then(r => { const ns = ((r && r.notifications) || []).map(x => ({ id: x.id })); return ns.length ? nat("LocalNotifications", "cancel", { notifications: ns }) : 0; }).catch(() => {})
+    .then(() => { if (!nfAny()) return 0;
+      [["pray", "nf_pray", 4], ["forb", "nf_forb", 3], ["thu", "nf_thu", 3]].forEach(([id, k, importance]) => natQ("LocalNotifications", "createChannel", { id, name: t(k), importance, visibility: 1 }));
+      const list = nfPlan(NF_DAYS).map(x => ({ id: x.id, title: x.title, body: x.body, largeBody: x.body, channelId: x.ch, smallIcon: "ic_stat_door", iconColor: "#0E6B5C", schedule: { at: new Date(x.at).toISOString(), allowWhileIdle: true } }));
+      return list.length ? nat("LocalNotifications", "schedule", { notifications: list }) : 0; }).catch(() => {});
+}
+function nfShow(x) {
+  const o = { body: x.body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "ie-" + x.id, lang: st.lang };
+  const plain = () => { try { new Notification(x.title, o); } catch (e) {} };
+  try { if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r => r.showNotification(x.title, o)).catch(plain); else plain(); } catch (e) {}
+}
+function nfWebTick() {
+  if (NATIVE || !webPlan.length) return;
+  const now = Date.now(); let last = 0; try { last = +localStorage.getItem(KEY + ".nf") || 0; } catch (e) {}
+  for (const x of webPlan) if (x.at <= now && x.at > now - 12e4 && x.at > last) { last = x.at; try { localStorage.setItem(KEY + ".nf", String(x.at)); } catch (e) {} nfShow(x); }
+  if (webPlan[webPlan.length - 1].at < now + 36e5) nfRun();
+}
+if (!NATIVE) setInterval(nfWebTick, 15000);
+/* Asks the phone or browser for permission. Resolves true (allowed), false (refused) or null (not available). */
+function nfAsk() {
+  if (NATIVE) return nat("LocalNotifications", "requestPermissions").then(r => !!r && r.display === "granted", () => false);
+  try { if (!("Notification" in window)) return Promise.resolve(null); return Promise.resolve(Notification.requestPermission()).then(x => x === "granted", () => false); } catch (e) { return Promise.resolve(null); }
+}
+function nfSet(k, on) {
+  const redraw = () => { const y = scrollY; render(false); scrollTo(0, y); };
+  if (!on) { st.nf[k] = false; save(); nfSync(); redraw(); return; }
+  nfAsk().then(ok => { st.nfAsk = true;
+    if (ok) { if (k === "all") st.nf = { pray: true, forb: true, thu: true }; else st.nf[k] = true; toast(t("nf_done")); } else toast(t(ok === null ? "nf_unsup" : "nf_denied"));
+    save(); nfSync(); redraw(); });
+}
+const SELF_FX = new Set(["trk", "xw", "markread", "nwread", "setvib", "snd"]);
+
 /* ---------------- events ---------------- */
 document.addEventListener("click", e => {
   if (NATIVE) { const a = e.target.closest('a[target="_blank"]'); if (a && /^https?:/.test(a.href)) { const u = new URL(a.href); e.preventDefault(); location.href = u.origin !== location.origin ? a.href : WEB + u.pathname.replace(/^\//, "") + u.search; return; } } // opens in the phone's browser
   const b = e.target.closest("[data-act]"); if (!b) { return; }
   const a = b.dataset.act, d = b.dataset;
+  if (!SELF_FX.has(a)) { if (SND) SND.tap(); if (NATIVE && a !== "tab") buzz(6); } // every press answers; these few give their own feedback
   switch (a) {
     case "tab": if (d.tab === R.tab && !R.sub && !R.surah && !R.study) { window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); break; } if (NATIVE) buzz(8); go({ tab: d.tab }); break;
     case "go": go({ tab: d.tab, sub: d.sub || null }); break;
@@ -2027,9 +2203,21 @@ document.addEventListener("click", e => {
       save(); const y = scrollY; render(false); scrollTo(0, y); break; }
     case "setglass": if (GLASS.includes(d.k)) { st.glass = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
     case "setmotion": if (MOTION.includes(d.k)) { st.motion = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "setvib": if (VIBS.includes(d.k)) { st.vib = d.k; save(); b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); buzz(18); } break;
+    case "snd": st.snd = !st.snd; save(); b.setAttribute("aria-checked", st.snd); sndApply(); if (SND) SND.tap(); break;
+    case "amb": st.amb = !st.amb; save(); b.setAttribute("aria-checked", st.amb); sndApply(); break;
+    case "ambk": if (SND && SND.KINDS.includes(d.k)) { st.ambK = d.k; st.amb = true; save(); sndApply(); b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); const sw = document.querySelector('[data-act="amb"]'); if (sw) sw.setAttribute("aria-checked", "true"); } break;
+    case "nf": nfSet(d.k, !st.nf[d.k]); break;
+    case "nfon": nfSet("all", true); break;
+    case "nflater": st.nfAsk = true; save(); { const c = b.closest(".nf-card"); if (c) c.remove(); } break;
+    case "heroinfo": openSheet(`<h3>${t("hq_title")}</h3><div class="fw-sheet"><p>${t("hq_b1")}</p><p>${t("hq_b2")}</p><p class="note">${t("hq_b3")}</p></div>`, b); break;
+    case "prplay": if (!SL) break; PR.playing = !PR.playing; if (PR.playing) prayGo(PR.done || PR.i >= PR.steps.length - 1 ? 0 : PR.i + (PR.cur ? 1 : 0)); else { prayStop(); const sx = PR.steps[PR.i]; PR.cur = SL.POSE[sx.pose]; const el = $("pray-g"); if (el) el.innerHTML = SL.draw(PR.cur, sx); prayCaption(); } break;
+    case "prstep": if (SL) { PR.playing = false; prayGo(PR.i + +d.d); } break;
+    case "prgo": if (SL) { PR.playing = false; prayGo(+d.i); const el = document.querySelector(".pr-player"); if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } break;
+    case "prschool": if (SL && SL.SCHOOLS.includes(d.k)) { st.pray = d.k; save(); PR.i = 0; const y = scrollY; render(false); scrollTo(0, y); } break;
     case "setscene": if (SCENES.includes(d.k)) { st.scene = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
-    case "setasr": st.asr = +d.k; save(); render(false); break;
-    case "hadj": st.hadj = Math.max(-2, Math.min(2, st.hadj + +d.d)); save(); render(false); break;
+    case "setasr": st.asr = +d.k; save(); render(false); nfSync(); break;
+    case "hadj": st.hadj = Math.max(-2, Math.min(2, st.hadj + +d.d)); save(); render(false); nfSync(); break;
     case "gloss": st.gloss = !st.gloss; save(); b.setAttribute("aria-checked", st.gloss); if (R.tab === "quran" || R.tab === "today") { const y = scrollY; render(false); scrollTo(0, y); } break;
     case "tl": st.tl = !st.tl; save(); b.setAttribute("aria-checked", st.tl); if (R.tab === "quran" || R.tab === "duas") { const y = scrollY; render(false); scrollTo(0, y); } break;
     case "aa": aaSheet(); break;
@@ -2038,14 +2226,14 @@ document.addEventListener("click", e => {
     case "savequran": saveQuranOffline(b); break;
     case "loc": openLoc(); break;
     case "gps": locate(); break;
-    case "city": { st.city = d.id; const c = city(); if (c.g === "bd") { st.method = "KAR"; st.asr = 2; } else if (c.g === "au") { st.method = "MWL"; st.asr = 1; } save(); closeSheet(); render(true); break; }
+    case "city": { st.city = d.id; const c = city(); if (c.g === "bd") { st.method = "KAR"; st.asr = 2; } else if (c.g === "au") { st.method = "MWL"; st.asr = 1; } save(); closeSheet(); render(true); nfSync(); break; }
     case "trk": {
       if (!snap) break;
       const k = trackKey(snap);
       if (k !== trackKey(snapshot()) && !tSel) { render(false); break; }   // the day changed under an open page: redraw first
       const r = XT.togglePrayer(st.log, k, d.k); st.log = r.log; pruneLog(snap); save();
       const rc = b.getBoundingClientRect(), y = scrollY; justTicked = r.done ? d.k : null; render(false); scrollTo(0, y); justTicked = null;
-      if (r.done) { buzz(15); const o = st.log[k]; if (k === snap.key && PRAYERS.every(p => o[p])) { burst(rc.left + rc.width / 2, rc.top + rc.height / 2); toast(t("alldone")); buzz([30, 50, 30]); } else if (k !== snap.key) toast(t("t_saved").replace("{d}", longDay(k))); }
+      if (r.done) { fx(15); const o = st.log[k]; if (k === snap.key && PRAYERS.every(p => o[p])) { burst(rc.left + rc.width / 2, rc.top + rc.height / 2); toast(t("alldone")); buzz([30, 50, 30]); } else if (k !== snap.key) toast(t("t_saved").replace("{d}", longDay(k))); }
       break;
     }
     case "tday": { if (!snap) break; const cur = trackKey(snap); tSel = d.k === "today" ? null : XT.shift(cur, d.k === "prev" ? -1 : 1); if (tSel && XT.clamp(tSel, XT.shift(snap.key, -(KEEP_DAYS - 1)), snap.key) === snap.key) tSel = null; const y = scrollY; render(false); scrollTo(0, y); break; }
@@ -2060,7 +2248,7 @@ document.addEventListener("click", e => {
       const li = b.closest("li"), c = li && li.querySelector(".xc"), xs = li && li.querySelector(".xs");
       b.setAttribute("aria-pressed", r.done); if (c) c.textContent = xCount(k, snap); if (xs) xs.outerHTML = xStrip(k, snap);
       b.classList.remove("just"); if (li) li.classList.remove("just");
-      if (r.done) { void b.offsetWidth; b.classList.add("just"); if (li) li.classList.add("just"); buzz(15); toast(t("x_done")); }
+      if (r.done) { void b.offsetWidth; b.classList.add("just"); if (li) li.classList.add("just"); fx(15); toast(t("x_done")); }
       else toast(t("x_undone"));
       break;
     }
@@ -2074,7 +2262,7 @@ document.addEventListener("click", e => {
     case "qf": qFilter = d.k; document.querySelectorAll('[data-act="qf"]').forEach(x => x.setAttribute("aria-pressed", x.dataset.k === qFilter)); $("surah-list").innerHTML = listRows(); break;
     case "lazyretry": render(true); break;
     case "retry": { const i = R.surah || (votdPick && votdPick.s); if (i) { delete QERR["ar:" + i]; delete QERR[st.lang + ":" + i]; delete QERR["bnt:" + i]; } render(false); break; }
-    case "markread": { const i = R.surah; const was = st.read.includes(i); st.read = was ? st.read.filter(x => x !== i) : st.read.concat(i); save(); if (!was) { const rc = b.getBoundingClientRect(); burst(rc.left + rc.width / 2, rc.top); buzz(20); } b.classList.toggle("soft", !was); b.textContent = !was ? "✓ " + t("readmark") : t("markread"); break; }
+    case "markread": { const i = R.surah; const was = st.read.includes(i); st.read = was ? st.read.filter(x => x !== i) : st.read.concat(i); save(); if (!was) { const rc = b.getBoundingClientRect(); burst(rc.left + rc.width / 2, rc.top); fx(20); } b.classList.toggle("soft", !was); b.textContent = !was ? "✓ " + t("readmark") : t("markread"); break; }
     case "bm": { const id = d.id, on = st.bm.includes(id); st.bm = on ? st.bm.filter(x => x !== id) : st.bm.concat(id); save(); b.setAttribute("aria-pressed", !on); toast(on ? t("bmremoved") : t("bmadded")); break; }
     case "copyayah": { const k = +d.k, i = R.surah, ar = QS["ar:" + i], tr = QS[st.lang + ":" + i]; if (!ar) break; copyText(`${ar[k]}\n${tr ? tr.t[k] + "\n" : ""}— ${sname(i)} ${i}:${k + 1}\n${trCredit()}`); break; }
     case "hcat": hCat = d.k; document.querySelectorAll('[data-act="hcat"]').forEach(x => x.setAttribute("aria-pressed", x.dataset.k === hCat)); $("hadith-list").innerHTML = hadithList(); fitClamps(); break;
@@ -2084,7 +2272,7 @@ document.addEventListener("click", e => {
       b.setAttribute("aria-pressed", !was); b.classList.toggle("soft", !was); b.textContent = !was ? "✓ " + t("nw_done") : t("nw_mark");
       const jb = document.querySelector(`.nw-jump [data-n="${n}"]`); if (jb) { jb.classList.toggle("done", !was); jb.setAttribute("aria-label", t("nw_no").replace("{n}", num(n)).replace("{t}", num(NW_N)) + (!was ? ", " + t("nw_done") : "")); }
       const pg = $("nw-prog"), bar = $("nw-bar"); if (pg) pg.textContent = nwProg(); if (bar) bar.style.width = (st.nwread.length / NW_N * 100).toFixed(1) + "%";
-      if (!was) buzz(15); break; }
+      if (!was) fx(15); break; }
     case "hgo": { st.hcol = "general"; hCat = "all"; save(); render(false); fitClamps(); const el = $("hd-" + d.id); if (el) { scrollTo(0, Math.max(0, el.getBoundingClientRect().top + scrollY - 84)); const h = $("hd-h-" + d.id); if (h) { h.setAttribute("tabindex", "-1"); h.focus({ preventScroll: true }); } } break; }
     case "hdmore": { const open = !hOpen.has(d.id); if (open) hOpen.add(d.id); else hOpen.delete(d.id); toggleClamp(b, open); break; }
     case "dcat": dCat = d.k; document.querySelectorAll('[data-act="dcat"]').forEach(x => x.setAttribute("aria-pressed", x.dataset.k === dCat)); $("dua-list").innerHTML = duaList(); fitDuas(); break;
@@ -2115,7 +2303,7 @@ document.addEventListener("click", e => {
     case "school": st.school = d.k; save(); render(false); break;
     case "zkb": st.zk.basis = d.k === "gold" ? "gold" : "silver"; save(); { const y = scrollY; render(false); scrollTo(0, y); } break;
     case "zkw": st.zk.w = ZK.WEIGHTS[d.k] ? d.k : "tola"; save(); { const y = scrollY; render(false); scrollTo(0, y); } break;
-    case "wipe": if (b.dataset.armed) { try { localStorage.removeItem(KEY); } catch (x) {} st = JSON.parse(JSON.stringify(DEF)); render(true); toast(t("resetdone")); } else { b.dataset.armed = "1"; b.textContent = t("tapagain"); } break;
+    case "wipe": if (b.dataset.armed) { try { localStorage.removeItem(KEY); } catch (x) {} st = JSON.parse(JSON.stringify(DEF)); sndApply(); nfSync(); render(true); toast(t("resetdone")); } else { b.dataset.armed = "1"; b.textContent = t("tapagain"); } break;
   }
 });
 $("scrim").addEventListener("click", closeSheet);
@@ -2155,6 +2343,7 @@ document.addEventListener("input", e => {
   else if (el.id === "d-search") { dQuery = el.value; $("dua-list").innerHTML = duaList(); fitDuas(); }
   else if (el.id === "n-search") { nQuery = el.value; $("names-list").innerHTML = namesList(); }
   else if (el.id === "c-search") { $("city-list").innerHTML = locSheet(el.value); }
+  else if (el.id === "vol") { st.vol = +el.value; save(); if (SND) SND.setVolume(st.vol); }
   else if (el.id === "ar-size") { st.ar = +el.value; save(); document.documentElement.style.setProperty("--ar-scale", st.ar); }
   else if (el.id === "fp-note") { const k = el.dataset.k, v = el.value.slice(0, 140), o = Object.assign({}, st.fplan[k]); if (v) o.n = v; else delete o.n; if (o.f || o.n) st.fplan[k] = o; else delete st.fplan[k]; save(); const cf = $("cp-fasts"); if (cf) cf.innerHTML = calFasts(snap || snapshot()); }
   else if (el.dataset.zk) { st.zk.v[el.dataset.zk] = el.value; save(); $("zk-result").innerHTML = zakatCalc(); }
@@ -2164,7 +2353,7 @@ document.addEventListener("change", e => {
   const el = e.target;
   if (el.id === "fp-check") { const k = el.dataset.k, o = Object.assign({}, st.fplan[k]); if (el.checked) o.f = true; else delete o.f; if (o.f || o.n) st.fplan[k] = o; else delete st.fplan[k]; save();
     const c = document.querySelector(`.cal .c[data-k="${k}"]`); if (c) c.classList.toggle("fp", !!o.f); const cf = $("cp-fasts"); if (cf) cf.innerHTML = calFasts(snap || snapshot()); toast(t(el.checked ? "fp_on" : "fp_off")); return; }
-  if (el.id === "method") { st.method = el.value; save(); toast(t("saved2")); }
+  if (el.id === "method") { st.method = el.value; save(); toast(t("saved2")); nfSync(); }
   else if (el.id === "zk-cur") { st.zk.cur = el.value; save(); $("zk-result").innerHTML = zakatCalc(); }
   else if (el.id === "t-date" && snap) { const k = XT.clamp(el.value, XT.shift(snap.key, -(KEEP_DAYS - 1)), snap.key); tSel = k === snap.key ? null : k; const y = scrollY; render(false); scrollTo(0, y); const f = $("t-date"); if (f) f.focus({ preventScroll: true }); }
 });
@@ -2181,16 +2370,26 @@ if (g0 && !lazyDone.has(g0)) { // opened from a shared link: show that page load
   if (d0) deepPost(d0);
 }
 if (!phone()) Object.keys(LAZY).forEach(g => need(g).catch(() => {})); // desktop: load all page data now
+/* Sound: starts on the first touch or key (browsers require one), pauses when the app or tab is hidden. In the Android
+   app it follows the phone's sound profile through the small Ringer plugin (MainActivity): silent or vibrate mutes it. */
+sndApply();
+if (SND) { const un = () => { SND.unlock(); SND.resume(); }; addEventListener("pointerdown", un, true); addEventListener("keydown", un, true);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) SND.pause(); else SND.resume(); }); }
+if (NATIVE) { const rg = m => { ringer = (m && m.mode) || "normal"; if (SND) SND.setMuted(ringer !== "normal"); const el = $("snd-prof"); if (el) el.textContent = sndProfile(); };
+  const ask = () => nat("Ringer", "getMode").then(rg, () => {}); ask();
+  try { window.Capacitor.addListener("Ringer", "ringerChange", rg); window.Capacitor.addListener("App", "resume", () => { ask(); nfSync(); }); } catch (e) {} }
+nfSync();
 (() => { const sp = $("splash"), h = document.documentElement;
   let first = true; try { first = !sessionStorage.getItem("ie.splash"); sessionStorage.setItem("ie.splash", "1"); } catch (e) {}
-  // First open in a session: about 5 seconds in all (the door opens at 4.45 s), so the studio name can be read.
+  // First open in a session: about 3.5 seconds in all (the door opens at 3.1 s): the doorway is there from the first
+  // frame, then the names and the three promises, each long enough to read (Nov 2026; it was 4.45 s with an empty first second).
   // Later loads: as soon as the app is ready. A tap, click or key skips it.
   let done = false; const go = () => { if (done || !sp) return; done = true; sp.classList.add("out"); setTimeout(() => sp.remove(), 700);
     // Phone and app: the page rises into place as the door opens, instead of having drawn itself unseen behind the splash.
     if ((NATIVE || phone()) && !reduce && st.motion !== "off") { const v = $("view"); setTimeout(() => { v.classList.remove("enter"); [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); void v.offsetWidth; v.classList.add("enter");
       if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), 180); } }, 140); }
     else if (arcF != null) { const f = arcF; arcF = null; animateArc(f, true); } };
-  const arm = t0 => setTimeout(go, first ? Math.max(0, 4450 - (performance.now() - t0)) : 0);
+  const arm = t0 => setTimeout(go, first ? Math.max(0, 3100 - (performance.now() - t0)) : 0);
   if (sp) { sp.addEventListener("pointerdown", go); addEventListener("keydown", go, { once: true }); }
   if (!NATIVE) { if (sp) arm(0); return; }
   // In the app the splash waits, still, under Android's launch screen (theme-boot.js adds sp-hold); it starts the moment that screen fades.

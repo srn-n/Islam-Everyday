@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launch screen icon (Nov 2026): the doorway and horizon, 120dp wide and centred, in the accent colour. The page's
+     splash draws the same doorway at the same size and place (app.css, html.native .sp-door), so the launch screen
+     hands over to the page without an empty moment. Coordinates are the web SVG's (viewBox 96 76 320 348) x 0.375. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp" android:height="288dp" android:viewportWidth="288" android:viewportHeight="288">
+    <group android:scaleX="0.375" android:scaleY="0.375" android:translateX="48" android:translateY="50.25">
+        <path android:pathData="M150,392V248A140,140 0,0 1,256 112.2A140,140 0,0 1,362 248V392"
+            android:strokeColor="@color/colorAccent" android:strokeWidth="20" android:strokeLineJoin="round" android:strokeLineCap="round" />
+        <path android:pathData="M118,393H394" android:strokeColor="@color/colorAccent" android:strokeWidth="20" android:strokeLineCap="round" />
+    </group>
+</vector>

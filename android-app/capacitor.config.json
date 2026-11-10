@@ -18,6 +18,10 @@
     "SystemBars": {
       "insetsHandling": "css",
       "style": "DEFAULT"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_door",
+      "iconColor": "#0E6B5C"
     }
   }
 }

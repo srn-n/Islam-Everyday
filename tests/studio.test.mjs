@@ -31,11 +31,11 @@ test("the splash respects reduced motion and the app's Motion off setting", () =
 
 test("the splash leaves after the first screen; only the first open in a session waits for dawn", () => {
   const i = app.indexOf('const sp = $("splash")'); assert.ok(i > app.indexOf("render(true);"), "after the first render");
-  assert.match(app, /const arm = t0 => setTimeout\(go, first \? Math\.max\(0, 4450 - \(performance\.now\(\) - t0\)\) : 0\);/);
+  assert.match(app, /const arm = t0 => setTimeout\(go, first \? Math\.max\(0, 3100 - \(performance\.now\(\) - t0\)\) : 0\);/);
   assert.match(app, /if \(!NATIVE\) \{ if \(sp\) arm\(0\); return; \}/, "on the web it counts from page start, as before");
   assert.match(app, /sp\.classList\.add\("out"\); setTimeout\(\(\) => sp\.remove\(\), 700\)/);
   assert.match(app, /sp\.addEventListener\("pointerdown", go\); addEventListener\("keydown", go, \{ once: true \}\)/, "tap or key skips it");
-  assert.match(css, /\.sp-by\{[^}]*animation:sp-by 1s var\(--ease\) 2\.2s forwards\}/, "studio name has its own moment");
+  assert.match(css, /\.sp-by\{[^}]*animation:sp-by \.8s var\(--ease\) \.85s forwards\}/, "studio name has its own moment");
 });
 
 test("on-demand pages show the small doorway, not a spinner", () => {

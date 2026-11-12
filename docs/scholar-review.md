@@ -458,3 +458,14 @@ Method: sunrise, solar transit (Dhuhr) and sunset are calculated for the user's 
 2. **Choice of verses for each prayer** (for example 17:78 for Fajr, 2:238 and 103:1–3 for Asr, 11:114 for Maghrib, 30:17–18 for Dhuhr and Maghrib): is each a sound association?
 3. **How to pray** (`assets/salah.js`): the step texts, the notes on each of the five schools (Hanafi, Maliki, Shafi'i, Hanbali, Ja'fari) and the named teaching texts were written from general knowledge of those schools and were NOT checked line by line against the books. Every statement there needs review by someone qualified in that school, including the transliterated phrases and the positions the figure shows.
 4. **Reminder for times to avoid voluntary prayer**: uses the same 15/10/15-minute windows as the Today card (open question 7 above).
+
+## Added 12 November 2026 (How to pray, second version)
+
+5. The figure now shows positions in more detail, and each needs checking against the school it is shown for:
+   hand placement in qiyam (Hanafi and Hanbali below the navel, Shafi'i above the navel and below the chest, Maliki and
+   Ja'fari at the sides); hands-first (Maliki, Ja'fari) or knees-first (others) when going down; sujud (palms beside the
+   head, elbows raised, toes bent towards the qibla); iftirash, tawarruk and the Ja'fari sitting (on the left thigh, the
+   top of the right foot over the left sole, as recommended in that school); and the index finger in the tashahhud
+   (Hanafi: raised at "la ilaha", lowered at "illa Allah"; Shafi'i: raised at "illa Allah" and kept still; Hanbali:
+   pointed at each mention of Allah; Maliki: moved side to side). All were written from general knowledge of the
+   schools, not checked against the named books.

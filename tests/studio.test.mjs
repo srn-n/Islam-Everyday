@@ -31,9 +31,11 @@ test("the splash respects reduced motion and the app's Motion off setting", () =
 
 test("the splash leaves after the first screen; only the first open in a session waits for dawn", () => {
   const i = app.indexOf('const sp = $("splash")'); assert.ok(i > app.indexOf("render(true);"), "after the first render");
-  assert.match(app, /const arm = t0 => setTimeout\(go, first \? Math\.max\(0, 3100 - \(performance\.now\(\) - t0\)\) : 0\);/);
+  assert.match(app, /const MIN = first \? \(NATIVE \? 1600 : 3100\) : 0;/, "website 3.1 s; the app 1.6 s after Android's launch screen");
+  assert.match(app, /const arm = t0 => \{ settled\.then\(\(\) => setTimeout\(go, Math\.max\(0, MIN - \(performance\.now\(\) - t0\)\)\)\); setTimeout\(go, MIN \+ 1200\); \};/, "the door waits for fonts and the verse, with a failsafe");
   assert.match(app, /if \(!NATIVE\) \{ if \(sp\) arm\(0\); return; \}/, "on the web it counts from page start, as before");
-  assert.match(app, /sp\.classList\.add\("out"\); setTimeout\(\(\) => sp\.remove\(\), 700\)/);
+  assert.match(app, /sp\.classList\.add\("out"\); if \(rise\) \{ v\.classList\.remove\("hold"\); v\.classList\.add\("enter"\); \}/, "the page rises in the same frame as the door opens");
+  assert.match(app, /setTimeout\(\(\) => \{ sp\.remove\(\); v\.classList\.remove\("door"\); \}, 700\)/);
   assert.match(app, /sp\.addEventListener\("pointerdown", go\); addEventListener\("keydown", go, \{ once: true \}\)/, "tap or key skips it");
   assert.match(css, /\.sp-by\{[^}]*animation:sp-by \.8s var\(--ease\) \.85s forwards\}/, "studio name has its own moment");
 });

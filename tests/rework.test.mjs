@@ -89,21 +89,72 @@ test("splash: the doorway is there from the first frame, and the three promises 
 });
 
 test("How to pray: five schools, complete two-rak'ah sequences in both languages, labelled as not reviewed", () => {
+  const SL = loadBrowser("assets/salah.js").IE_SALAH, F = loadBrowser("assets/salah-fig.js").IE_SALAH_FIG;
   assert.deepEqual([...SL.SCHOOLS], ["hanafi", "maliki", "shafii", "hanbali", "jafari"]);
   for (const k of SL.SCHOOLS) {
-    const st = SL.steps(k); assert.ok(st.length >= 17, k);
-    for (const s of st) { assert.ok(SL.POSE[s.pose], `${k} ${s.id} pose`); assert.ok(s.t.en && /[ঀ-৿]/.test(s.t.bn) && s.d.en && /[ঀ-৿]/.test(s.d.bn), `${k} ${s.id} text`); if (s.via) assert.ok(SL.POSE[s.via]); }
+    const st = SL.steps(k); assert.ok(st.length >= 18, k);
+    for (const s of st) { assert.ok(F.POSE[s.pose], `${k} ${s.id} pose ${s.pose}`); assert.ok(s.t.en && /[ঀ-৿]/.test(s.t.bn) && s.d.en && /[ঀ-৿]/.test(s.d.bn), `${k} ${s.id} text`);
+      if (s.via) assert.ok(F.POSE[s.via]); if (s.inset) assert.ok(SL.INSET[s.inset] && SL.INSET[s.inset].bn, `${k} inset ${s.inset}`); }
     assert.equal(st.filter(s => s.pose === "ruku").length, 2, k + " bows twice"); assert.equal(st.filter(s => s.pose === "sujud").length, 4, k + " prostrates four times");
     assert.ok(SL.NOTES[k].length >= 5 && SL.SOURCES[k].length >= 2, k);
-    assert.match(SL.draw(SL.POSE.sujud, { turbah: true }), /sl-turbah/);
+    for (const lang of ["en", "bn"]) { const T = SL.timeline(st, lang); assert.equal(T.length, st.length);
+      T.forEach((x, i) => { assert.ok(x.start <= x.moved && x.moved < x.end); if (i) assert.equal(x.start, T[i - 1].end); }); assert.ok(T[T.length - 1].end > 90000 && T[T.length - 1].end < 240000, "about two minutes"); }
   }
   assert.ok(!SL.steps("maliki").some(s => s.id === "salamL"), "Maliki: one salam");
   assert.ok(SL.steps("jafari").some(s => s.id === "qunutB") && SL.steps("shafii").some(s => s.id === "qunutA"));
   assert.ok(SL.steps("shafii").some(s => s.id === "raf") && !SL.steps("hanafi").some(s => s.id === "raf"));
-  const m = SL.mix(SL.POSE.stand, SL.POSE.ruku, 0.5), j = SL.joints(m), d = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
-  assert.ok(Math.abs(d(j.hip, j.knee) - 40) < 0.01 && Math.abs(d(j.hip, j.sh) - 50) < 0.01, "limbs keep their length while blending");
+  assert.ok(SL.steps("jafari").every(s => s.pose !== "sujud" || s.turbah), "Ja'fari: turbah in sujud");
+  assert.equal(SL.steps("hanafi").find(s => s.id === "qiyam").inset, "low"); assert.equal(SL.steps("shafii").find(s => s.id === "qiyam").inset, "mid");
   assert.match(I18N.en.pr_review, /not yet been reviewed by a qualified scholar/); assert.match(app, /\$\{t\("pr_review"\)\}/);
-  assert.match(app, /pray: \["salah"\]/); assert.ok(sw.includes('"assets/salah.js"'));
+  assert.match(app, /pray: \["salah-fig", "salah"\]/); assert.ok(sw.includes('"assets/salah-fig.js", "assets/salah.js"'));
+});
+
+test("How to pray: the figure is a body that stands on the ground and keeps its proportions", () => {
+  const F = loadBrowser("assets/salah-fig.js").IE_SALAH_FIG, G = F.G;
+  const world = k => { const p = F.pose(k), b = F.body(p), dx = F.X0 - b.n.Bl[0]; const box = F.bbox(p); const dy = box[3] - Math.max(0, 0); return { p, b, box }; };
+  const lowest = k => { const svg = F.draw(F.pose(k), {}); return svg; };
+  for (const k of Object.keys(F.POSE)) { const box = F.bbox(F.pose(k)); assert.equal(box[3], G); assert.ok(box[1] > 0, k + " fits in the picture"); assert.ok(lowest(k).includes("sl-skin") && lowest(k).includes("sl-pants") && lowest(k).includes("sl-cap"), k + " draws skin, clothes and cap"); }
+  // grounded positions: rebuild the same placement draw() uses
+  const placed = k => { const p = F.pose(k), b = F.body(p); const mv = q => [q[0] + p._dx, q[1] + p._dy]; return { p, K: [mv(b.n.K), mv(b.f.K)], C: mv(b.C), Bl: mv(b.n.Bl), Sj: mv(b.Sj) }; };
+  for (const k of ["kneel", "sujud", "sit", "tashahhud", "tawarruk", "jsit"]) { const w = placed(k); for (const K of w.K) assert.ok(G - (K[1] + 7) < 1.5, `${k}: knees on the ground (${(G - K[1] - 7).toFixed(1)})`); }
+  { const w = placed("sujud"); assert.ok(G - (w.C[1] + F.LEN.hr) < 3, "sujud: forehead on the ground"); }
+  { const w = placed("stand"); assert.ok(w.C[1] < G - 150, "standing: head high"); }
+  // ruku: back level, hands reach the knees
+  { const p = F.pose("ruku"); assert.ok(Math.abs(p.T - 90) < 5, "level back"); const w = placed("ruku"); const a = p.arms.n, E = [w.Sj[0] + Math.sin(a.ua * Math.PI / 180) * F.LEN.ua, w.Sj[1] - Math.cos(a.ua * Math.PI / 180) * F.LEN.ua], W = [E[0] + Math.sin(a.fa * Math.PI / 180) * F.LEN.fa, E[1] - Math.cos(a.fa * Math.PI / 180) * F.LEN.fa];
+    assert.ok(Math.hypot(W[0] - w.K[0][0], W[1] - w.K[0][1]) < 14, "hand at the knee"); }
+  // blending keeps limb lengths (forward kinematics) and the near foot in place
+  const m = F.mix(F.pose("stand"), F.pose("sujud"), 0.5), b = F.body(m), d = (a, c) => Math.hypot(a[0] - c[0], a[1] - c[1]);
+  assert.ok(Math.abs(d(b.Hj, b.n.K) - F.LEN.th) < 0.01 && Math.abs(d(b.n.K, b.n.A) - F.LEN.sh) < 0.01 && Math.abs(d(b.H, b.S) - F.LEN.to) < 0.01);
+  assert.match(F.draw(F.pose("sujud"), { points: true, turbah: true }), /sl-pt[\s\S]*sl-pt|sl-turbah/);
+  assert.equal((F.draw(F.pose("sujud"), { points: true }).match(/class="sl-pt"/g) || []).length, 7, "seven parts of sujud");
+  for (const kind of ["low", "mid", "sides", "ear", "shoulder", "qunut", "finger", "finger-keep", "finger-pulse", "finger-move", "feet", "seven"]) assert.ok(F.inset(kind, 0.5).length > 40, "close-up " + kind);
+});
+
+test("How to pray plays like a video: one clock, scrub bar, subtitles, full screen", () => {
+  for (const id of ["pray-seek", "pray-play", "pray-fs", "pray-time", "pray-say", "pray-inset", "pray-big"]) assert.ok(app.includes(`id="${id}"`), id);
+  assert.match(app, /PR\.t = Math\.min\(PR\.total, PR\.t \+ dt \* PR\.speed\)/);
+  assert.match(app, /else if \(el\.id === "pray-seek"\)/);
+  assert.match(app, /svg\.setAttribute\("viewBox"/, "the camera frames the figure");
+  assert.match(css, /\.pr-video\.pv-full\{position:fixed;inset:0/);
+  assert.match(app, /if \(document\.querySelector\("\.pv-full"\)\) \{ prayFull\(false\); return; \}/, "Back leaves full screen first");
+});
+
+test("tab bar is kept and updated, so its pill slides; segmented controls have a sliding pill", () => {
+  const navSrc = app.slice(app.indexOf("function nav()"), app.indexOf("const SEGP"));
+  assert.match(navSrc, /if \(navLang !== st\.lang \|\| !box\.querySelector\("\.ind"\)\)/, "rebuilt only when the language changes");
+  assert.match(navSrc, /ind\.style\.transform = `translateX/);
+  assert.match(navSrc, /pill\.animate\(/); assert.match(navSrc, /ico\.animate\(/);
+  assert.match(app, /function segThumbs\(\)/); assert.match(app, /segThumbs\(\);\n  fitClamps\(\);/);
+  assert.match(css, /\.seg\.has-th>button\[aria-pressed="true"\]\{background:transparent;box-shadow:none\}/);
+});
+
+test("opening: the app hands over at the first painted frame; the page waits drawn and settles as the door opens", () => {
+  assert.match(app, /requestAnimationFrame\(\(\) => requestAnimationFrame\(release\)\);\n  setTimeout\(release, 1200\);/);
+  assert.match(app, /const held = anim && !viaVT && underSplash\(\);/);
+  assert.match(css, /\.view\.door\.enter>\*\{animation:rise-door/);
+  assert.doesNotMatch(css, /\.view\.hold>\*\{opacity:0\}/, "the page is never hidden behind the splash (that forced a full repaint as the door opened)");
+  assert.match(css, /html\.native \.sp-name\{animation-duration:\.6s;animation-delay:\.15s\}/);
+  assert.match(css, /\.v-today>:nth-child\(n\+5\)\{content-visibility:auto/);
 });
 
 test("Android: only the share folder can be handed to other apps; the policy names saved coordinates in backups", () => {

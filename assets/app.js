@@ -9,15 +9,15 @@ const LOC = window.IE_LOCALE, VE = window.IE_VOTD_EN, DV = window.IE_DAYVIZ;
 /* Phone speed (Oct 2026): page data that the Today screen does not need is loaded only when its page opens, so a phone
    downloads about a third of the scripts before the first screen appears. LAZY lists each group's files in load order;
    bindLazy() picks up the globals they define. The service worker still precaches all of them for offline use. */
-const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"], pray: ["salah"] };
-let NM, NAMES = [], GD, HD, NW, SD, ST, SL = null, LG = null, HCOLL = {}, NW_N = 0;
+const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"], pray: ["salah-fig", "salah"] };
+let NM, NAMES = [], GD, HD, NW, SD, ST, SL = null, SF = null, LG = null, HCOLL = {}, NW_N = 0;
 const lazyDone = new Set(), lazyP = {}, lazyFiles = new Set();
 /* Phones (touch screen) get the on-demand loading; computers with a mouse keep the previous behaviour: everything is
    loaded straight after the first screen, so their pages open with no "Loading…" step. */
 const phone = () => { try { return matchMedia("(pointer: coarse)").matches; } catch (e) { return false; } };
 function bindLazy() {
   NM = window.DINSATHI_NAMES; NAMES = NM ? NM.names : []; GD = window.IE_GUIDE; HD = window.IE_HADITH; NW = window.IE_NAWAWI;
-  SD = window.IE_STUDY; ST = window.IE_STORIES; LG = window.IE_LEGAL || null; SL = window.IE_SALAH || null;
+  SD = window.IE_STUDY; ST = window.IE_STORIES; LG = window.IE_LEGAL || null; SL = window.IE_SALAH && window.IE_SALAH_FIG ? window.IE_SALAH : null; SF = window.IE_SALAH_FIG || null;
   HCOLL = Object.assign({}, NW ? NW.COLLECTIONS : {}, HD ? HD.COLLECTIONS : {});
   NW_N = NW ? NW.HADITH.length : 0;
 }
@@ -132,6 +132,11 @@ const P = {
   aa: '<path d="M3.5 18l4.5-12 4.5 12M5.3 13.5h5.4M14.5 18l3-8 3 8M15.6 15.5h3.8"/>',
   play: '<path d="M8 5.5v13l10-6.5z"/>',
   pause: '<path d="M8.5 5.5v13M15.5 5.5v13"/>',
+  replay: '<path d="M5 12a7 7 0 1 0 2.1-5"/><path d="M5 4.5v3.5h3.5"/>',
+  prev: '<path d="M7 6v12M18 6l-8 6 8 6z"/>',
+  next: '<path d="M17 6v12M6 6l8 6-8 6z"/>',
+  expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  shrink: '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',
   bell: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
   prayfig: '<circle cx="12" cy="5" r="2.2"/><path d="M12 7.5v7M12 14.5l-3 5.5M12 14.5l3 5.5M8.5 10.5h7"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
@@ -536,12 +541,52 @@ function header() {
     <button type="button" class="icon-btn lang-btn" data-act="lang" aria-label="${(bn() ? "EN" : "বাং") + ", " + esc(t("langswitch"))}">${bn() ? "EN" : "বাং"}</button>
     <button type="button" class="icon-btn" data-act="go" data-tab="more" data-sub="settings" aria-label="${esc(t("settings"))}">${ic("gear")}</button>`;
 }
+/* Tab bar (Nov 2026): built once and then only updated, so the pill really slides from one section to the next (it used
+   to be rebuilt on every page change and simply reappeared in its new place). On the way it stretches a little and
+   settles with a spring; the new icon pops. Rebuilt only when the language changes. */
+const moving = () => !reduce && st.motion !== "off";
+let navLang = "";
 function nav() {
-  const i = TABS.indexOf(R.tab);
-  $("tabs").innerHTML = `<span class="ind" style="transform:translateX(${i * 100}%)"></span>` +
-    TABS.map(id => `<button type="button" data-act="tab" data-tab="${id}"${id === R.tab ? ' aria-current="page"' : ""}>${ic(id)}<span>${t(id === "quran" ? "study_nav" : id)}</span></button>`).join("");
+  const box = $("tabs"), i = TABS.indexOf(R.tab);
+  if (navLang !== st.lang || !box.querySelector(".ind")) { navLang = st.lang;
+    box.innerHTML = `<span class="ind" aria-hidden="true"><i></i></span>` + TABS.map(id => `<button type="button" data-act="tab" data-tab="${id}">${ic(id)}<span>${t(id === "quran" ? "study_nav" : id)}</span></button>`).join(""); }
+  const ind = box.querySelector(".ind"), was = ind.dataset.i == null ? -1 : +ind.dataset.i;
+  ind.style.transform = `translateX(${Math.max(0, i) * 100}%)`; ind.dataset.i = i;
+  box.querySelectorAll("button").forEach(b => { if (b.dataset.tab === R.tab) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+  if (was >= 0 && i >= 0 && was !== i && moving() && ind.firstChild.animate) {
+    const far = Math.min(3, Math.abs(i - was)), pill = ind.firstChild, ico = box.querySelector(`button[data-tab="${R.tab}"] svg`);
+    pill.getAnimations().forEach(x => x.cancel());
+    pill.animate([{ transform: "none" }, { transform: `scaleX(${(1 + 0.2 * far).toFixed(2)}) scaleY(.86)`, offset: 0.32 }, { transform: "scaleX(.94) scaleY(1.06)", offset: 0.66 }, { transform: "none" }], { duration: 560, easing: "cubic-bezier(.25,.8,.3,1)" });
+    if (ico) { ico.getAnimations().forEach(x => x.cancel()); ico.animate([{ transform: "scale(.78)" }, { transform: "translateY(-3px) scale(1.18)", offset: 0.45 }, { transform: "translateY(-1px) scale(1.08)" }], { duration: 520, easing: "cubic-bezier(.3,1.4,.5,1)" }); }
+  }
+}
+/* Segmented controls (Settings, Hadith collections, Qur'an study/stories): one pill slides under the chosen option,
+   also when the choice redraws the page (its last place is remembered for a moment and it springs from there). */
+const SEGP = new Map();
+const segKey = sg => [...sg.querySelectorAll(":scope>button")].map(b => b.dataset.act + ":" + (b.dataset.k || "")).join("|");
+function segMark(sg) { const b = sg.querySelector(':scope>button[aria-pressed="true"]'); if (b) SEGP.set(segKey(sg), { x: b.offsetLeft, y: b.offsetTop, w: b.offsetWidth, h: b.offsetHeight, t: performance.now() }); }
+function segThumbs() {
+  document.querySelectorAll(".seg").forEach(sg => {
+    const b = sg.querySelector(':scope>button[aria-pressed="true"]'); let th = sg.querySelector(":scope>.seg-th");
+    if (!b) { if (th) th.remove(); sg.classList.remove("has-th"); return; }
+    if (!th) { th = document.createElement("i"); th.className = "seg-th"; th.setAttribute("aria-hidden", "true"); sg.prepend(th); sg.classList.add("has-th"); }
+    const k = segKey(sg), x = b.offsetLeft, y = b.offsetTop, w = b.offsetWidth, h = b.offsetHeight, prev = SEGP.get(k);
+    th.style.width = w + "px"; th.style.height = h + "px"; th.style.transform = `translate(${x}px,${y}px)`;
+    if (prev && performance.now() - prev.t < 1500 && (prev.x !== x || prev.y !== y) && moving() && th.animate) {
+      th.getAnimations().forEach(a => a.cancel());
+      th.animate([{ transform: `translate(${prev.x}px,${prev.y}px)`, width: prev.w + "px", height: prev.h + "px" }, { transform: `translate(${x}px,${y}px)`, width: w + "px", height: h + "px" }], { duration: 480, easing: "cubic-bezier(.3,1.3,.5,1)" });
+    }
+    SEGP.set(k, { x, y, w, h, t: 0 });
+  });
+}
+/* A filter chip that becomes the chosen one gives a small springy pop. */
+function popChosen(a, k) {
+  if (!moving() || k == null) return;
+  const el = [...document.querySelectorAll(`[data-act="${a}"]`)].find(x => x.dataset.k === k && x.getAttribute("aria-pressed") === "true");
+  if (el && el.animate) el.animate([{ transform: "scale(.9)" }, { transform: "scale(1.06)", offset: 0.5 }, { transform: "none" }], { duration: 420, easing: "cubic-bezier(.3,1.4,.5,1)" });
 }
 let post = [], heroAnim = false;
+const underSplash = () => { const sp = $("splash"); return !!sp && !sp.classList.contains("out") && (NATIVE || phone()) && !reduce && st.motion !== "off"; };
 function render(anim, viaVT) {
   // A redraw of the same page (for example the Today page each minute) puts keyboard focus back on the same control.
   const fa = !anim && document.activeElement, fd = fa && $("view").contains(fa) && fa.dataset && fa.dataset.act ? fa.dataset : null;
@@ -564,9 +609,14 @@ function render(anim, viaVT) {
     return;
   }
   v.innerHTML = f() + siteFoot();
-  if (anim && !reduce && !viaVT) { v.classList.remove("enter"); [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); void v.offsetWidth; v.classList.add("enter"); }
+  // Nov 2026: behind the splash (phones and the app) the page waits, hidden and still, and rises only as the door opens.
+  // It used to play its rise unseen, then show fully as the splash faded, blink out and rise again.
+  const held = anim && !viaVT && underSplash();
+  v.classList.toggle("hold", held);
+  if (anim && !reduce && !viaVT && !held) { v.classList.remove("enter"); [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); void v.offsetWidth; v.classList.add("enter"); }
   else v.classList.remove("enter");
   post.forEach(fn => fn());
+  segThumbs();
   fitClamps();
   if (fd) { const el = [...v.querySelectorAll("[data-act]")].find(x => x.dataset.act === fd.act && x.dataset.k === fd.k && x.dataset.i === fd.i && x.dataset.s === fd.s); if (el) el.focus({ preventScroll: true }); }
 }
@@ -1632,51 +1682,100 @@ function vGuide() {
     <p class="note" style="margin-top:10px">${esc(L(GD.notes.review))}</p></section>`;
 }
 
-/* ---------------- HOW TO PRAY (Nov 2026) ----------------
-   An animated walk through a two-rak'ah prayer for five schools (assets/salah.js, loaded on demand). The figure blends
-   from one position to the next (about a second), holds while the caption is read, and moves on; Play/Pause, step
-   buttons and the step list control it. With reduced motion or Motion: off the positions change without movement. */
-const PR = { i: 0, playing: false, raf: 0, tm: 0, cur: null, steps: [], done: false };
+/* ---------------- HOW TO PRAY (Nov 2026, second version) ----------------
+   Plays like a short video: one clock runs through the whole two-rak'ah prayer (SL.timeline); each step moves the
+   figure (assets/salah-fig.js) into its position and holds it while the subtitle is read. A scrub bar with a mark per
+   step, play/pause, previous/next, speed and full screen. Close-ups show the hands from the front; in sujud the seven
+   parts light up. Reduced motion or Motion: off: the positions change without movement. */
+const PR = { t: 0, playing: false, raf: 0, last: 0, speed: 1, steps: [], times: [], total: 0, i: -1, sc: "", lang: "" };
 const praySchool = () => SL.SCHOOLS.includes(st.pray) ? st.pray : (school() === "shafii" ? "shafii" : "hanafi");
-function prayStop() { cancelAnimationFrame(PR.raf); clearTimeout(PR.tm); PR.raf = 0; PR.tm = 0; }
+const mmss = ms => { const s = Math.max(0, Math.round(ms / 1000)); return num(Math.floor(s / 60) + ":" + pad2(s % 60)); };
+const easeIO = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+function praySetup() {
+  const sc = praySchool();
+  if (PR.sc !== sc || PR.lang !== st.lang) { const keep = PR.sc === sc ? PR.t : 0; PR.sc = sc; PR.lang = st.lang; PR.steps = SL.steps(sc); PR.times = SL.timeline(PR.steps, st.lang); PR.total = PR.times[PR.times.length - 1].end; PR.t = Math.min(keep, PR.total); PR.i = -1; }
+}
+function prayStep(t) { const T = PR.times; let i = 0; while (i < T.length - 1 && t >= T[i].end) i++; return i; }
+function prayFrame() {
+  const g = $("pray-g"); if (!g || !SL || !SF) { prayStop(); return; }
+  const i = prayStep(PR.t), s = PR.steps[i], tm = PR.times[i], still = reduce || st.motion === "off";
+  let p = SF.pose(s.pose), k = 1;
+  if (i > 0 && PR.t < tm.moved && !still) {
+    const from = SF.pose(PR.steps[i - 1].pose), x = (PR.t - tm.start) / (tm.moved - tm.start), via = s.via && SF.pose(s.via);
+    k = x;
+    if (via) p = x < 0.5 ? SF.mix(from, via, easeIO(x * 2)) : SF.mix(via, SF.pose(s.pose), easeIO(x * 2 - 1));
+    else p = SF.mix(from, SF.pose(s.pose), easeIO(x));
+  }
+  const hold = PR.t >= tm.moved || still, ht = (PR.t - tm.moved) / (tm.end - tm.moved);
+  // The camera frames the figure: closer for sitting and prostration, wider for standing; it glides with the movement.
+  const svg = $("pray-fig"); if (svg) { const box = SF.bbox(p), H = Math.max(128, Math.min(200, box[3] - box[1] + 34)), W = H * 356 / 200, cx = (box[0] + box[2]) / 2;
+    svg.setAttribute("viewBox", `${(cx - W / 2 - W * 0.08).toFixed(1)} ${(SF.G + 8 - H).toFixed(1)} ${W.toFixed(1)} ${H.toFixed(1)}`); }
+  g.innerHTML = SF.draw(p, { points: s.points && hold, turbah: s.turbah, finger: hold && /^finger/.test(s.inset || ""), turnArrow: hold && s.turn ? Math.sign(s.turn) : 0 });
+  if (s.turn && hold) { const q = Object.assign({}, SF.pose(s.pose), { turn: s.turn * Math.min(1, ht * 4) }); g.innerHTML = SF.draw(q, { turbah: s.turbah, turnArrow: Math.sign(s.turn) }); }
+  // Close-up (front view of the hands, or the feet from behind): a card over the picture's top-left corner.
+  const ins = $("pray-inset");
+  if (ins) { const kind = hold ? s.inset : null;
+    if (ins.dataset.k !== (kind || "") || (kind && /^finger/.test(kind))) { ins.dataset.k = kind || "";
+      if (kind) ins.innerHTML = `<svg viewBox="0 0 110 118" aria-hidden="true">${SF.inset(kind, Math.max(0, ht))}</svg><p>${esc(L(SL.INSET[kind]))}</p>`;
+      ins.classList.toggle("on", !!kind); } }
+  if (PR.i !== i) { PR.i = i; prayCaption(); }
+  const bar = $("pray-seek"); if (bar && !bar.dataset.drag) { bar.value = Math.round(PR.t); bar.style.setProperty("--p", (PR.t / PR.total * 100).toFixed(2) + "%"); }
+  const tl = $("pray-time"); if (tl) tl.textContent = mmss(PR.t) + " / " + mmss(PR.total);
+}
 function prayCaption() {
-  const s = PR.steps[PR.i], n = PR.steps.length, set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
-  set("pray-k", t("pr_step").replace("{k}", num(PR.i + 1)).replace("{n}", num(n)) + " · " + t("pr_rk").replace("{n}", num(s.rk)));
+  const s = PR.steps[PR.i], set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+  set("pray-k", t("pr_step").replace("{k}", num(PR.i + 1)).replace("{n}", num(PR.steps.length)) + " · " + t("pr_rk").replace("{n}", num(s.rk)));
   set("pray-t", L(s.t)); const d = $("pray-d"); if (d) d.innerHTML = escS(L(s.d));
-  const say = $("pray-say"); if (say) { say.hidden = !s.say; say.innerHTML = s.say ? `<b>${t("pr_say")}:</b> <span lang="ar-Latn">${esc(s.say)}</span>` : ""; }
-  const bar = $("pray-bar"); if (bar) bar.style.transform = `scaleX(${(PR.i + 1) / n})`;
-  const pb = $("pray-play"); if (pb) { const k = PR.playing ? "pr_pause" : PR.done ? "pr_again" : "pr_play"; pb.innerHTML = ic(PR.playing ? "pause" : "play") + `<span>${t(k)}</span>`; pb.setAttribute("aria-pressed", PR.playing); }
+  const say = $("pray-say"); if (say) { say.hidden = !s.say; say.innerHTML = s.say ? `<span lang="ar-Latn">“${esc(s.say)}”</span>` : ""; }
   document.querySelectorAll(".pr-list button").forEach((b, i) => { if (i === PR.i) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current"); });
 }
-function prayGo(i, instant) {
-  prayStop(); const n = PR.steps.length; PR.i = i = Math.max(0, Math.min(n - 1, i));
-  const s = PR.steps[i], to = SL.POSE[s.pose], from = PR.cur || to, g = () => $("pray-g");
-  PR.done = false; prayCaption();
-  const hold = () => { PR.cur = to; const el = g(); if (!el) { PR.playing = false; return; } el.innerHTML = SL.draw(to, s);
-    if (PR.playing) PR.tm = setTimeout(() => { if (!g()) { PR.playing = false; return; } if (PR.i >= n - 1) { PR.playing = false; PR.done = true; prayCaption(); } else prayGo(PR.i + 1); }, 2400 + Math.min(3200, L(s.d).length * 24)); };
-  if (instant || reduce || st.motion === "off" || from === to) { hold(); return; }
-  const via = s.via && SL.POSE[s.via], keys = via ? [from, via, to] : [from, to], dur = via ? 1700 : 950, t0 = performance.now();
-  const ease = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-  const tick = now => { const el = g(); if (!el) { prayStop(); PR.playing = false; return; }
-    const x = Math.min(1, (now - t0) / dur), h = via && x >= 0.5 ? 1 : 0, p = via ? SL.mix(keys[h], keys[h + 1], ease(h ? x * 2 - 1 : x * 2)) : SL.mix(from, to, ease(x));
-    PR.cur = p; el.innerHTML = SL.draw(p, { turbah: s.turbah, finger: s.finger && x > 0.7, turn: x > 0.7 ? s.turn : 0 });
-    if (x < 1) PR.raf = requestAnimationFrame(tick); else hold(); };
-  PR.raf = requestAnimationFrame(tick);
+function prayButtons() {
+  const pb = $("pray-play"); if (pb) { const end = PR.t >= PR.total; pb.innerHTML = ic(PR.playing ? "pause" : end ? "replay" : "play"); pb.setAttribute("aria-label", t(PR.playing ? "pr_pause" : end ? "pr_again" : "pr_play")); }
+  const big = $("pray-big"); if (big) big.hidden = PR.playing || (PR.t > 0 && PR.t < PR.total); // only before the start and at the end, like a video
+  const v = $("pr-video"); if (v) v.classList.toggle("playing", PR.playing);
 }
+function prayStop() { cancelAnimationFrame(PR.raf); PR.raf = 0; }
+function prayLoop(now) {
+  if (!$("pray-g")) { PR.playing = false; prayStop(); return; }
+  const dt = Math.min(100, now - (PR.last || now)); PR.last = now;
+  if (PR.playing) { PR.t = Math.min(PR.total, PR.t + dt * PR.speed); if (PR.t >= PR.total) { PR.playing = false; prayButtons(); } }
+  prayFrame();
+  if (PR.playing) PR.raf = requestAnimationFrame(prayLoop); else PR.raf = 0;
+}
+function prayPlay(on) {
+  if (on && PR.t >= PR.total) PR.t = 0;
+  PR.playing = on; prayButtons(); prayStop();
+  if (on) { PR.last = performance.now(); PR.raf = requestAnimationFrame(prayLoop); } else prayFrame();
+}
+function praySeek(t) { PR.t = Math.max(0, Math.min(PR.total, t)); prayFrame(); prayButtons(); }
+function prayFull(on) { const v = $("pr-video"); if (!v) return; v.classList.toggle("pv-full", on); document.documentElement.classList.toggle("pv-lock", on); const b = $("pray-fs"); if (b) { b.innerHTML = ic(on ? "shrink" : "expand"); b.setAttribute("aria-label", t(on ? "pr_exitfs" : "pr_fs")); } }
+document.addEventListener("visibilitychange", () => { if (document.hidden && PR.playing) prayPlay(false); });
 function vPray() {
-  const sc = praySchool(); prayStop(); PR.steps = SL.steps(sc); PR.i = Math.min(PR.i, PR.steps.length - 1); PR.cur = null; PR.playing = false;
-  post.push(() => prayGo(PR.i, true));
+  praySetup(); const sc = PR.sc; prayStop(); PR.playing = false; PR.i = -1;
+  post.push(() => { prayFrame(); prayButtons(); });
   return `<div class="page-head">${back()}<h2>${t("pray")}</h2></div>
   <section class="card pad pr-intro"><p>${t("pr_intro")}</p>
     <div class="pr-schools" role="group" aria-label="${esc(t("pr_school"))}">${SL.SCHOOLS.map(k => `<button type="button" class="chip" data-act="prschool" data-k="${k}" aria-pressed="${k === sc}">${esc(L(SL.NAMES[k]))}</button>`).join("")}</div></section>
-  <section class="card pr-player" aria-label="${esc(t("pray") + ": " + L(SL.NAMES[sc]))}">
-    <div class="pr-stage"><svg id="pray-fig" viewBox="70 0 200 196" role="img" aria-labelledby="pray-t"><g id="pray-g"></g></svg><span class="pr-qibla" aria-hidden="true">${t("pr_qibla")} →</span><span class="pr-sc" aria-hidden="true">${esc(L(SL.NAMES[sc]))}</span></div>
-    <div class="pr-bar" aria-hidden="true"><i id="pray-bar"></i></div>
-    <div class="pr-cap" aria-live="polite"><p class="eyebrow" id="pray-k"></p><h3 id="pray-t"></h3><p id="pray-d"></p><p class="pr-say" id="pray-say" hidden></p></div>
-    <div class="pr-ctl"><button type="button" class="icon-btn" data-act="prstep" data-d="-1" aria-label="${esc(t("pr_prev"))}">${ic("back")}</button><button type="button" class="btn pr-play" data-act="prplay" id="pray-play" aria-pressed="false"></button><button type="button" class="icon-btn" data-act="prstep" data-d="1" aria-label="${esc(t("pr_next"))}">${ic("chev")}</button></div>
+  <section class="pr-video" id="pr-video" aria-label="${esc(t("pray") + ": " + L(SL.NAMES[sc]))}">
+    <div class="pv-pic">
+      <svg id="pray-fig" viewBox="70 0 356 200" role="img" aria-labelledby="pray-t"><g id="pray-g"></g></svg>
+      <div class="pv-inset si" id="pray-inset"></div>
+      <span class="pv-badge" aria-hidden="true">${esc(L(SL.NAMES[sc]))}</span><span class="pv-qibla" aria-hidden="true">${t("pr_qibla")} →</span>
+      <button type="button" class="pv-big" id="pray-big" data-act="prplay" aria-label="${esc(t("pr_play"))}">${ic("play")}</button>
+    </div>
+    <div class="pv-ctl">
+      <button type="button" class="pv-btn" data-act="prplay" id="pray-play"></button>
+      <button type="button" class="pv-btn" data-act="prstep" data-d="-1" aria-label="${esc(t("pr_prev"))}">${ic("prev")}</button>
+      <button type="button" class="pv-btn" data-act="prstep" data-d="1" aria-label="${esc(t("pr_next"))}">${ic("next")}</button>
+      <div class="pv-track"><span class="pv-marks" aria-hidden="true">${PR.times.map(x => `<i style="left:${(x.start / PR.total * 100).toFixed(2)}%"></i>`).join("")}</span><input type="range" id="pray-seek" min="0" max="${PR.total}" step="100" value="${Math.round(PR.t)}" aria-label="${esc(t("pr_seek"))}"></div>
+      <span class="pv-time" id="pray-time"></span>
+      <button type="button" class="pv-btn pv-speed" data-act="prspeed" aria-label="${esc(t("pr_speed"))}">${num(PR.speed)}×</button>
+      <button type="button" class="pv-btn" data-act="prfs" id="pray-fs" aria-label="${esc(t("pr_fs"))}">${ic("expand")}</button>
+    </div>
+    <div class="pv-sub" aria-live="polite"><p class="pv-k" id="pray-k"></p><p class="pv-say" id="pray-say" hidden></p><p class="pv-text"><b id="pray-t"></b> <span id="pray-d"></span></p></div>
   </section>
   <section class="card pad"><h3 class="sec-title">${t("pr_notes")} · ${esc(L(SL.NAMES[sc]))}</h3><ul class="pr-notes">${SL.NOTES[sc].map(x => `<li>${escS(L(x))}</li>`).join("")}</ul></section>
-  <section class="card pad"><h3 class="sec-title">${t("pr_steps")}</h3><ol class="pr-list">${PR.steps.map((s, i) => `<li><button type="button" data-act="prgo" data-i="${i}"><span class="n">${num(i + 1)}</span><span>${esc(L(s.t))}</span></button></li>`).join("")}</ol></section>
+  <section class="card pad"><h3 class="sec-title">${t("pr_steps")}</h3><ol class="pr-list">${PR.steps.map((s, i) => `<li><button type="button" data-act="prgo" data-i="${i}"><span class="n">${num(i + 1)}</span><span class="grow">${esc(L(s.t))}</span><span class="note">${mmss(PR.times[i].start)}</span></button></li>`).join("")}</ol></section>
   <section class="card pad"><p class="note st-draft" role="note">${t("pr_review")}</p><p class="note" style="margin-top:10px"><b>${t("pr_src")}:</b> ${SL.SOURCES[sc].map(esc).join("; ")}.</p></section>`;
 }
 
@@ -2185,6 +2284,13 @@ document.addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b) { return; }
   const a = b.dataset.act, d = b.dataset;
   if (!SELF_FX.has(a)) { if (SND) SND.tap(); if (NATIVE && a !== "tab") buzz(6); } // every press answers; these few give their own feedback
+  const sg = b.parentNode && b.parentNode.classList && b.parentNode.classList.contains("seg") ? b.parentNode : null; if (sg) segMark(sg);
+  const wasOn = b.getAttribute("aria-pressed") === "true";
+  act(a, d, b);
+  if (sg) segThumbs();
+  if (!wasOn && b.classList.contains("chip")) popChosen(a, d.k);
+});
+function act(a, d, b) {
   switch (a) {
     case "tab": if (d.tab === R.tab && !R.sub && !R.surah && !R.study) { window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); break; } if (NATIVE) buzz(8); go({ tab: d.tab }); break;
     case "go": go({ tab: d.tab, sub: d.sub || null }); break;
@@ -2211,10 +2317,12 @@ document.addEventListener("click", e => {
     case "nfon": nfSet("all", true); break;
     case "nflater": st.nfAsk = true; save(); { const c = b.closest(".nf-card"); if (c) c.remove(); } break;
     case "heroinfo": openSheet(`<h3>${t("hq_title")}</h3><div class="fw-sheet"><p>${t("hq_b1")}</p><p>${t("hq_b2")}</p><p class="note">${t("hq_b3")}</p></div>`, b); break;
-    case "prplay": if (!SL) break; PR.playing = !PR.playing; if (PR.playing) prayGo(PR.done || PR.i >= PR.steps.length - 1 ? 0 : PR.i + (PR.cur ? 1 : 0)); else { prayStop(); const sx = PR.steps[PR.i]; PR.cur = SL.POSE[sx.pose]; const el = $("pray-g"); if (el) el.innerHTML = SL.draw(PR.cur, sx); prayCaption(); } break;
-    case "prstep": if (SL) { PR.playing = false; prayGo(PR.i + +d.d); } break;
-    case "prgo": if (SL) { PR.playing = false; prayGo(+d.i); const el = document.querySelector(".pr-player"); if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); } break;
-    case "prschool": if (SL && SL.SCHOOLS.includes(d.k)) { st.pray = d.k; save(); PR.i = 0; const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "prplay": if (SL) prayPlay(!PR.playing); break;
+    case "prstep": if (SL) { const i = Math.max(0, Math.min(PR.steps.length - 1, prayStep(PR.t) + +d.d)); praySeek(PR.times[i].moved - (PR.playing ? 0 : 1)); if (!PR.playing) praySeek(PR.times[i].moved); } break;
+    case "prgo": if (SL) { praySeek(PR.times[+d.i].start); const el = $("pr-video"); if (el && el.getBoundingClientRect().top < 60) el.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); if (!PR.playing) prayPlay(true); } break;
+    case "prspeed": { const S = [1, 0.75, 0.5, 1.25], i = (S.indexOf(PR.speed) + 1) % S.length; PR.speed = S[i]; b.textContent = num(PR.speed) + "×"; break; }
+    case "prfs": prayFull(!$("pr-video").classList.contains("pv-full")); break;
+    case "prschool": if (SL && SL.SCHOOLS.includes(d.k)) { st.pray = d.k; save(); prayPlay(false); PR.sc = ""; const y = scrollY; render(false); scrollTo(0, y); } break;
     case "setscene": if (SCENES.includes(d.k)) { st.scene = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
     case "setasr": st.asr = +d.k; save(); render(false); nfSync(); break;
     case "hadj": st.hadj = Math.max(-2, Math.min(2, st.hadj + +d.d)); save(); render(false); nfSync(); break;
@@ -2305,10 +2413,10 @@ document.addEventListener("click", e => {
     case "zkw": st.zk.w = ZK.WEIGHTS[d.k] ? d.k : "tola"; save(); { const y = scrollY; render(false); scrollTo(0, y); } break;
     case "wipe": if (b.dataset.armed) { try { localStorage.removeItem(KEY); } catch (x) {} st = JSON.parse(JSON.stringify(DEF)); sndApply(); nfSync(); render(true); toast(t("resetdone")); } else { b.dataset.armed = "1"; b.textContent = t("tapagain"); } break;
   }
-});
+}
 $("scrim").addEventListener("click", closeSheet);
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") { closeSheet(); return; }
+  if (e.key === "Escape") { if (document.querySelector(".pv-full")) { prayFull(false); return; } closeSheet(); return; }
   if (e.key === "Tab") { trapSheet(e); return; }
   const tg = e.target, typing = tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA" || tg.tagName === "SELECT" || tg.isContentEditable);
   if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -2344,6 +2452,7 @@ document.addEventListener("input", e => {
   else if (el.id === "n-search") { nQuery = el.value; $("names-list").innerHTML = namesList(); }
   else if (el.id === "c-search") { $("city-list").innerHTML = locSheet(el.value); }
   else if (el.id === "vol") { st.vol = +el.value; save(); if (SND) SND.setVolume(st.vol); }
+  else if (el.id === "pray-seek") { el.style.setProperty("--p", (+el.value / PR.total * 100).toFixed(2) + "%"); praySeek(+el.value); }
   else if (el.id === "ar-size") { st.ar = +el.value; save(); document.documentElement.style.setProperty("--ar-scale", st.ar); }
   else if (el.id === "fp-note") { const k = el.dataset.k, v = el.value.slice(0, 140), o = Object.assign({}, st.fplan[k]); if (v) o.n = v; else delete o.n; if (o.f || o.n) st.fplan[k] = o; else delete st.fplan[k]; save(); const cf = $("cp-fasts"); if (cf) cf.innerHTML = calFasts(snap || snapshot()); }
   else if (el.dataset.zk) { st.zk.v[el.dataset.zk] = el.value; save(); $("zk-result").innerHTML = zakatCalc(); }
@@ -2381,27 +2490,28 @@ if (NATIVE) { const rg = m => { ringer = (m && m.mode) || "normal"; if (SND) SND
 nfSync();
 (() => { const sp = $("splash"), h = document.documentElement;
   let first = true; try { first = !sessionStorage.getItem("ie.splash"); sessionStorage.setItem("ie.splash", "1"); } catch (e) {}
-  // First open in a session: about 3.5 seconds in all (the door opens at 3.1 s): the doorway is there from the first
-  // frame, then the names and the three promises, each long enough to read (Nov 2026; it was 4.45 s with an empty first second).
-  // Later loads: as soon as the app is ready. A tap, click or key skips it.
-  let done = false; const go = () => { if (done || !sp) return; done = true; sp.classList.add("out"); setTimeout(() => sp.remove(), 700);
-    // Phone and app: the page rises into place as the door opens, instead of having drawn itself unseen behind the splash.
-    if ((NATIVE || phone()) && !reduce && st.motion !== "off") { const v = $("view"); setTimeout(() => { v.classList.remove("enter"); [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); void v.offsetWidth; v.classList.add("enter");
-      if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), 180); } }, 140); }
-    else if (arcF != null) { const f = arcF; arcF = null; animateArc(f, true); } };
-  const arm = t0 => setTimeout(go, first ? Math.max(0, 3100 - (performance.now() - t0)) : 0);
+  // Fonts and the Verse for today (at most 0.9 s): the door waits for them, so neither re-lays out the page as it opens.
+  let fr = Promise.resolve(); try { if (document.fonts) fr = document.fonts.ready; } catch (e) {}
+  const settled = Promise.race([Promise.all([fr, votdP]).then(() => { try { void document.body.offsetHeight; return document.fonts && document.fonts.ready; } catch (e) {} }), new Promise(r => setTimeout(r, 900))]);
+  // The door opens; in the same frame the page (held still behind it) starts to rise, and the sun arc follows.
+  let done = false; const go = () => { if (done || !sp) return; done = true;
+    const v = $("view"), rise = v.classList.contains("hold");
+    if (rise) { [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); v.classList.add("door"); }
+    sp.classList.add("out"); if (rise) { v.classList.remove("hold"); v.classList.add("enter"); }
+    setTimeout(() => { sp.remove(); v.classList.remove("door"); }, 700);
+    if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), rise ? 260 : 0); } };
+  // How long the opening lasts once it is on screen. First open: the website 3.1 s (unchanged); the app 1.6 s, because
+  // Android's own launch screen has already shown the doorway (Nov 2026: it was 3.1 s on top of that wait).
+  const MIN = first ? (NATIVE ? 1600 : 3100) : 0;
+  const arm = t0 => { settled.then(() => setTimeout(go, Math.max(0, MIN - (performance.now() - t0)))); setTimeout(go, MIN + 1200); };
   if (sp) { sp.addEventListener("pointerdown", go); addEventListener("keydown", go, { once: true }); }
   if (!NATIVE) { if (sp) arm(0); return; }
-  // In the app the splash waits, still, under Android's launch screen (theme-boot.js adds sp-hold); it starts the moment that screen fades.
-  let rel = false; const release = () => { if (rel) return; rel = true; natQ("SplashScreen", "hide", { fadeOutDuration: 200 }); h.classList.remove("sp-hold"); if (sp) arm(performance.now()); };
-  // Released after two frames, once the first screen has been painted: Android's launch screen then fades onto a finished
-  // page and the door's first frames do not also have to paint everything under it. 1.5 s failsafe; 3 s in capacitor.config.json.
-  // It also waits (at most 0.9 s) for the fonts and the Verse for today, so neither re-lays out the page mid-animation.
-  let fr = Promise.resolve(); try { if (document.fonts) fr = document.fonts.ready; } catch (e) {}
-  // After the verse is in, layout is run once so its Arabic font starts loading, and that is waited for too.
-  const settled = Promise.all([fr, votdP]).then(() => { try { void document.body.offsetHeight; return document.fonts && document.fonts.ready; } catch (e) {} });
-  Promise.race([settled, new Promise(r => setTimeout(r, 900))]).then(() => requestAnimationFrame(() => requestAnimationFrame(release)));
-  setTimeout(release, 1500); })();
+  // In the app the splash waits, still, under Android's launch screen (theme-boot.js adds sp-hold), which shows the same
+  // doorway in the same place. It is handed over as soon as the first screen has been painted (two frames), no longer
+  // after the fonts and the verse too: the doorway animates while they finish, and the door waits for them instead.
+  let rel = false; const release = () => { if (rel) return; rel = true; natQ("SplashScreen", "hide", { fadeOutDuration: 150 }); h.classList.remove("sp-hold"); if (sp) arm(performance.now()); };
+  requestAnimationFrame(() => requestAnimationFrame(release));
+  setTimeout(release, 1200); })();
 /* Android app: the Back button and leaving the app. Back closes an open sheet, then steps back through pages, then returns
    to Today; on Today the app closes into its door (a short fade into the doorway) and Android takes it to the background.
    Coming back reverses that fade. Presses while it is closing are ignored. */
@@ -2420,6 +2530,7 @@ if (NATIVE) (() => {
       if (closing) return;
       if (document.body.classList.contains("printing")) return;
       if ($("splash")) { shut(); return; }
+      if (document.querySelector(".pv-full")) { prayFull(false); return; }
       if ($("sheet").classList.contains("on")) { closeSheet(); return; }
       if (depth > 0) { try { history.back(); return; } catch (e) {} }
       if (!isRoot(R)) { go(R.story ? { tab: "quran", sub: "stories" } : { tab: R.tab }, false); try { history.replaceState(R, ""); } catch (e) {} return; }

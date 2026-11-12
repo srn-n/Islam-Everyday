@@ -1444,34 +1444,121 @@ html.native .sp-line{position:absolute;left:50%;top:calc(50% + 172px);margin:0 0
 .amb-kinds{display:flex;flex-wrap:wrap;gap:8px;width:100%}
 .set input[type=range]{touch-action:pan-y}
 .switch[disabled]{opacity:.45}
-/* How to pray: the animated figure and its player */
+/* How to pray (Nov 2026, second version): a video-style player. The picture, the subtitles under it and the controls sit
+   in one dark frame, like a short video; the figure's colours stay the same in every theme so it always reads as a person. */
 .pr-schools{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.pr-player{overflow:hidden}
-.pr-stage{position:relative;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 12%,var(--surface)),var(--surface-2) 78%);border-bottom:1px solid var(--line)}
-.pr-stage svg{display:block;width:100%;max-height:min(32vh,250px);margin-inline:auto}
-.pr-qibla,.pr-sc{position:absolute;top:10px;font-size:.74rem;font-weight:600;letter-spacing:.04em;color:var(--muted)}
-.pr-qibla{right:14px}.pr-sc{left:14px;color:var(--accent)}
-.sl-body,.sl-leg,.sl-foot,.sl-arm,.sl-fin,.sl-turn{fill:none;stroke-linecap:round;stroke-linejoin:round}
-.sl-body{stroke:var(--ink);stroke-width:24}.sl-leg{stroke:var(--ink);stroke-width:13}.sl-foot{stroke:var(--ink);stroke-width:9}
-.sl-head{fill:var(--ink)}
-.sl-arm{stroke:var(--accent);stroke-width:9}.sl-fin{stroke:var(--accent);stroke-width:4}
-.sl-mat{fill:color-mix(in srgb,var(--accent) 34%,var(--surface))}.sl-turbah{fill:var(--gold)}
-.sl-turn{stroke:var(--gold);stroke-width:2.6}
-.pr-bar{height:4px;background:var(--surface-2)}
-.pr-bar i{display:block;height:100%;background:var(--accent);transform-origin:0 50%;transform:scaleX(0);transition:transform .5s var(--ease)}
-[dir=rtl] .pr-bar i{transform-origin:100% 50%}
-.pr-cap{padding:14px 16px 4px;min-height:11.5rem}
-.pr-cap h3{font-family:var(--display);font-weight:400;font-size:1.4rem;line-height:1.25;margin:4px 0 6px}
-.pr-cap p{margin:0}
-.pr-say{margin-top:10px!important;padding:8px 12px;border-radius:12px;background:var(--surface-2);font-size:.92rem}
-.pr-ctl{display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 16px 16px}
-.pr-play{min-width:150px}.pr-play svg{width:20px;height:20px;fill:currentColor;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.pr-video{--pv-bg:#0f1916;--pv-ink:#eef3f1;--pv-dim:#a9bab4;background:var(--pv-bg);color:var(--pv-ink);border-radius:20px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px}
+.pv-pic{position:relative;background:linear-gradient(180deg,#eaf2ef,#dfe9e5 70%,#d5e2dd)}
+:root[data-theme="dark"] .pv-pic{background:linear-gradient(180deg,#203630,#1a2c27 70%,#16251f)}
+.pv-pic>svg{display:block;width:100%;height:auto;aspect-ratio:356/200}
+.pv-badge,.pv-qibla{position:absolute;top:8px;font-size:.72rem;font-weight:600;letter-spacing:.04em;padding:3px 8px;border-radius:99px;background:rgba(15,25,22,.55);color:#fff}
+.pv-badge{right:8px}.pv-qibla{left:8px;top:auto;bottom:10px}
+.pv-big{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:0;background:rgba(15,25,22,.72);color:#fff;display:grid;place-items:center;box-shadow:0 6px 24px rgba(0,0,0,.25);transition:transform .3s var(--bounce),opacity .2s}
+.pv-big svg{width:28px;height:28px;fill:currentColor;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round;margin-left:4px}
+.pv-big:active{transform:scale(.92)}
+.pv-sub{padding:2px 14px 14px;min-height:7rem}
+.pv-sub p{margin:0}
+.pv-k{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--pv-dim)}
+.pv-say{margin-top:4px!important;font-style:italic;color:#f2d38a;font-size:.95rem}
+.pv-text{margin-top:4px!important;font-size:.95rem;line-height:1.5}
+.pv-text b{color:#fff}
+.pv-ctl{display:flex;align-items:center;gap:4px;padding:4px 8px 2px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:8px}
+.pv-btn{flex:none;min-width:40px;height:40px;border:0;border-radius:12px;background:none;color:var(--pv-ink);display:grid;place-items:center;font:inherit;font-size:.8rem;font-weight:600}
+.pv-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#pray-play svg{fill:currentColor}
+.pv-btn:active{background:rgba(255,255,255,.12)}
+.pv-track{position:relative;flex:1;min-width:60px;height:40px;display:flex;align-items:center}
+.pv-marks{position:absolute;left:8px;right:8px;top:50%;height:10px;margin-top:-5px;pointer-events:none}
+.pv-marks i{position:absolute;top:2px;width:2px;height:6px;border-radius:1px;background:rgba(255,255,255,.35)}
+#pray-seek{width:100%;margin:0;-webkit-appearance:none;appearance:none;background:transparent;height:40px;--p:0%}
+#pray-seek::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--accent-hi,#4cc3a6) var(--p),rgba(255,255,255,.22) var(--p))}
+#pray-seek::-moz-range-track{height:4px;border-radius:2px;background:linear-gradient(90deg,#4cc3a6 var(--p),rgba(255,255,255,.22) var(--p))}
+#pray-seek::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+#pray-seek::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;background:#fff}
+.pv-time{flex:none;font-size:.74rem;color:var(--pv-dim);font-variant-numeric:tabular-nums;padding:0 2px}
+.pv-speed{min-width:44px}
+@media (max-width:380px){.pv-time{display:none}}
+/* Full screen: the frame fills the screen (works the same in the app and in a browser). */
+.pr-video.pv-full{position:fixed;inset:0;z-index:120;border-radius:0;margin:0;display:flex;flex-direction:column;justify-content:center;padding:var(--safe-area-inset-top,env(safe-area-inset-top,0px)) 0 var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px))}
+.pr-video.pv-full .pv-pic>svg{max-height:calc(100vh - 13rem);margin-inline:auto}
+html.pv-lock,html.pv-lock body{overflow:hidden}
+/* The figure */
+.sl-ol{fill:none;stroke:#1d2b27;stroke-width:3.2;stroke-linejoin:round}
+.sl-shirt{fill:#f6f3ec}.sl-shirt.far{fill:#d6d0c2}
+.sl-pants{fill:#4f6460}.sl-pants.far{fill:#384845}
+.sl-skin{fill:#c99570}.sl-skin.far{fill:#a67858}
+.sl-cap{fill:#fff;stroke:#1d2b27;stroke-width:1.4}
+.sl-face{fill:none;stroke:#1d2b27;stroke-width:1.4;stroke-linejoin:round;stroke-linecap:round}
+.sl-ear{fill:#b5825f;stroke:#1d2b27;stroke-width:1}
+.sl-mat{fill:#9fc4b8}:root[data-theme="dark"] .sl-mat{fill:#3f6a5e}
+.sl-turbah{fill:#9a6a2c;stroke:#1d2b27;stroke-width:1}
+.sl-pt{fill:rgba(240,176,48,.25);stroke:#e0a020;stroke-width:2.2;animation:sl-pt 1.6s ease-in-out infinite;animation-delay:calc(var(--k)*90ms);transform-box:fill-box;transform-origin:center}
+@keyframes sl-pt{0%,100%{opacity:.55;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.sl-turn{fill:none;stroke:#e0a020;stroke-width:2.4;stroke-linecap:round}
+/* Close-ups (front view) */
+.pv-inset{position:absolute;left:8px;top:8px;width:min(30%,124px);padding:4px 4px 6px;border-radius:12px;background:rgba(255,255,255,.94);box-shadow:0 2px 10px rgba(0,0,0,.15);pointer-events:none}
+.pv-inset svg{display:block;width:100%;height:auto}
+.pv-inset p{margin:2px 0 0;font:600 .62rem/1.2 system-ui,"Noto Sans Bengali","Hind Siliguri",sans-serif;color:#1d2b27;text-align:center}
+.si{opacity:0;transform:scale(.94);transform-origin:0 0;transition:opacity .3s,transform .4s var(--bounce)}.si.on{opacity:1;transform:none}
+.si-shirt{fill:#f6f3ec;stroke:#1d2b27;stroke-width:1.6}
+.si-skin{fill:#c99570;stroke:#1d2b27;stroke-width:1.4}.si-skin.front{fill:#d6a27c}
+.si-cap{fill:#fff;stroke:#1d2b27;stroke-width:1.2}
+.si-sleeve{fill:none;stroke:#e9e4d8;stroke-width:9;stroke-linecap:round}
+.si-pants{fill:#4f6460}
+.si-fing{fill:none;stroke:#1d2b27;stroke-width:1;stroke-linecap:round}
+.si-guide{fill:none;stroke:#e0a020;stroke-width:1.4;stroke-dasharray:3 3}
+.si-mark{fill:#e0a020}
+.si-lab{font-size:8px;fill:#e0a020}
+.si-ground{stroke:#9fc4b8;stroke-width:4;stroke-linecap:round}
+.si-big{font:700 46px/1 system-ui,sans-serif;fill:#e0a020;text-anchor:middle}
+/* Step list */
 .pr-notes{margin:8px 0 0;padding-left:1.2em;display:grid;gap:8px}
 .pr-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:2px}
 .pr-list button{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:6px 8px;border:0;border-radius:12px;background:none;text-align:start;color:inherit;font:inherit}
+.pr-list .grow{flex:1}
 .pr-list .n{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);font-size:.8rem;font-weight:600}
 .pr-list button[aria-current]{background:var(--accent-2);font-weight:600}
 .pr-list button[aria-current] .n{background:var(--accent);color:var(--on-accent)}
+:root[data-motion="off"] .sl-pt,html.reduce .sl-pt{animation:none}
+@media (prefers-reduced-motion:reduce){.sl-pt{animation:none}}
 .pr-link{width:100%;text-align:start;margin-bottom:14px}
 .pr-link .ic{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--on-accent)}
 .pr-link .ic svg{width:20px;height:20px;fill:currentColor}
+
+/* ================= Nov 2026 (2): opening, tab bar, segmented controls ================= */
+/* Behind the (opaque) splash the page is held: drawn, but still. As the door opens it settles into place by movement
+   only. It stays fully drawn throughout, so nothing has to be painted from scratch at that moment and nothing blinks. */
+.view.door.enter>*{animation:rise-door .62s var(--bounce) both;animation-delay:calc(var(--i,0)*30ms)}
+@keyframes rise-door{from{transform:translateY(26px) scale(.98)}to{transform:none}}
+/* App splash: the same picture on a shorter clock (about 1.6 s), because Android's launch screen has already shown the
+   doorway. The website keeps its own timing. */
+html.native .sp-sky{animation-duration:.6s;animation-delay:0s}
+html.native .sp-night{animation-duration:1.2s}
+html.native .sp-stars circle{animation-duration:1.1s}
+html.native .sp-sun{animation-duration:1.1s;animation-delay:.05s}
+html.native .sp-glow{animation:sp-glowup 1.1s var(--ease) .05s forwards,sp-breathe 2.6s ease-in-out 1.2s infinite}
+html.native .sp-name{animation-duration:.6s;animation-delay:.15s}
+html.native .sp-by{animation-duration:.6s;animation-delay:.45s}
+html.native .sp-promise{animation-duration:.5s;animation-delay:.6s}
+html.native .sp-line{display:none}
+/* Tab bar: the pill is its own element so it can stretch on the way (app.js nav()). */
+nav.tabs .ind::before{content:none}
+nav.tabs .ind>i{display:block;width:56px;height:32px;border-radius:99px;background:var(--accent-2);transform-origin:50% 50%}
+nav.tabs button span{transition:color .25s,transform .35s var(--bounce)}
+@media (pointer:coarse){nav.tabs button:active span{transform:scale(.94)}}
+/* Segmented controls: one sliding pill (app.js segThumbs) instead of each button's own background. */
+.seg{position:relative}
+.seg>.seg-th{position:absolute;left:0;top:0;border-radius:11px;background:var(--surface);box-shadow:var(--shadow);pointer-events:none;z-index:0}
+.seg>button{position:relative;z-index:1}
+.seg.has-th>button[aria-pressed="true"]{background:transparent;box-shadow:none}
+@media (min-width:1024px){@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.seg>.seg-th{box-shadow:var(--glass-hi),var(--shadow)}}}
+/* Every button answers a press with a quick squeeze and springs back on release (phones and the app). */
+@media (pointer:coarse){
+  :is(.btn,.chip,.chip-btn,.icon-btn,.seg>button,.th-card,.sc-card,.nw-jump button){transition-timing-function:var(--bounce),var(--ease),ease,ease,ease,ease;transition-duration:.42s,.2s,.2s,.2s,.2s,.2s}
+  :is(.btn,.chip,.chip-btn,.icon-btn,.seg>button,.th-card,.sc-card,.nw-jump button):active{transform:scale(.94);transition-duration:.08s}
+}
+/* Phones: Today's cards below the first screen are laid out when they come near it, so the first screen (what the
+   opening waits for) is ready sooner. The size is a first guess; once shown, the real size is remembered (auto). */
+@media (pointer:coarse) and (max-width:1023px){.v-today>:nth-child(n+5){content-visibility:auto;contain-intrinsic-height:auto 340px}}
+/* Desktop: the How to pray video keeps a comfortable size instead of filling the whole column. */
+@media (min-width:1024px){.pr-video{max-width:720px}.pr-video.pv-full{max-width:none}}

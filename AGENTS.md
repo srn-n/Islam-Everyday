@@ -66,7 +66,7 @@ No build step and no dependencies. Node.js 18 or newer.
 
 ```bash
 npm start        # static server on http://localhost:8090 (scripts/serve.mjs, sends no-store)
-npm test         # node:test suite, no browser, no network (180 tests as of 11 Nov 2026)
+npm test         # node:test suite, no browser, no network (184 tests as of 12 Nov 2026)
 ```
 
 Browser suites (Playwright, run separately against a running server; install Playwright outside the repo):
@@ -177,11 +177,11 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 ## 9. Current state (update this with every change)
 
-*Last updated: 11 November 2026.*
+*Last updated: 12 November 2026.*
 
-- Latest pushed commit: `b8e2aa6`. **Uncommitted in the working tree: the 11 November interface rework** (see the log
-  below); the owner commits and pushes it.
-- `npm test`: 180 pass.
+- Latest pushed commit: `c5e698d` (the 11 November rework; its Android build #8 succeeded). **Uncommitted: the 12
+  November work** (opening, tab bar, How to pray video; see the log). The owner commits and pushes it.
+- `npm test`: 184 pass.
 - The Android build in `IslamEverydayApp` is for `af5acab` and does NOT contain the rework. After the owner pushes,
   a new build must be downloaded, verified and tested on a phone before anything is uploaded to Play. The rework adds
   a native plugin (`@capacitor/local-notifications`), a small Java plugin (`RingerPlugin`), new drawables and a new
@@ -219,6 +219,30 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 ## 10. Agent log (newest first)
 
 Add a new entry at the top for every change: date, summary, files, tests, open items.
+
+### 2026-11-12: Notion tasks: faster app opening, moving tab bar, How to pray as a video (uncommitted)
+- From the owner's Notion task list (Projects → Islam Everyday → Tasks, the three "Up next" items of 12 Nov).
+- **Opening** (`app.js` boot, `render`, `underSplash`; `app.css` end): native splash hidden after two painted frames
+  (no longer after fonts + verse); the door waits for those instead (`settled`, max 0.9 s); app opening 1.6 s
+  (`MIN`), website unchanged (3.1 s). Under the splash the page is `.hold` (drawn, no animation) and gets `.door.enter`
+  (transform-only `rise-door`) in the same frame as `splash.out`. Do not hide it with opacity: that forced a full
+  repaint (a 134 ms frame) as the door opened. Phones: `.v-today>:nth-child(n+5)` use `content-visibility:auto`.
+  Measured (Chrome, 6x CPU, stubbed Capacitor): hand-over 2.0 → 1.7 s, door 5.2 → 3.3 s, Today 5.9 → 4.0 s; no slow
+  frames at the door.
+- **Tab bar** (`nav()`): built once, updated in place (rebuilt only on language change); WAAPI squash on the pill and
+  pop on the icon. **Segmented controls**: `segThumbs()` after every render and click (FLIP from `SEGP`, 1.5 s
+  memory), `.seg.has-th`. **Chips**: `popChosen()`. The click handler now calls `act(a, d, b)` (was inline).
+- **How to pray** (`assets/salah-fig.js` new, `assets/salah.js` rewritten, `vPray`/`prayFrame`/`prayLoop` in app.js,
+  lazy group `pray: ["salah-fig", "salah"]`): figure = joint angles, two-bone IK for wrist targets (`at: joint|ground`),
+  auto-grounded with the near foot's ball fixed; `mix()` blends resolved poses; `bbox()` drives the camera (`viewBox`).
+  Shin angles: 0 = up, 90 = qibla, 180 = down, 270 = back, so a shin rising to a tucked heel is about 282°, not 258°.
+  Player: one clock (`PR.t`), `SL.timeline()` per language, scrub `#pray-seek`, speed, CSS full screen (`.pv-full`;
+  Back and Escape leave it). Close-ups are an HTML overlay (`#pray-inset`), not inside the zooming SVG.
+- Tests: `tests/rework.test.mjs` rewritten for the new figure and player, new tests for tab bar and opening;
+  `tests/studio.test.mjs` updated for the new timing. `npm test` 184 pass. Browser: no overflow at 320/360/412 in both
+  languages, light and dark, no errors; desktop segmented controls pixel-identical to before.
+- **Not tested:** on a real phone. Open: whether the opening now feels right on the device; whether the owner wants
+  real video files instead of the drawn player (it plays like a video but is drawn live: sharper, tiny, two languages).
 
 ### 2026-11-11: interface rework (uncommitted; owner to push)
 - **Slides and feel** (`assets/app.css`, end of file; `assets/app.js` click handler): view-transition slide with a

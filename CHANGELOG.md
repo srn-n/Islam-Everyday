@@ -2,6 +2,19 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Faster opening, moving tab bar, How to pray as a video (12 November 2026)
+
+### Changed
+- **Opening (app):** Android's launch screen hands over as soon as the first screen is painted (it used to wait for the fonts and the Verse for today too), and the opening runs 1.6 s instead of 3.1 s on top of that. In a phone-speed test the Today page now appears at 4.0 s instead of 5.9 s. On phones, Today's cards below the first screen are laid out only when they come near it.
+- **Opening (fix):** the Today page used to show fully as the splash faded, blink out and rise again. It now stays drawn behind the splash and settles into place as the door opens, with no repaint at that moment.
+- **Tab bar:** the pill now really slides from section to section (it was rebuilt on every change and just reappeared), stretching a little on the way and settling with a spring; the new icon pops.
+- **Segmented controls** (Settings, Hadith, Qur'an): one pill slides under the chosen option. Filter chips pop when chosen; every button gives a quick squeeze when pressed (phones and the app).
+- **How to pray, rebuilt:** a proportioned figure in a long shirt and trousers, with real hands and feet (heel, sole and bendable toes), both arms and legs, and a head with a cap. Hands are placed exactly: on the knees in ruku, palms flat beside the head in sujud, on the thighs when sitting. Close-ups show the hand position from the front for each school (below/above the navel, at the sides, takbir height, qunut, the tashahhud finger as each school moves it) and the feet from behind; the seven points of sujud light up. It plays like a short video (about 2 to 2½ minutes): subtitles under the picture, play/pause, previous/next, a scrub bar with a mark per step, speed (1×, 0.75×, 0.5×, 1.25×) and full screen. A camera frames each position.
+- Ja'fari sitting now shows that school's recommended way (on the left thigh, the top of the right foot over the left sole).
+
+### Tests
+- `npm test`: 184 pass (new: the figure stands on the ground with knees, toes and forehead touching where they should; hands reach the knees in ruku; the player; the tab bar; the opening).
+
 ## Interface rework: slides, reminders, sounds, hero lines, How to pray (11 November 2026)
 
 ### Added

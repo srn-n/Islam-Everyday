@@ -2,7 +2,8 @@
 // places, prayer guide pop-ups and the three-quarter, men/women How to pray.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { read, loadBrowser } from "./helpers.mjs";
+import { readFileSync } from "node:fs";
+import { read, loadBrowser, p } from "./helpers.mjs";
 const app = read("assets/app.js"), css = read("assets/app.css"), X = loadBrowser("assets/data.js").DINSATHI, { I18N } = X;
 
 test("tabs: Today, Qur'an, Hadith, More; Duas lives in More; old links still work", () => {
@@ -16,9 +17,13 @@ test("tabs: Today, Qur'an, Hadith, More; Duas lives in More; old links still wor
 
 test("notification sounds: phone default or one of three app sounds, each on its own channel", () => {
   assert.match(app, /const NF_SND = \["default", "drop", "tap", "breeze"\]/);
+  // Each file must be a whole, unaltered WAV: the sizes in its header match the file (a copy that converted line
+  // endings once added bytes and corrupted them). The app's copy and the Android copy are identical.
   for (const k of ["drop", "tap", "breeze"]) {
-    const f = read(`android-app/android/app/src/main/res/raw/ie_${k}.wav`, "latin1"); assert.equal(f.slice(0, 4), "RIFF", k);
-    assert.equal(read(`assets/sounds/ie_${k}.wav`, "latin1").slice(0, 4), "RIFF");
+    const a = readFileSync(p(`android-app/android/app/src/main/res/raw/ie_${k}.wav`)), b = readFileSync(p(`assets/sounds/ie_${k}.wav`));
+    assert.equal(a.toString("latin1", 0, 4), "RIFF", k); assert.equal(a.readUInt32LE(4) + 8, a.length, k + " RIFF size");
+    assert.equal(a.toString("latin1", 36, 40), "data", k); assert.equal(a.readUInt32LE(40) + 44, a.length, k + " data size");
+    assert.ok(a.equals(b), k + " same in both places");
   }
   assert.match(app, /deleteChannel/); assert.match(app, /const nfCh = \(base, s\) => s === "default" \? base : base \+ "_" \+ s;/);
 });

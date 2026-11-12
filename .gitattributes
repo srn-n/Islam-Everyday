@@ -1,2 +1,5 @@
 # Qur'an data is fingerprinted (sw.js DATA_REV): keep it byte-identical on every OS.
 data/** -text
+
+# Sound files are binary: never convert line endings.
+*.wav binary

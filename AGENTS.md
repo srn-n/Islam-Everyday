@@ -179,8 +179,10 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 *Last updated: 12 November 2026.*
 
-- Latest pushed commit: `1ae6b4a` (12 November: opening, tab bar, How to pray video; Android build #9 succeeded).
-  Working tree: the second 12 Nov batch (15 Notion tasks, see the agent log) is written but not yet committed.
+- Latest pushed commit: `040d7e0` (12 November, second batch: 15 Notion tasks; Android build #10 succeeded and is
+  signed with the upload key). Its three WAV sounds were damaged in transfer (bytes added); the working tree has the
+  fixed files, `*.wav binary` in `.gitattributes` and a test that checks each WAV's header sizes. Build #10 is NOT
+  copied to `IslamEverydayApp`: wait for the build of the fix.
 - `npm test`: 191 pass.
 - The Android build in `IslamEverydayApp` is build #9 for `1ae6b4a` (12 Nov): checksums OK, the `.aab` signed with the
   upload key, the bundled `app.js`/`salah-fig.js` identical to the repo. Not yet tested on a phone; nothing uploaded
@@ -221,7 +223,13 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 Add a new entry at the top for every change: date, summary, files, tests, open items.
 
-### 2026-11-12 (second batch): 15 Notion tasks: tabs, sounds, motion, themes, scenes, places, reminders, How to pray (uncommitted)
+### 2026-11-12: sound files repaired (uncommitted)
+- `040d7e0` shipped `ie_drop/tap/breeze.wav` 5–6 KB too large: copying them to the PC treated them as text. Regenerated
+  on the PC with the same script (byte-identical to the originals), in `assets/sounds/` and `res/raw/`.
+- `.gitattributes`: `*.wav binary`. `tests/nov12.test.mjs`: the RIFF and data sizes must match the file, and both
+  copies must be identical. `npm test` 191 pass. All 15 Notion tasks moved to Done.
+
+### 2026-11-12 (second batch): 15 Notion tasks: tabs, sounds, motion, themes, scenes, places, reminders, How to pray (`040d7e0`)
 - From the owner's Notion task list (Projects → Islam Everyday → Tasks, the 15 "Up next" items of 12 Nov).
 - **Tabs / More** (`app.js`): `TABS` = Today, Qur'an, Hadith, More; Duas is `more/duas`. `oldHash()` sends old `#duas`
   and `#more/hadith` links to the new places. More order: Duas, 99 Names, Prayer guide, Calendar, Developer message

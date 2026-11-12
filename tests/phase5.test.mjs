@@ -64,7 +64,7 @@ test("hadith: the source terms and the review limits are recorded with the data"
   assert.match(app, /data-act="hcat"/);
   assert.match(app, /h\.refs\.filter\(x => x\.wording !== "similar"\)\.map|refs\.map\(x => `<a href="\$\{x\.url\}"/, "reference link on every card");
   assert.doesNotMatch(app.slice(app.indexOf("function hadithList"), app.indexOf("function vHadith")), /slice\(|substr|…/, "no truncation");
-  assert.match(app, /"hadith", "hadith", "more\/hadith"/, "sidebar entry");
+  assert.match(app, /\["hadith", "hadith", "hadith"\]/, "sidebar entry (Nov 2026: Hadith is a tab)");
 });
 
 /* ---------- English translation round 2 ---------- */

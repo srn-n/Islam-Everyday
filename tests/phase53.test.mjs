@@ -162,13 +162,14 @@ const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
 const block = sel => { const i = css.indexOf(sel + "{"); assert.ok(i >= 0, sel); const b = css.slice(i, css.indexOf("}", i)); return Object.fromEntries([...b.matchAll(/--([a-z0-9-]+):\s*(#[0-9A-Fa-f]{6})/g)].map(m => [m[1], m[2]])); };
 const SETS = { "classic-light": block(":root"), "classic-dark": block(':root[data-theme="dark"]') };
 // Face 7 (intentional): three light themes and three dark themes; no theme has a set for the other appearance.
-for (const p of ["emerald", "sandstone"]) SETS[p + "-light"] = block(`:root[data-palette="${p}"]`);
-for (const p of ["indigo", "plum"]) SETS[p + "-dark"] = block(`:root[data-palette="${p}"][data-theme="dark"]`);
+// Nov 2026 (intentional): Emerald Ivory → Sky Blue, Plum Dusk → Deep Teal.
+for (const p of ["sky", "sandstone"]) SETS[p + "-light"] = block(`:root[data-palette="${p}"]`);
+for (const p of ["indigo", "teal"]) SETS[p + "-dark"] = block(`:root[data-palette="${p}"][data-theme="dark"]`);
 
-test("themes (Face 7): Classic Teal, Emerald Ivory, Sandstone Teal for light; Midnight Jade, Indigo Moon, Plum Dusk for dark", () => {
-  for (const k of ["pl_classic", "pl_emerald", "pl_sandstone", "pl_jade", "pl_indigo", "pl_plum", "th_light", "th_dark", "md_system", "md_light", "md_dark", "appearance"]) { assert.ok(I18N.en[k], k); assert.ok(I18N.bn[k], "bn " + k); }
-  assert.equal(I18N.en.pl_classic, "Classic Teal"); assert.equal(I18N.en.pl_emerald, "Emerald Ivory"); assert.equal(I18N.en.pl_sandstone, "Sandstone Teal");
-  assert.equal(I18N.en.pl_jade, "Midnight Jade"); assert.equal(I18N.en.pl_indigo, "Indigo Moon"); assert.equal(I18N.en.pl_plum, "Plum Dusk");
+test("themes (Nov 2026): Classic Teal, Sky Blue, Sandstone Teal for light; Midnight Jade, Indigo Moon, Deep Teal for dark", () => {
+  for (const k of ["pl_classic", "pl_sky", "pl_sandstone", "pl_jade", "pl_indigo", "pl_teal", "th_light", "th_dark", "md_system", "md_light", "md_dark", "appearance"]) { assert.ok(I18N.en[k], k); assert.ok(I18N.bn[k], "bn " + k); }
+  assert.equal(I18N.en.pl_classic, "Classic Teal"); assert.equal(I18N.en.pl_sky, "Sky Blue"); assert.ok(!I18N.en.pl_emerald && !I18N.en.pl_plum, "removed themes have no names"); assert.equal(I18N.en.pl_sandstone, "Sandstone Teal");
+  assert.equal(I18N.en.pl_jade, "Midnight Jade"); assert.equal(I18N.en.pl_indigo, "Indigo Moon"); assert.equal(I18N.en.pl_teal, "Deep Teal");
   assert.match(I18N.en.th_light, /Recommended for light appearance/); assert.match(I18N.en.th_dark, /Recommended for dark appearance/);
   assert.ok(!I18N.en.pl_burgundy, "Burgundy is no longer offered as a light theme");
   assert.equal(Object.keys(SETS).length, 6);
@@ -196,16 +197,20 @@ test("theme boot: mode and palette applied before paint, system preference follo
   assert.deepEqual(boot(null), { theme: "light", palette: "classic", scheme: "light", host: undefined, glass: "balanced", motion: "subtle" });
   assert.equal(boot(null, { prefersDark: true }).theme, "dark");
   assert.equal(boot({ mode: "light" }, { prefersDark: true }).theme, "light", "explicit light beats the system");
-  // Face 7 migration (intentional): Phase 5.3 burgundy becomes Plum Dusk in dark; light falls back to Classic Teal.
-  assert.equal(boot({ mode: "dark", palette: "burgundy" }).palette, "plum");
+  // Face 7 migration (intentional): Phase 5.3 burgundy became Plum Dusk in dark, and Nov 2026 replaced Plum Dusk with
+  // Deep Teal; light falls back to Classic Teal.
+  assert.equal(boot({ mode: "dark", palette: "burgundy" }).palette, "teal");
+  assert.equal(boot({ mode: "dark", darkTheme: "plum" }).palette, "teal", "Plum Dusk users get Deep Teal");
+  assert.equal(boot({ mode: "light", lightTheme: "emerald" }).palette, "sky", "Emerald Ivory users get Sky Blue");
+  assert.equal(boot({ motion: "playful" }).motion, "subtle", "the removed Playful motion becomes Slide"); assert.equal(boot({ motion: "fade" }).motion, "fade");
   assert.equal(boot({ mode: "light", palette: "burgundy" }).palette, "classic");
   assert.equal(boot({ mode: "dark", palette: "emerald" }).palette, "classic", "emerald has no dark set: dark uses Midnight Jade (base tokens)");
   assert.equal(boot({ mode: "light", palette: "sandstone" }).palette, "sandstone");
   assert.equal(boot({ mode: "dark", lightTheme: "emerald", darkTheme: "indigo" }).palette, "indigo");
-  assert.equal(boot({ mode: "light", lightTheme: "emerald", darkTheme: "indigo", palette: "burgundy" }).palette, "emerald", "saved Face 7 themes win over the old palette");
+  assert.equal(boot({ mode: "light", lightTheme: "sandstone", darkTheme: "indigo", palette: "burgundy" }).palette, "sandstone", "saved Face 7 themes win over the old palette");
   assert.equal(boot({ glass: "solid", motion: "off" }).glass, "solid"); assert.equal(boot({ glass: "x", motion: "off" }).motion, "off");
   assert.equal(boot({ mode: "dark", palette: "burgundy" }).theme, "dark");
-  assert.deepEqual([boot({ theme: "emerald" }).theme, boot({ theme: "emerald" }).palette], ["light", "emerald"]);
+  assert.deepEqual([boot({ theme: "emerald" }).theme, boot({ theme: "emerald" }).palette], ["light", "sky"]);
   assert.deepEqual([boot({ theme: "indigo" }).theme, boot({ theme: "indigo" }).palette], ["dark", "indigo"]);
   assert.equal(boot({ theme: "dark" }).theme, "dark");
   assert.equal(boot({ theme: "system" }, { prefersDark: true }).theme, "dark");
@@ -367,16 +372,17 @@ test("new scripts load before app.js and are precached", () => {
   }
 });
 
-test("interactions: subtle lift by default, Playful spring kept, Off and reduced motion stop movement, never on texts", () => {
+test("interactions: subtle lift by default, Fade moves nothing, Off and reduced motion stop movement, never on texts", () => {
+  // Nov 2026 (intentional): Playful was removed; Fade dims a pressed control instead of moving it.
   // Face 7 (intentional): the Phase 5.3 spring became the "Playful" level of the new Interaction motion setting;
   // the default "Subtle" level lifts by 1px without the spring. Reduced motion still turns all movement off.
   const i = css.indexOf("/* Interaction motion (Face 7"), blk = css.slice(i);
   assert.ok(i > 0);
   assert.match(blk, /@media \(hover:hover\) and \(pointer:fine\)/);
   assert.match(blk, /:focus-visible\{transform:translateY\(-1px\)\}/);
-  assert.match(blk, /:root\[data-motion="playful"\] :is\([^)]*\):focus-visible\{transform:translateY\(-1px\) scale\(1\.03\)\}/);
-  assert.match(blk, /:root\[data-motion="playful"\] :is\([^)]*\):active\{transform:scale\(\.95\)\}/);
-  assert.match(blk, /var\(--spring\)/);
+  assert.match(blk, /:root\[data-motion="fade"\] :is\([^)]*\)\{transform:none!important/);
+  assert.match(blk, /:root\[data-motion="fade"\] :is\([^)]*\):active\{opacity:\.72/);
+  assert.ok(!css.includes('data-motion="playful"'), "Playful is gone");
   assert.match(blk, /:root\[data-motion="off"\]/);
   const rm = blk.slice(blk.indexOf("@media (prefers-reduced-motion:reduce)"));
   for (const sel of [".btn", ".chip", ".icon-btn", ".nw-jump button", ".th-card"]) assert.ok(rm.includes(sel), sel);

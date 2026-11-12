@@ -9,8 +9,9 @@ const HR = loadBrowser("assets/heroes.js").IE_HEROES;
 const SL = loadBrowser("assets/salah.js").IE_SALAH;
 const verses = (l, s) => { const j = json(`data/quran/${l}/${String(s).padStart(3, "0")}.json`); return Array.isArray(j) ? j : j.t; };
 
-test("hero lines: 3 to 7 for each prayer and for Jumu'ah, at least 15 for the Qur'an page", () => {
-  for (const k of ["fajr", "dhuhr", "asr", "maghrib", "isha", "jumuah"]) assert.ok(HR.PRAYER[k].length >= 3 && HR.PRAYER[k].length <= 7, k);
+test("hero lines: at least 8 for each prayer and for Jumu'ah, at least 15 for the Qur'an page", () => {
+  // Nov 2026 (intentional): the earlier limit of 7 per prayer was lifted and more lines added.
+  for (const k of ["fajr", "dhuhr", "asr", "maghrib", "isha", "jumuah"]) assert.ok(HR.PRAYER[k].length >= 8, k + " " + HR.PRAYER[k].length);
   assert.ok(HR.QURAN.length >= 15);
   assert.equal(HR.HADITH_HERO.k, "h");
 });
@@ -60,21 +61,26 @@ test("reminders: five prayers, three times to avoid with their end, Thursday's Q
   assert.ok(exists("android-app/android/app/src/main/res/drawable/ic_stat_door.xml"));
 });
 
-test("sound: generated on the device, five background sounds, follows the phone's sound profile; vibration is separate", () => {
+test("sound: generated on the device, three soft touch sounds, no background sound, follows the phone's sound profile; vibration is separate", () => {
+  // Nov 2026 (intentional): background sounds were removed; the touch sound has three soft kinds.
   const snd = read("assets/sound.js"), S = loadBrowser("assets/sound.js").IE_SOUND;
-  assert.deepEqual([...S.KINDS], ["wind", "rain", "drops", "river", "ocean"]);
+  assert.deepEqual([...S.TOUCH], ["soft", "drop", "air"]);
+  assert.equal(S.KINDS, undefined); assert.equal(S.setAmbient, undefined);
   assert.doesNotMatch(snd, /new Audio\(|\.mp3|\.ogg|\.wav|fetch\(/, "no audio files");
-  assert.doesNotThrow(() => { S.setVolume(50); S.setAmbient("rain"); S.setMuted(true); S.tap(); S.pause(); S.resume(); }, "safe where Web Audio is missing");
+  assert.doesNotThrow(() => { S.setVolume(50); S.setKind("drop"); S.setMuted(true); S.tap(); S.preview("air"); S.pause(); S.resume(); }, "safe where Web Audio is missing");
   assert.match(app, /SND\.setMuted\(ringer !== "normal"\)/);
   assert.match(read("android-app/android/app/src/main/java/com/simplymadestudio/islameveryday/RingerPlugin.java"), /getRingerMode\(\)/);
   assert.match(read("android-app/android/app/src/main/java/com/simplymadestudio/islameveryday/MainActivity.java"), /registerPlugin\(RingerPlugin\.class\)/);
   const buzz = app.slice(app.indexOf("const buzz = p =>"), app.indexOf("const SND ="));
   assert.doesNotMatch(buzz, /ringer|SND|st\.motion/, "vibration depends only on its own setting");
-  for (const k of ["vb_off", "vb_light", "vb_medium", "vb_strong", "ab_wind", "ab_rain", "ab_drops", "ab_river", "ab_ocean", "vol"]) assert.ok(I18N.en[k] && I18N.bn[k], k);
+  assert.doesNotMatch(app, /st\.amb\b|setAmbient/, "no background sound left");
+  for (const k of ["vb_off", "vb_light", "vb_medium", "vb_strong", "tk_soft", "tk_drop", "tk_air", "snd_k", "vol"]) assert.ok(I18N.en[k] && I18N.bn[k], k);
 });
 
-test("section slides use a spring; filter rows keep the page margin; sheets blur the page on phones", () => {
-  assert.match(css, /html\[data-vt\]::view-transition-new\(root\)\{animation:vt-in \.5s var\(--bounce\) both\}/);
+test("section slides ease out (Fade cross-fades); filter rows keep the page margin; sheets blur the page on phones", () => {
+  // Nov 2026 (intentional): one long ease-out instead of the spring; Motion: Fade cross-fades the pages.
+  assert.match(css, /html\[data-vt\]::view-transition-new\(root\)\{animation:vt-in \.42s cubic-bezier\(\.16,1,\.3,1\) both\}/);
+  assert.match(css, /html\[data-vt\]\[data-motion="fade"\]::view-transition-new\(root\)\{animation:vt-fi /);
   assert.match(css, /--bounce:linear\(/);
   assert.match(css, /\.chips\{scroll-padding-inline:16px\}/);
   assert.match(css, /@media \(pointer:coarse\)\{@supports[^{]*\{\s*\.scrim\{[^}]*backdrop-filter:blur\(14px\)/);

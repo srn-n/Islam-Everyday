@@ -83,6 +83,33 @@
     salam1: [L2("Salam", "সালাম"), L2("Say the salam once, beginning to the front and turning a little to the right. The prayer is complete.", "একবার সালাম বলুন, সামনের দিক থেকে শুরু করে একটু ডানে মুখ ফিরিয়ে। নামাজ শেষ হলো।"), "As-salamu 'alaykum"],
     salamJ: [L2("Salam", "সালাম"), L2("Still facing the qibla, say the salam. The prayer is complete; saying the takbir three times afterwards, raising the hands each time, is recommended.", "কিবলার দিকে মুখ রেখেই সালাম বলুন। নামাজ শেষ হলো; এরপর প্রতিবার হাত তুলে তিনবার তাকবির বলা মুস্তাহাব।"), "As-salamu 'alaykum wa rahmatullahi wa barakatuh"]
   };
+  /* Nov 2026: the women's version. In the Hanafi school several positions are taught differently for women (raising
+     the hands to the shoulders, hands on the chest, a lighter bow, a gathered prostration with the forearms down,
+     sitting with both feet out to the right). In the other schools women are commonly taught the same positions with the
+     body kept gathered in prostration; the other steps are as shown for men. Same status as above: a draft. */
+  const W = {
+    takbir: L2("Raise both hands to the level of the shoulders, palms facing the qibla, keeping them under the outer covering, and say the takbir: the prayer has begun.",
+      "দুই হাত কাঁধ বরাবর তুলুন, তালু কিবলার দিকে, হাত চাদর বা ওড়নার ভেতরে রেখে, আর তাকবির বলুন: নামাজ শুরু হয়ে গেল।"),
+    qiyam: L2("Place the right hand over the left on the chest, the right palm on the back of the left hand, without gripping the wrist. Recite Surah al-Fatihah, then another surah or some verses.",
+      "ডান হাত বাম হাতের ওপর রেখে বুকের ওপর রাখুন, ডান তালু বাম হাতের পিঠে, কবজি না ধরে। সূরা আল-ফাতিহা পড়ুন, তারপর আরেকটা সূরা বা কিছু আয়াত।"),
+    ruku: L2("Bow a little less than men do, just enough for the hands to reach the knees. Rest the hands on the knees with the fingers together, without gripping; keep the arms close to the sides and the knees slightly bent. Stay still and glorify Allah three times.",
+      "পুরুষদের চেয়ে একটু কম ঝুঁকুন, যতটুকুতে হাত হাঁটুতে পৌঁছায়। আঙুল একসাথে রেখে হাত হাঁটুর ওপর রাখুন, শক্ত করে না ধরে; বাহু শরীরের সাথে লাগিয়ে রাখুন আর হাঁটু সামান্য বাঁকা। স্থির হয়ে তিনবার তাসবিহ পড়ুন।"),
+    sujud: L2("Prostrate on seven parts: the forehead with the nose, both palms, both knees and the toes. Keep the body gathered: the belly close to the thighs, the arms close to the sides with the forearms on the ground, and the feet out to the right. Glorify Allah three times.",
+      "সাতটি অঙ্গের ওপর সিজদা করুন: নাকসহ কপাল, দুই হাতের তালু, দুই হাঁটু আর পায়ের আঙুল। শরীর গুটিয়ে রাখুন: পেট ঊরুর কাছে, বাহু শরীরের সাথে লাগানো আর কনুই থেকে হাত মাটিতে বিছানো, পা ডান দিকে বের করা। তিনবার তাসবিহ পড়ুন।"),
+    sit: L2("Sit on the ground on the left side, with both feet out to the right. Rest the hands on the thighs, fingers together, and pause until still.",
+      "বাম দিকে ভর দিয়ে মাটিতে বসুন, দুই পা ডান দিক দিয়ে বের করে দিন। আঙুল একসাথে রেখে দুই হাত ঊরুর ওপর রাখুন, আর স্থির না হওয়া পর্যন্ত থামুন।"),
+    last: L2("Sit as between the prostrations, with both feet out to the right. Recite the tashahhud; at the testimony point with the right index finger (raised at “la ilaha”, lowered at “illa Allah”). Then send blessings on the Prophet ﷺ and make dua.",
+      "দুই সিজদার মাঝের মতো বসুন, দুই পা ডান দিক দিয়ে বের করা। তাশাহহুদ পড়ুন; শাহাদাতের সময় ডান হাতের শাহাদাত আঙুল দিয়ে ইশারা করুন (“লা ইলাহা”-তে ওঠান, “ইল্লাল্লাহ”-তে নামান)। তারপর নবী ﷺ-এর ওপর দরুদ পড়ুন আর দোয়া করুন।"),
+    gathered: L2("Women are commonly taught to keep the body gathered here: the elbows close to the sides and the belly near the thighs.",
+      "নারীদের সাধারণত এখানে শরীর গুটিয়ে রাখতে শেখানো হয়: কনুই শরীরের কাছে আর পেট ঊরুর কাছে।")
+  };
+  const WNOTE = {
+    hanafi: L2("Women's version: hands raised to the shoulders, placed on the chest, a lighter bow, a gathered prostration with the forearms on the ground, and sitting with both feet out to the right.",
+      "নারীদের জন্য: হাত কাঁধ পর্যন্ত তোলা, বুকের ওপর হাত বাঁধা, একটু কম ঝোঁকা, গুটিয়ে সিজদা আর কনুই থেকে হাত মাটিতে, আর দুই পা ডান দিকে বের করে বসা।"),
+    other: L2("Women's version: the same positions, with the body kept gathered in prostration (elbows close, belly near the thighs). Details differ between teachers.",
+      "নারীদের জন্য: একই ভঙ্গি, তবে সিজদায় শরীর গুটিয়ে রাখা (কনুই শরীরের কাছে, পেট ঊরুর কাছে)। খুঁটিনাটিতে শিক্ষকদের মধ্যে পার্থক্য আছে।")
+  };
+  const WHO = ["man", "woman"];
   const SAY_J = { ruku: "Subhana Rabbiyal-'Azimi wa bihamdih", sujud: "Subhana Rabbiyal-A'la wa bihamdih", sujud2: "Subhana Rabbiyal-A'la wa bihamdih", sit: "Astaghfirullaha Rabbi wa atubu ilayh", rise: "Sami'a Allahu liman hamidah" };
   /* Close-up captions (what the small front view shows). */
   const INSET = {
@@ -96,35 +123,40 @@
     "finger-keep": L2("Raised at “illa Allah”, kept still", "“ইল্লাল্লাহ”-তে ওঠানো, স্থির রাখা"),
     "finger-pulse": L2("Pointed at each mention of Allah", "আল্লাহর নাম আসলেই ইশারা"),
     "finger-move": L2("Finger moved side to side", "আঙুল ডানে-বামে নাড়ানো"),
+    chest: L2("Right over left, on the chest", "ডান হাত বাম হাতের ওপর, বুকের ওপর"),
     feet: L2("Seen from behind: left foot flat, right foot upright", "পেছন থেকে: বাম পা বিছানো, ডান পা খাড়া"),
     seven: L2("Seven parts touch the ground", "সাতটি অঙ্গ মাটিতে")
   };
   /* The steps of a two-rak'ah prayer for one school:
      [{ id, pose, via?, t, d, say, inset?, points?, turbah?, turn?, rk }] */
-  function steps(school) {
-    const c = CFG[school] || CFG.hanafi, J = school === "jafari", out = [];
+  function steps(school, who) {
+    const c0 = CFG[school] || CFG.hanafi, J = school === "jafari", out = [], fem = who === "woman", HW = fem && (school === "hanafi" || !CFG[school]);
+    const c = HW ? Object.assign({}, c0, { takbir: "shoulder", fold: "chest", sit: "sitW", last: "sitWf" }) : c0;
+    const RUKU = HW ? "rukuW" : "ruku", SUJ = HW ? "sujudW" : fem ? "sujudC" : "sujud";
+    const wd = (k, d) => HW && W[k] ? W[k] : d; // the women's text, Hanafi
+    const gd = d => fem && !HW ? L2(d.en + " " + W.gathered.en, d.bn + " " + W.gathered.bn) : d;
     const add = (id, pose, d, x) => out.push(Object.assign({ id, pose, t: T[id][0], d, say: (J && SAY_J[id]) || T[id][2] || "" }, x || {}));
     const sx = { turbah: !!c.turbah };
     const rakah = n => {
-      if (n === 1) add("qiyam", c.fold, T.qiyam[1][c.fold], { rk: 1, inset: c.fold });
+      if (n === 1) add("qiyam", c.fold, wd("qiyam", T.qiyam[1][c.fold]), { rk: 1, inset: c.fold });
       else add("qiyam2", c.fold, T.qiyam2[1], { rk: 2, inset: c.fold });
       if (n === 2 && c.qunut === "before") add("qunutB", "qunut", T.qunutB[1], { rk: 2, inset: "qunut" });
       if (c.raf) add("raf", "shoulder", T.raf[1], { rk: n, inset: "shoulder" });
-      add("ruku", "ruku", T.ruku[1], { rk: n });
+      add("ruku", RUKU, wd("ruku", T.ruku[1]), { rk: n });
       add("rise", c.raf ? "shoulder" : "stand", T.rise[1][c.raf ? "raf" : "plain"], { rk: n });
       if (n === 2 && c.qunut === "after") add("qunutA", "qunut", T.qunutA[1], { rk: 2, inset: "qunut" });
       add("down", c.down, T.down[1][c.down], Object.assign({ rk: n }, sx));
-      add("sujud", "sujud", T.sujud[1][c.turbah ? "turbah" : "seven"], Object.assign({ rk: n, points: true, inset: "seven" }, sx));
-      add("sit", c.sit, T.sit[1][c.sit === "sit" ? "sit" : c.sit], Object.assign({ rk: n, inset: c.sit === "sit" ? "feet" : null }, sx));
-      add("sujud2", "sujud", T.sujud2[1], Object.assign({ rk: n, points: true }, sx));
+      add("sujud", SUJ, wd("sujud", gd(T.sujud[1][c.turbah ? "turbah" : "seven"])), Object.assign({ rk: n, points: true, inset: "seven" }, sx));
+      add("sit", c.sit, wd("sit", T.sit[1][c.sit === "sit" ? "sit" : c.sit]), Object.assign({ rk: n, inset: c.sit === "sit" ? "feet" : null }, sx));
+      add("sujud2", SUJ, T.sujud2[1], Object.assign({ rk: n, points: true }, sx));
     };
     add("stand", "stand", T.stand[1], { rk: 1 });
-    add("takbir", c.takbir, T.takbir[1][J ? "jafari" : c.takbir], { rk: 1, inset: c.takbir });
+    add("takbir", c.takbir, wd("takbir", T.takbir[1][J ? "jafari" : c.takbir]), { rk: 1, inset: c.takbir });
     rakah(1);
     add("up", c.rest ? "sit" : "stand", T.up[1][c.rest ? "rest" : "plain"], Object.assign({ rk: 2, via: c.rest ? null : "kneel" }, sx));
     rakah(2);
     const lastKey = J ? "jafari" : school === "hanbali" ? "hanbali" : school === "shafii" ? "shafii" : school === "maliki" ? "maliki" : "tashahhud";
-    add("last", c.last, T.last[1][lastKey], Object.assign({ rk: 2, inset: c.finger || null }, sx));
+    add("last", c.last, wd("last", T.last[1][lastKey]), Object.assign({ rk: 2, inset: c.finger || null }, sx));
     if (c.salams === 2) { add("salamR", c.last, T.salamR[1], { rk: 2, turn: 1 }); add("salamL", c.last, T.salamL[1], { rk: 2, turn: -1 }); }
     else if (c.salams === 1) add("salam1", c.last, T.salam1[1], { rk: 2, turn: 0.6 });
     else add("salamJ", c.last, T.salamJ[1], Object.assign({ rk: 2 }, sx));
@@ -184,5 +216,6 @@
     hanbali: ["Ibn Qudamah, 'Umdat al-Fiqh", "al-Hajjawi, Zad al-Mustaqni'"],
     jafari: ["as-Sayyid 'Ali as-Sistani, Islamic Laws (Tawdih al-Masa'il)", "as-Sayyid Abu al-Qasim al-Khoei, Minhaj as-Salihin"]
   };
-  return { SCHOOLS, NAMES, CFG, steps, timeline, NOTES, SOURCES, INSET };
+  const notes = (school, who) => (NOTES[school] || []).concat(who === "woman" ? [school === "hanafi" ? WNOTE.hanafi : WNOTE.other] : []);
+  return { SCHOOLS, NAMES, CFG, steps, timeline, NOTES, notes, SOURCES, INSET, WHO };
 });

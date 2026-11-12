@@ -2,6 +2,26 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Hadith tab, softer sounds, new scenes, more places, How to pray for men and women (12 November 2026, second update)
+
+### Added
+- **Hadith is now a main tab** (Today, Qur'an, Hadith, More). Duas moved into More, which now starts with Duas, 99 Names, Prayer guide, Calendar and a Developer message page (to be written).
+- **Notification sound** (app): the phone's own sound, or water drop, soft tap or breeze. Only the chosen one plays.
+- **Tahajjud and Duha reminders**: when the last third of the night begins, and mid-morning.
+- **Six new scenes** for the Today picture (desert dunes, mountain lake, sea cliffs, pine forest, rice fields, red-rock canyon), and **Change every day**, with the mosque on Fridays.
+- **Many more places**: every country in Asia and major cities around the world, grouped by country, searchable by city or country. Choosing a city sets that country's usual calculation method.
+- **More prayer lines**: 8 to 9 verses and authentic hadiths for each prayer and for Jumu'ah.
+- **How to pray** now shows the figure from the front at an angle, with a men's and a women's version (headscarf and long dress; the positions commonly taught for women in the Hanafi school, and a gathered prostration in the others).
+
+### Changed
+- Touch sounds: choose soft touch, water drop or light air. Background sounds were removed.
+- Motion: **Slide** or **Fade** (Playful removed). Settings suggests the smoother one for your phone's Android version. Page changes and lists settle without the bounce.
+- Themes: Emerald Ivory is now **Sky Blue**, Plum Dusk is now **Deep Teal**; your choice moves over automatically.
+- Prayer guide: the How to pray link no longer takes a whole column; each prayer and term opens in a pop-up over the blurred page.
+
+### Tests
+- `npm test`: 191 pass.
+
 ## Faster opening, moving tab bar, How to pray as a video (12 November 2026)
 
 ### Changed

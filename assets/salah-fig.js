@@ -79,17 +79,25 @@
       let tg = s.at === "ground" ? [b.C[0], G] : joint(b, s.at); tg = [tg[0] + (s.dx || 0), tg[1] + (s.dy || 0)];
       if (s.at === "ground") tg[1] = G - (s.dy || 0);
       const r = ik(b.Sj, tg, LEN.ua, LEN.fa, s.bend || 1);
-      return { ua: r.ua, fa: r.fa, ha: s.ha != null ? s.ha : r.fa, hand: s.hand || "open" };
+      return { ua: r.ua, fa: r.fa, ha: s.ha != null ? s.ha : r.fa, hand: s.hand || "open", ze: s.ze, zw: s.zw };
     };
     return Object.assign({}, p, { arms: { n: arm("n", p.arms.n), f: arm("f", p.arms.f) }, _dx: dx, _dy: dy });
   }
+  /* Sideways (3D) hints: legs zk/za = knee and ankle distance to the person's right (absolute, units as above);
+     arms ze/zw = elbow and wrist distance from the middle as a share of the shoulder's (1 = straight down from it,
+     0 = on the middle line, below 0 = past it). Defaults: legs straight under the hips, arms hanging. */
+  const HIPZ = 7.5, SHZ = 12;
+  const lz = (l, s, k) => l[k] != null ? l[k] : (s === "n" ? HIPZ : -HIPZ) * (k === "zk" ? 1 : 1);
+  const az = (a, k) => a[k] != null ? a[k] : 1.08;
   const lerpA = (a, b, t) => a + (((b - a + 540) % 360) - 180) * t;
   /* Blend two resolved poses. Hand shapes switch half way. */
   function mix(a, b, t) {
     const o = { T: lerpA(a.T, b.T, t), N: lerpA(a.N, b.N, t), turn: (a.turn || 0) + ((b.turn || 0) - (a.turn || 0)) * t, legs: {}, arms: {} };
     for (const s of ["n", "f"]) {
       o.legs[s] = {}; for (const k of ["th", "sh", "ft", "to"]) o.legs[s][k] = lerpA(a.legs[s][k], b.legs[s][k], t);
+      for (const k of ["zk", "za"]) o.legs[s][k] = lz(a.legs[s], s, k) + (lz(b.legs[s], s, k) - lz(a.legs[s], s, k)) * t;
       o.arms[s] = { hand: t < 0.5 ? a.arms[s].hand : b.arms[s].hand }; for (const k of ["ua", "fa", "ha"]) o.arms[s][k] = lerpA(a.arms[s][k], b.arms[s][k], t);
+      for (const k of ["ze", "zw"]) o.arms[s][k] = az(a.arms[s], k) + (az(b.arms[s], k) - az(a.arms[s], k)) * t;
     }
     o.sit = t < 0.5 ? a.sit : b.sit;
     return o;
@@ -105,7 +113,7 @@
   function foot(l) { return [cap(l.A, l.Hl, 4.6, 4.2), cap(l.Hl, l.Bl, 4, 3.2), cap(l.A, at(l.Bl, ang(sub(l.A, l.Bl)) + 0, 3), 4.2, 3.2), cap(l.Bl, l.Tp, 3, 2.4)]; }
   /* The figure as SVG. o: { finger: index finger raised (near hand), points: highlight the seven parts of sujud,
      turbah: the clay tablet under the forehead } */
-  function draw(p, o) {
+  function drawSide(p, o) {
     o = o || {};
     const b = body(p);
     const dy = G - bottoms(b, p), dx = X0 - b.n.Bl[0]; place(b, dx, dy);
@@ -145,6 +153,119 @@
     return `<rect class="sl-mat" x="92" y="${G}" width="320" height="7" rx="3.5"/>` + out.join("");
   }
 
+
+  /* ---------- three-quarter front view (Nov 2026) ----------
+     The side-view skeleton above is lifted into 3D: x towards the qibla, y down, z to the person's right. Hips and
+     shoulders get their width, arms and legs their sideways hints (ze/zw, zk/za), and everything is seen from the
+     front-right (PHI from the qibla line) and a little from above (BETA). Parts are drawn far to near. Faceless.
+     who: "man" (cap, kurta to the knees, trousers) or "woman" (headscarf over the shoulders, a long loose dress). */
+  const PHI = 42 * D2R, BETA = 13 * D2R, cP = Math.cos(PHI), sP = Math.sin(PHI), cB = Math.cos(BETA), sB = Math.sin(BETA);
+  const proj = q => { const x = q[0] - X0, y = q[1] - G, z = q[2], d = x * cP + z * sP; return [X0 + x * sP - z * cP, G + y * cB + d * sB, d]; };
+  const add3 = (a, v, k) => [a[0] + v[0] * k, a[1] + v[1] * k, a[2] + v[2] * k];
+  function hull(pts) { // monotone chain, 2D
+    const P2 = pts.map(q => [q[0], q[1]]).sort((a, b) => a[0] - b[0] || a[1] - b[1]), cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo = [], up = []; for (const q of P2) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+    for (let i = P2.length - 1; i >= 0; i--) { const q = P2[i]; while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+    return lo.slice(0, -1).concat(up.slice(0, -1));
+  }
+  // a rounded section (an ellipse across the body) at c, depth along fd (2D unit vector), width w across
+  const section = (c, fd, dep, w, out, n) => { n = n || 10; for (let i = 0; i < n; i++) { const th = i / n * 2 * Math.PI; out.push(proj([c[0] + fd[0] * Math.cos(th) * dep, c[1] + fd[1] * Math.cos(th) * dep, (c[2] || 0) + Math.sin(th) * w])); } };
+  const blob = (c3, r, out, n) => { const c = proj(c3); n = n || 10; for (let i = 0; i < n; i++) { const th = i / n * 2 * Math.PI; out.push([c[0] + Math.cos(th) * r, c[1] + Math.sin(th) * r]); } };
+  function skel3(p) {
+    const b = body(p), dy = G - bottoms(b, p), dx = X0 - b.n.Bl[0]; place(b, dx, dy);
+    const sg = { n: 1, f: -1 }, L = {}, A = {};
+    for (const s of ["n", "f"]) {
+      const l = b[s], spec = p.legs[s], zk = lz(spec, s, "zk"), za = lz(spec, s, "za"), zh = sg[s] * HIPZ;
+      L[s] = { Hp: [b.Hj[0], b.Hj[1], zh], K: [l.K[0], l.K[1], zk], A: [l.A[0], l.A[1], za], Bl: [l.Bl[0], l.Bl[1], za], Tp: [l.Tp[0], l.Tp[1], za], Hl: [l.Hl[0], l.Hl[1], za] };
+      const a = p.arms[s], E = at(b.Sj, a.ua, LEN.ua), W = at(E, a.fa, LEN.fa), zs = sg[s] * SHZ;
+      A[s] = { S: [b.Sj[0], b.Sj[1], zs], E: [E[0], E[1], zs * az(a, "ze")], W: [W[0], W[1], zs * az(a, "zw")], ha: a.ha, hand: a.hand };
+    }
+    return { b, L, A, H: [b.H[0], b.H[1], 0], C: [b.C[0], b.C[1], 0], Ne: [b.Ne[0], b.Ne[1], 0], S: [b.S[0], b.S[1], 0] };
+  }
+  const dep = (...q) => q.reduce((t, x) => t + proj(x)[2], 0) / q.length;
+  function draw(p, o) {
+    o = o || {};
+    if (o.view === "side") return drawSide(p, o);
+    const who = o.who === "woman" ? "woman" : "man", W = who === "woman";
+    const k = skel3(p), u = p.T, fd = dir(u + 90), parts = [];
+    const put = (cls, d, depth, ol) => parts.push({ cls, d, depth, ol: ol !== false });
+    const cap3 = (a, b2, ra, rb) => { const A2 = proj(a), B2 = proj(b2); return cap(A2, B2, ra, rb); };
+    // hands: the 2D shapes, turned to the projected direction of the hand
+    const hand3 = s => { const a = k.A[s], tip = proj([a.W[0] + dir(a.ha)[0] * 10, a.W[1] + dir(a.ha)[1] * 10, a.W[2]]), w = proj(a.W);
+      const h = { ha: ang(sub(tip, w)), hand: a.hand === "point" && !o.finger ? "grip" : a.hand }; return hand(w, h).join(""); };
+    for (const s of ["n", "f"]) {
+      const a = k.A[s], l = k.L[s], far = s === "f" ? " far" : "";
+      put("sl-shirt" + far, cap3(a.S, a.E, 6.6, 5.4), dep(a.S, a.E) - 0.2, true);
+      put("sl-shirt" + far, cap3(a.E, a.W, 5.4, 4.4), dep(a.E, a.W));
+      put("sl-skin" + far, hand3(s), dep(a.W) + 0.4);
+      const legC = W ? "sl-shirt" : "sl-pants";
+      put(legC + far, cap3(l.Hp, l.K, 9.4, 7.2), dep(l.Hp, l.K));
+      put(legC + far, cap3(l.K, l.A, 7.2, 4.8), dep(l.K, l.A));
+      put("sl-skin" + far, foot({ A: proj(l.A), Hl: proj(l.Hl), Bl: proj(l.Bl), Tp: proj(l.Tp) }).join(""), dep(l.A, l.Tp) + 0.1);
+    }
+    // torso: sections from the hips to the shoulders, wrapped
+    const tp = []; const tc = t => { const c = at(k.b.H, u, t); return [c[0], c[1], 0]; };
+    for (const [t, dp, w] of [[-4, 10.5, 12.5], [10, 10, 11.5], [26, 11, 12.5], [42, 11, 14.5], [52, 8.5, 13.5], [57, 5, 8]]) section(tc(t), fd, dp, w, tp);
+    const torsoD = dep(k.H, k.S) - 2;
+    // the skirt of the kurta (to the knees) or the dress (to the ankles), over the tops of the legs
+    const sk = []; section(tc(-2), fd, 11, 13, sk);
+    const skirt = W ? 0.94 : (p.sit ? 0.6 : 0.72);
+    for (const s of ["n", "f"]) { const l = k.L[s], kn = [l.Hp[0] + (l.K[0] - l.Hp[0]) * skirt, l.Hp[1] + (l.K[1] - l.Hp[1]) * skirt, l.Hp[2] + (l.K[2] - l.Hp[2]) * skirt];
+      blob(kn, W ? 11 : 10.5, sk);
+      if (W) { const an = [l.K[0] + (l.A[0] - l.K[0]) * 0.86, l.K[1] + (l.A[1] - l.K[1]) * 0.86, l.K[2] + (l.A[2] - l.K[2]) * 0.86]; blob(an, 9.5, sk); blob(l.K, 10, sk); } }
+    const legTop = Math.max(...["n", "f"].map(s => dep(k.L[s].Hp, k.L[s].K)));
+    const skD = Math.max(torsoD, legTop) + 0.5;
+    put("sl-shirt", smooth(hull(tp)), torsoD);
+    put("sl-shirt", smooth(hull(sk)), skD);
+    if (Math.abs(((u % 360) + 360) % 360) < 40 || p.sit) put("sl-shirt", smooth(hull(tp)), skD + 0.01, false); // one garment: no seam at the waist
+    put("sl-skin", cap3([k.S[0], k.S[1], 0], k.Ne, 5, 5), torsoD + 0.1);
+    // head: facing direction (turned for the salam), then cap or headscarf
+    const N = p.N, tu = Math.max(-1, Math.min(1, p.turn || 0)) * 80 * D2R, fN = dir(N + 90), up = dir(N);
+    const fwd = [fN[0] * Math.cos(tu), fN[1] * Math.cos(tu), Math.sin(tu)], C2 = proj(k.C), hd = dep(k.C);
+    const upP = proj(add3(k.C, [up[0], up[1], 0], 10)), Np = ang(sub(upP, C2));
+    const head = [];
+    if (W) {
+      // the scarf: round the head and down over the shoulders and chest
+      const sc = []; blob(k.C, LEN.hr + 3.2, sc, 14);
+      const sh = at(k.b.H, u, 50), ch = at(at(k.b.H, u, 38), u + 90, 7);
+      for (const z of [-15, 15]) sc.push(proj([sh[0], sh[1], z]));
+      sc.push(proj([ch[0], ch[1], -9]), proj([ch[0], ch[1], 9]), proj([at(sh, u + 270, 6)[0], at(sh, u + 270, 6)[1], 0]));
+      head.push(`<path class="sl-ol" d="${smooth(hull(sc))}"/><path class="sl-scarf" d="${smooth(hull(sc))}"/>`);
+      const vis = fwd[0] * cP + fwd[2] * sP; // how much of the face turns to the viewer
+      if (vis > 0.05) { const fc = proj(add3(k.C, fwd, LEN.hr * 0.42)), rx = 6.2 * Math.min(1, 0.45 + vis * 0.7), ry = 8.2;
+        head.push(`<ellipse class="sl-skin" cx="${f1(fc[0])}" cy="${f1(fc[1])}" rx="${f1(rx)}" ry="${f1(ry)}" transform="rotate(${f1(Np)} ${f1(fc[0])} ${f1(fc[1])})"/>`); }
+    } else {
+      head.push(`<path class="sl-ol" d="${circ(C2, LEN.hr)}"/><path class="sl-skin" d="${circ(C2, LEN.hr)}"/>`);
+      const r = LEN.hr + 0.6;
+      head.push(`<path class="sl-cap" d="M${P(at(C2, Np - 92, r))}A${r} ${r} 0 0 1 ${P(at(C2, Np + 92, r))}Q${P(at(C2, Np, 3))} ${P(at(C2, Np - 92, r))}Z"/>`);
+      const ear = [Math.sin(tu) * -1 * 0, 0, 0], rv = [-(fwd[2]) , 0, fwd[0]]; // the right ear: 90° from the face
+      const earDir = [fN[0] * -Math.sin(tu), fN[1] * -Math.sin(tu), Math.cos(tu)];
+      if (earDir[0] * cP + earDir[2] * sP > 0.1) { const e = proj(add3(k.C, earDir, LEN.hr - 1)); head.push(`<ellipse class="sl-ear" cx="${f1(e[0])}" cy="${f1(e[1])}" rx="2.2" ry="3.2" transform="rotate(${f1(Np)} ${f1(e[0])} ${f1(e[1])})"/>`); }
+      void ear; void rv;
+      if (fwd[0] * cP + fwd[2] * sP > 0) { const n0 = proj(add3(k.C, fwd, LEN.hr - 0.5)), n1 = proj(add3(add3(k.C, fwd, LEN.hr + 2), [up[0], up[1], 0], -2.5));
+        head.push(`<path class="sl-face" d="M${P(proj(add3(add3(k.C, fwd, LEN.hr - 0.5), [up[0], up[1], 0], 2.5)))}L${P(n1)}L${P(n0)}"/>`); }
+    }
+    // the scarf lies over the shoulders: drawn after the upper arms, before forearms in front of the chest
+    const upperN = dep(k.A.n.S, k.A.n.E);
+    put("", head.join(""), W ? Math.max(hd, upperN) + 0.1 : hd + 0.3, false);
+    parts.sort((a, b) => a.depth - b.depth);
+    const out = parts.map(x => x.cls ? (x.ol ? `<path class="sl-ol" d="${x.d}"/>` : "") + `<path class="${x.cls}" d="${x.d}"/>` : x.d);
+    const fh = proj(add3(k.C, fwd, LEN.hr)), gp = (x, z) => proj([x, G, z]);
+    if (o.turbah) { const c = k.C[0] + 4, q = [gp(c, -6), gp(c + 16, -6), gp(c + 16, 6), gp(c, 6)]; out.unshift(`<path class="sl-turbah" d="M${q.map(P).join("L")}Z"/>`); }
+    if (o.points) { const pts = [[fh[0], Math.max(fh[1], proj([k.C[0], G, 0])[1] - 2)], proj(k.A.n.W), proj(k.A.f.W), proj(k.L.n.K), proj(k.L.f.K), proj(k.L.n.Tp), proj(k.L.f.Tp)];
+      out.push(pts.map((q, i) => `<circle class="sl-pt" style="--k:${i}" cx="${f1(q[0])}" cy="${f1(q[1])}" r="5.5"/>`).join("")); }
+    if (o.turnArrow) { const c = C2, s2 = o.turnArrow; out.push(`<path class="sl-turn" d="M${f1(c[0] - 14)} ${f1(c[1] - 22)}Q${f1(c[0])} ${f1(c[1] - 32)} ${f1(c[0] + 14)} ${f1(c[1] - 22)}"/><path class="sl-turn" d="${s2 < 0 ? `M${f1(c[0] + 14)} ${f1(c[1] - 22)}l-7 -2M${f1(c[0] + 14)} ${f1(c[1] - 22)}l-2 -7` : `M${f1(c[0] - 14)} ${f1(c[1] - 22)}l7 -2M${f1(c[0] - 14)} ${f1(c[1] - 22)}l2 -7`}"/>`); }
+    const m = [gp(X0 - 150, -30), gp(X0 + 70, -30), gp(X0 + 70, 30), gp(X0 - 150, 30)];
+    return `<path class="sl-mat" d="M${m.map(P).join("L")}Z"/>` + out.join("");
+  }
+  /* The box around the figure as drawn in the three-quarter view (for the camera). */
+  function bbox3(p) {
+    const k = skel3(p), pts = [k.H, k.S, k.C];
+    for (const s of ["n", "f"]) { const l = k.L[s], a = k.A[s]; pts.push(l.K, l.A, l.Tp, l.Hl, a.E, a.W); }
+    const q = pts.map(proj), xs = q.map(v => v[0]), ys = q.map(v => v[1]);
+    return [Math.min(...xs) - 16, Math.min(...ys) - 18, Math.max(...xs) + 16, Math.max(...ys) + 8];
+  }
+
   /* ---------- poses ---------- */
   const STAND_LEGS = { n: { th: 180, sh: 180, ft: 90, to: 90 }, f: { th: 182, sh: 181, ft: 90, to: 90 } };
   // Kneeling with the toes tucked: the shin rises a little towards the heel, the foot stands on its bent toes.
@@ -158,34 +279,46 @@
   const hang = { ua: 182, fa: 180, ha: 180, hand: "open" };
   const POSE = {
     stand:    { T: 0, N: 10, legs: STAND_LEGS, arms: { n: hang, f: Object.assign({}, hang, { ua: 184 }) } },
-    ear:      { T: 0, N: 4, legs: STAND_LEGS, arms: { n: { at: "C", dx: 14, dy: 14, bend: 1, ha: 2, hand: "open" }, f: { at: "C", dx: 12, dy: 15, bend: 1, ha: 2, hand: "open" } } },
-    shoulder: { T: 0, N: 4, legs: STAND_LEGS, arms: { n: { at: "S", dx: 12, dy: 12, bend: 1, ha: 4, hand: "open" }, f: { at: "S", dx: 10, dy: 13, bend: 1, ha: 4, hand: "open" } } },
-    low:      { T: 0, N: 14, legs: STAND_LEGS, arms: { n: { at: "H", dx: 11, dy: -12, bend: 1, ha: 70, hand: "grip" }, f: { at: "H", dx: 9, dy: -14, bend: 1, ha: 76, hand: "open" } } },
-    mid:      { T: 0, N: 14, legs: STAND_LEGS, arms: { n: { at: "H", dx: 12, dy: -29, bend: 1, ha: 70, hand: "grip" }, f: { at: "H", dx: 10, dy: -31, bend: 1, ha: 76, hand: "open" } } },
+    ear:      { T: 0, N: 4, legs: STAND_LEGS, arms: { n: { at: "C", dx: 6, dy: 14, bend: 1, ha: 2, hand: "open", ze: 1.6, zw: 1.5 }, f: { at: "C", dx: 4, dy: 15, bend: 1, ha: 2, hand: "open", ze: 1.6, zw: 1.5 } } },
+    shoulder: { T: 0, N: 4, legs: STAND_LEGS, arms: { n: { at: "S", dx: 9, dy: 12, bend: 1, ha: 4, hand: "open", ze: 1.5, zw: 1.3 }, f: { at: "S", dx: 7, dy: 13, bend: 1, ha: 4, hand: "open", ze: 1.5, zw: 1.3 } } },
+    low:      { T: 0, N: 14, legs: STAND_LEGS, arms: { n: { at: "H", dx: 11, dy: -12, bend: 1, ha: 70, hand: "grip", ze: 1.12, zw: -0.12 }, f: { at: "H", dx: 9, dy: -14, bend: 1, ha: 76, hand: "open", ze: 1.12, zw: 0.28 } } },
+    mid:      { T: 0, N: 14, legs: STAND_LEGS, arms: { n: { at: "H", dx: 12, dy: -29, bend: 1, ha: 70, hand: "grip", ze: 1.15, zw: -0.12 }, f: { at: "H", dx: 10, dy: -31, bend: 1, ha: 76, hand: "open", ze: 1.15, zw: 0.28 } } },
     sides:    { T: 0, N: 14, legs: STAND_LEGS, arms: { n: hang, f: Object.assign({}, hang, { ua: 184 }) } },
-    qunut:    { T: 0, N: 8, legs: STAND_LEGS, arms: { n: { at: "S", dx: 19, dy: 9, bend: 1, ha: 78, hand: "open" }, f: { at: "S", dx: 17, dy: 8, bend: 1, ha: 78, hand: "open" } } },
-    ruku:     { T: 90, N: 92, legs: { n: { th: 176, sh: 182, ft: 90, to: 90 }, f: { th: 178, sh: 183, ft: 90, to: 90 } }, arms: { n: { at: "n.K", dx: 3, dy: -3, bend: 1, ha: 172, hand: "grip" }, f: { at: "f.K", dx: 1, dy: -4, bend: 1, ha: 172, hand: "grip" } } },
-    kneel:    { T: 2, N: 14, legs: KNEEL_LEGS, arms: { n: { at: "n.K", dx: 8, dy: -16, bend: 1, ha: 100, hand: "open" }, f: { at: "f.K", dx: 6, dy: -17, bend: 1, ha: 100, hand: "open" } } },
-    reach:    { T: 120, N: 132, legs: { n: { th: 150, sh: 200, ft: 120, to: 95 }, f: { th: 152, sh: 202, ft: 120, to: 95 } }, arms: { n: { at: "ground", dx: -4, dy: 3, bend: -1, ha: 90, hand: "open" }, f: { at: "ground", dx: -6, dy: 3, bend: -1, ha: 90, hand: "open" } } },
-    sujud:    { T: 115, N: 150, legs: { n: { th: 170, sh: 284, ft: 176, to: 90 }, f: { th: 168, sh: 284, ft: 176, to: 90 } }, arms: { n: { at: "ground", dx: -19, dy: 3.5, bend: -1, ha: 92, hand: "open" }, f: { at: "ground", dx: -21, dy: 3.5, bend: -1, ha: 92, hand: "open" } } },
-    sit:      { T: 0, N: 22, legs: SIT_LEGS, sit: 1, arms: { n: { at: "n.K", dx: -4, dy: -9, bend: 1, ha: 96, hand: "open" }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 96, hand: "open" } } },
-    tashahhud:{ T: 0, N: 22, legs: SIT_LEGS, sit: 1, arms: { n: { at: "n.K", dx: -6, dy: -9, bend: 1, ha: 96, hand: "point" }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 96, hand: "open" } } },
-    tawarruk: { T: 4, N: 22, legs: TAW_LEGS, sit: 2, arms: { n: { at: "n.K", dx: -6, dy: -9, bend: 1, ha: 98, hand: "point" }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 98, hand: "open" } } },
-    jsit:     { T: 2, N: 22, legs: JAF_LEGS, sit: 2, arms: { n: { at: "n.K", dx: -4, dy: -9, bend: 1, ha: 98, hand: "open" }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 98, hand: "open" } } },
-    tawsit:   { T: 4, N: 22, legs: TAW_LEGS, sit: 2, arms: { n: { at: "n.K", dx: -4, dy: -9, bend: 1, ha: 98, hand: "open" }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 98, hand: "open" } } }
+    qunut:    { T: 0, N: 8, legs: STAND_LEGS, arms: { n: { at: "S", dx: 19, dy: 9, bend: 1, ha: 78, hand: "open", ze: 1.2, zw: 0.42 }, f: { at: "S", dx: 17, dy: 8, bend: 1, ha: 78, hand: "open", ze: 1.2, zw: 0.42 } } },
+    ruku:     { T: 90, N: 92, legs: { n: { th: 176, sh: 182, ft: 90, to: 90 }, f: { th: 178, sh: 183, ft: 90, to: 90 } }, arms: { n: { at: "n.K", dx: 3, dy: -3, bend: 1, ha: 172, hand: "grip", ze: 1.3, zw: 0.64 }, f: { at: "f.K", dx: 1, dy: -4, bend: 1, ha: 172, hand: "grip", ze: 1.3, zw: 0.64 } } },
+    kneel:    { T: 2, N: 14, legs: KNEEL_LEGS, arms: { n: { at: "n.K", dx: 8, dy: -16, bend: 1, ha: 100, hand: "open", zw: 0.62 }, f: { at: "f.K", dx: 6, dy: -17, bend: 1, ha: 100, hand: "open", zw: 0.62 } } },
+    reach:    { T: 120, N: 132, legs: { n: { th: 150, sh: 200, ft: 120, to: 95 }, f: { th: 152, sh: 202, ft: 120, to: 95 } }, arms: { n: { at: "ground", dx: -4, dy: 3, bend: -1, ha: 90, hand: "open", ze: 1.15, zw: 1.0 }, f: { at: "ground", dx: -6, dy: 3, bend: -1, ha: 90, hand: "open", ze: 1.15, zw: 1.0 } } },
+    sujud:    { T: 115, N: 150, legs: { n: { th: 170, sh: 284, ft: 176, to: 90 }, f: { th: 168, sh: 284, ft: 176, to: 90 } }, arms: { n: { at: "ground", dx: -19, dy: 3.5, bend: -1, ha: 92, hand: "open", ze: 1.5, zw: 1.15 }, f: { at: "ground", dx: -21, dy: 3.5, bend: -1, ha: 92, hand: "open", ze: 1.5, zw: 1.15 } } },
+    sit:      { T: 0, N: 22, legs: SIT_LEGS, sit: 1, arms: { n: { at: "n.K", dx: -4, dy: -9, bend: 1, ha: 96, hand: "open", zw: 0.62 }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 96, hand: "open", zw: 0.62 } } },
+    tashahhud:{ T: 0, N: 22, legs: SIT_LEGS, sit: 1, arms: { n: { at: "n.K", dx: -6, dy: -9, bend: 1, ha: 96, hand: "point", zw: 0.62 }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 96, hand: "open", zw: 0.62 } } },
+    tawarruk: { T: 4, N: 22, legs: TAW_LEGS, sit: 2, arms: { n: { at: "n.K", dx: -6, dy: -9, bend: 1, ha: 98, hand: "point", zw: 0.62 }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 98, hand: "open", zw: 0.62 } } },
+    jsit:     { T: 2, N: 22, legs: JAF_LEGS, sit: 2, arms: { n: { at: "n.K", dx: -4, dy: -9, bend: 1, ha: 98, hand: "open", zw: 0.62 }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 98, hand: "open", zw: 0.62 } } },
+    tawsit:   { T: 4, N: 22, legs: TAW_LEGS, sit: 2, arms: { n: { at: "n.K", dx: -4, dy: -9, bend: 1, ha: 98, hand: "open", zw: 0.62 }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 98, hand: "open", zw: 0.62 } } },
+    /* Nov 2026: positions commonly taught for women. chest: right hand over the left on the chest (Hanafi);
+       rukuW: a lighter bow, hands resting on the knees with the fingers together, arms close (Hanafi);
+       sujudW: gathered, belly near the thighs, forearms down and close to the sides (Hanafi); sujudC: gathered, elbows
+       close (taught for women in the other schools); sitW: sitting on the ground with both feet out to the right (Hanafi). */
+    chest:    { T: 0, N: 12, legs: STAND_LEGS, arms: { n: { at: "S", dx: 11, dy: 17, bend: 1, ha: 74, hand: "open", ze: 1.02, zw: -0.06 }, f: { at: "S", dx: 9, dy: 19, bend: 1, ha: 78, hand: "open", ze: 1.02, zw: 0.34 } } },
+    rukuW:    { T: 62, N: 68, legs: { n: { th: 172, sh: 190, ft: 90, to: 90 }, f: { th: 174, sh: 191, ft: 90, to: 90 } }, arms: { n: { at: "n.K", dx: 2, dy: -4, bend: 1, ha: 176, hand: "open", ze: 1.0, zw: 0.62 }, f: { at: "f.K", dx: 0, dy: -5, bend: 1, ha: 176, hand: "open", ze: 1.0, zw: 0.62 } } },
+    sujudW:   { T: 106, N: 148, legs: { n: { th: 150, sh: 284, ft: 176, to: 90, zk: 5, za: 14 }, f: { th: 148, sh: 284, ft: 176, to: 90, zk: -5, za: 4 } }, arms: { n: { at: "ground", dx: -15, dy: 3.5, bend: -1, ha: 92, hand: "open", ze: 0.95, zw: 1.0 }, f: { at: "ground", dx: -17, dy: 3.5, bend: -1, ha: 92, hand: "open", ze: 0.95, zw: 1.0 } } },
+    sujudC:   { T: 110, N: 150, legs: { n: { th: 158, sh: 284, ft: 176, to: 90, zk: 6 }, f: { th: 156, sh: 284, ft: 176, to: 90, zk: -6 } }, arms: { n: { at: "ground", dx: -17, dy: 3.5, bend: -1, ha: 92, hand: "open", ze: 1.05, zw: 1.0 }, f: { at: "ground", dx: -19, dy: 3.5, bend: -1, ha: 92, hand: "open", ze: 1.05, zw: 1.0 } } },
+    sitW:     { T: 3, N: 22, legs: { n: { th: 100, sh: 270, ft: 268, to: 268, zk: 9, za: 24 }, f: { th: 104, sh: 268, ft: 266, to: 266, zk: -3, za: 16 } }, sit: 2, arms: { n: { at: "n.K", dx: -4, dy: -9, bend: 1, ha: 98, hand: "open", zw: 0.7 }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 98, hand: "open", zw: 0.3 } } },
+    sitWf:    { T: 3, N: 22, legs: { n: { th: 100, sh: 270, ft: 268, to: 268, zk: 9, za: 24 }, f: { th: 104, sh: 268, ft: 266, to: 266, zk: -3, za: 16 } }, sit: 2, arms: { n: { at: "n.K", dx: -6, dy: -9, bend: 1, ha: 98, hand: "point", zw: 0.7 }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 98, hand: "open", zw: 0.3 } } }
   };
   const RES = {}; for (const k in POSE) RES[k] = resolve(POSE[k]);
   const pose = (k, extra) => extra ? Object.assign({}, RES[k], extra) : RES[k];
 
   /* ---------- close-ups (front view): where the hands go ---------- */
   // 110 x 120 panel. Front view: the person faces the viewer, so his right hand is on the viewer's left.
-  function inset(kind, t) {
+  function inset(kind, t, who) {
     const o = [];
-    const torso = `<path class="si-shirt" d="M26 46Q55 38 84 46L88 112H22Z"/><circle class="si-skin" cx="55" cy="26" r="13"/><path class="si-cap" d="M42 24A13 13 0 0 1 68 24Q55 19 42 24Z"/><path class="si-skin" d="M50 37h10v6H50z"/>`;
+    const torso = who === "woman"
+      ? `<path class="si-shirt" d="M26 46Q55 38 84 46L88 112H22Z"/><path class="si-scarf" d="M55 9C40 9 36 22 37 34C30 40 24 50 28 60Q55 68 82 60C86 50 80 40 73 34C74 22 70 9 55 9Z"/><ellipse class="si-skin" cx="55" cy="27" rx="9.5" ry="12"/>`
+      : `<path class="si-shirt" d="M26 46Q55 38 84 46L88 112H22Z"/><circle class="si-skin" cx="55" cy="26" r="13"/><path class="si-cap" d="M42 24A13 13 0 0 1 68 24Q55 19 42 24Z"/><path class="si-skin" d="M50 37h10v6H50z"/>`;
     const navel = `<circle class="si-mark" cx="55" cy="86" r="1.8"/>`, line = (y, lab) => `<path class="si-guide" d="M14 ${y}H96"/><text class="si-lab" x="98" y="${y + 3}">${lab}</text>`;
     const palm = (x, y, a, front) => `<g transform="translate(${x} ${y}) rotate(${a})"><rect class="si-skin${front ? " front" : ""}" x="-5.5" y="-15" width="11" height="17" rx="5"/><path class="si-fing" d="M-3 -13v-4M0 -14v-4.5M3 -13v-4"/></g>`;
-    if (kind === "low" || kind === "mid") {
-      const y = kind === "low" ? 96 : 76;
+    if (kind === "low" || kind === "mid" || kind === "chest") {
+      const y = kind === "low" ? 96 : kind === "mid" ? 76 : 62;
       o.push(torso, navel, `<path class="si-sleeve" d="M28 50Q22 ${y - 10} 40 ${y}"/><path class="si-sleeve" d="M82 50Q90 ${y - 12} 66 ${y}"/>`,
         `<rect class="si-skin" x="44" y="${y - 6}" width="28" height="10" rx="5"/>`, `<rect class="si-skin front" x="36" y="${y - 7}" width="26" height="12" rx="6"/><path class="si-fing" d="M56 ${y - 6}v10M59 ${y - 6}v9"/>`,
         line(86, "•"));
@@ -218,7 +351,7 @@
     } else if (kind === "seven") {
       o.push(`<text class="si-big" x="55" y="64">7</text>`);
     }
-    return o.join("");
+    return who === "woman" ? o.join("").replace(/class="si-pants"/g, 'class="si-shirt"') : o.join(""); // the dress, not trousers
   }
   /* Where the figure is (for the camera): the box around its joints and head, set on the ground as in draw(). */
   function bbox(p) {
@@ -228,5 +361,5 @@
     const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]);
     return [Math.min(...xs) - 14, Math.min(...ys) - 16, Math.max(...xs) + 14, G];
   }
-  return { G, X0, LEN, POSE, RES, pose, resolve, mix, draw, body, bbox, inset, ik, cap };
+  return { G, X0, LEN, POSE, RES, pose, resolve, mix, draw, drawSide, body, bbox, bbox3, inset, ik, cap, proj };
 });

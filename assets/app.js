@@ -2,7 +2,7 @@
 (() => {
 "use strict";
 const QM = window.QURAN_META, X = window.DINSATHI;
-const { I18N, TL, DUAS, DUA_CATS, CITIES, METHODS, EVENTS, HM, CURRENCIES } = X;
+const { I18N, TL, DUAS, DUA_CATS, CITIES, COUNTRIES, REGIONS, METHODS, EVENTS, HM, CURRENCIES } = X;
 const VOTD = window.DINSATHI_VOTD;
 const FIX = window.IE_BNFIX || { repair: s => s }, XT = window.IE_XTRACK, GL = window.IE_GLOSS;
 const LOC = window.IE_LOCALE, VE = window.IE_VOTD_EN, DV = window.IE_DAYVIZ;
@@ -33,10 +33,10 @@ function need(g) {
 }
 /* Which group a route or a shared link needs (null: nothing extra). */
 const routeGroup = r => r.tab === "quran" ? (r.sub === "stories" ? "stories" : (r.sub === "all" || r.surah) ? null : "study")
-  : r.tab === "more" ? ({ names: "names", guide: "guide", hadith: "hadith", about: "legal", terms: "legal", privacy: "legal", pray: "pray" }[r.sub] || null) : null;
+  : r.tab === "hadith" ? "hadith" : r.tab === "more" ? ({ names: "names", guide: "guide", about: "legal", terms: "legal", privacy: "legal", pray: "pray" }[r.sub] || null) : null;
 const hashGroup = h => /^story\//.test(h) ? "stories" : /^name\//.test(h) ? "names" : /^(hadith|nawawi)\//.test(h) ? "hadith" : null;
 const PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"], ROWS = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
-const TABS = ["today", "quran", "duas", "more"];
+const TABS = ["today", "quran", "hadith", "more"]; // Nov 2026: Hadith is a tab; Duas moved into More
 const mq = (() => { try { return matchMedia("(min-width: 1024px)"); } catch (e) { return { matches: false }; } })();
 const desk = () => !!mq.matches;
 /* Running inside the Android app (Capacitor)? Everything is bundled there, so no service worker is needed. */
@@ -47,8 +47,11 @@ const natQ = (p, m, o) => { nat(p, m, o).catch(() => {}); };
 
 /* ---------------- state ---------------- */
 const KEY = "dinsathi.web.v1";
-const DEF = { lang: "en", loc: "en-IN", mode: "system", lightTheme: "classic", darkTheme: "jade", glass: "balanced", motion: "subtle", scene: "landscape", city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
-  school: null, vib: "light", snd: true, vol: 60, amb: false, ambK: "rain", nf: { pray: false, forb: false, thu: false }, nfAsk: false, pray: null, log: {}, xlog: {}, fplan: {}, gloss: false, last: null, read: [], bm: [], fav: [], tab: "today", hcol: "general", nwread: [],
+/* Notification sounds (Nov 2026): the phone's own sound, or one of three soft sounds that ship with the app
+   (res/raw/ie_drop, ie_tap, ie_breeze; previews in assets/sounds). */
+const NF_SND = ["default", "drop", "tap", "breeze"];
+const DEF = { lang: "en", loc: "en-IN", mode: "system", lightTheme: "classic", darkTheme: "jade", glass: "balanced", motion: "subtle", scene: "landscape", sceneAuto: false, city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
+  school: null, vib: "light", snd: true, sndK: "soft", vol: 60, nfSnd: "default", nf: { pray: false, forb: false, thu: false, tahajjud: false, duha: false }, nfAsk: false, pray: null, log: {}, xlog: {}, fplan: {}, gloss: false, last: null, read: [], bm: [], fav: [], tab: "today", hcol: "general", nwread: [],
   zk: { cur: "AUD", basis: "silver", w: "tola", price: "", v: {} } };
 let st = JSON.parse(JSON.stringify(DEF));
 try {
@@ -60,6 +63,10 @@ try {
   }
   if (!["off", "light", "medium", "strong"].includes(st.vib)) st.vib = "light";
   st.vol = Math.max(0, Math.min(100, +st.vol || 0));
+  delete st["amb"]; delete st["ambK"]; // background sounds were removed (Nov 2026)
+  if (!["soft", "drop", "air"].includes(st.sndK)) st.sndK = "soft";
+  if (!NF_SND.includes(st.nfSnd)) st.nfSnd = "default";
+  st.sceneAuto = !!st.sceneAuto;
   st.xlog = XT.clean(st.xlog);
   if (!st.fplan || typeof st.fplan !== "object" || Array.isArray(st.fplan)) st.fplan = {};
   if (st.hcol !== "nawawi") st.hcol = "general";
@@ -103,7 +110,7 @@ const buzz = p => { const v = VIB[st.vib]; if (!v) return;
 const SND = window.IE_SOUND || null;
 const fx = p => { buzz(p); if (SND) SND.done(); };
 let ringer = "normal"; // Android app: the phone's sound profile (normal | vibrate | silent); the app's sounds follow it
-function sndApply() { if (!SND) return; SND.setVolume(st.vol); SND.setTouch(st.snd); SND.setAmbient(st.amb ? st.ambK : null); }
+function sndApply() { if (!SND) return; SND.setVolume(st.vol); SND.setTouch(st.snd); SND.setKind(st.sndK); }
 const sndProfile = () => NATIVE ? t(ringer !== "normal" ? "snd_muted" : "snd_prof_app") : t(SND && SND.supported() ? "snd_prof_web" : "snd_unsup");
 const pad2 = n => String(n).padStart(2, "0");
 
@@ -113,6 +120,7 @@ const P = {
   stories: '<path d="M5 4.5h11.5A1.5 1.5 0 0 1 18 6v14H6.5A1.5 1.5 0 0 1 5 18.5z"/><path d="M5 18.5A1.5 1.5 0 0 1 6.5 17H18"/><path d="M8.5 8h6M8.5 11h4"/>',
   quran: '<path d="M12 6.5c-2-1.5-5-2-8-1.5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5zM12 6.5V20"/>',
   duas: '<path d="M19.5 14.5A8 8 0 1 1 9.5 4.5a6.5 6.5 0 0 0 10 10z"/>',
+  msg: '<path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8.5a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17H5a1.5 1.5 0 0 1-1.5-1.5V7A1.5 1.5 0 0 1 5 5.5z"/><path d="M8 10h8M8 13h5"/>',
   more: '<rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/>',
   pin: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',
   gear: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/>',
@@ -155,23 +163,28 @@ const ic = (n, cls) => `<svg viewBox="0 0 24 24" aria-hidden="true"${cls ? ` cla
 
 /* ---------------- theme ---------------- */
 /* Appearance (Face 7). The mode (System, Light, Dark) picks the appearance; each appearance has three themes and
-   remembers its own choice: st.lightTheme (classic | emerald | sandstone) and st.darkTheme (jade | indigo | plum).
+   remembers its own choice: st.lightTheme (classic | sky | sandstone) and st.darkTheme (jade | indigo | teal).
    A light theme is only ever shown in the light appearance and a dark theme only in the dark one.
    Migration, idempotent and non-destructive (st.palette/st.mode are left in place):
    - Phase 5.2 st.theme: light/dark/system keep that mode; emerald → light + Emerald; indigo → dark + Indigo.
    - Phase 5.3 st.palette: emerald/sandstone → that light theme; indigo → Indigo Moon; burgundy → Plum Dusk
      (Burgundy had a light variant; it is no longer offered as a light theme, so light falls back to Classic Teal).
+   - Nov 2026: Emerald Ivory and Plum Dusk were removed; whoever had them gets Sky Blue (light) and Deep Teal (dark).
+     Interaction motion "playful" was removed; it becomes "subtle" (Slide). The new option is "fade".
    assets/theme-boot.js applies the same rules before first paint. st.glass, st.motion and st.scene are new. */
-const MODES = ["system", "light", "dark"], LIGHT_TH = ["classic", "emerald", "sandstone"], DARK_TH = ["jade", "indigo", "plum"];
-const GLASS = ["subtle", "balanced", "high", "solid"], MOTION = ["off", "subtle", "playful"], SCENES = ["landscape", "sky", "mosque"];
+const MODES = ["system", "light", "dark"], LIGHT_TH = ["classic", "sky", "sandstone"], DARK_TH = ["jade", "indigo", "teal"];
+const GLASS = ["subtle", "balanced", "high", "solid"], MOTION = ["off", "subtle", "fade"];
+const SCENES = ["landscape", "sky", "mosque", "dunes", "mountains", "sea", "forest", "fields", "canyon"];
 (() => {
   const old = st.theme, raw = (() => { try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { return {}; } })();
   if (!MODES.includes(raw.mode) || !MODES.includes(st.mode)) st.mode = old === "light" || old === "dark" ? old : old === "emerald" ? "light" : old === "indigo" ? "dark" : MODES.includes(raw.mode) ? raw.mode : "system";
   const pal = raw.palette || (old === "emerald" || old === "indigo" ? old : "classic");
-  if (!LIGHT_TH.includes(raw.lightTheme)) st.lightTheme = pal === "emerald" || pal === "sandstone" ? pal : "classic";
-  if (!DARK_TH.includes(raw.darkTheme)) st.darkTheme = pal === "indigo" ? "indigo" : pal === "burgundy" ? "plum" : "jade";
+  if (raw.lightTheme === "emerald") st.lightTheme = "sky";
+  else if (!LIGHT_TH.includes(raw.lightTheme)) st.lightTheme = pal === "emerald" ? "sky" : pal === "sandstone" ? pal : "classic";
+  if (raw.darkTheme === "plum") st.darkTheme = "teal";
+  else if (!DARK_TH.includes(raw.darkTheme)) st.darkTheme = pal === "indigo" ? "indigo" : pal === "burgundy" ? "teal" : "jade";
   if (!GLASS.includes(st.glass)) st.glass = "balanced";
-  if (!MOTION.includes(st.motion)) st.motion = "subtle";
+  if (!MOTION.includes(st.motion)) st.motion = "subtle"; // includes the removed "playful"
   if (!SCENES.includes(st.scene)) st.scene = "landscape";
   delete st.theme;
 })();
@@ -451,9 +464,11 @@ function vExtra(s) {
 /* ---------------- routing ---------------- */
 let R = { tab: TABS.includes(st.tab) ? st.tab : "today", sub: null, surah: 0, ayah: 0 };
 /* Face 7: zakat removed from the UI (route, nav, More, About). st.zk and assets/zakat.js are kept untouched; old #more/zakat links fall back to More. */
-const SUBS = ["guide", "pray", "hadith", "names", "calendar", "settings", "about", "terms", "privacy", "feedback"];
+const SUBS = ["duas", "names", "guide", "pray", "calendar", "dev", "settings", "about", "terms", "privacy", "feedback"];
+/* Links from before Nov 2026: #duas now lives under More, #more/hadith is the Hadith tab. */
+const oldHash = h => h === "duas" ? "more/duas" : h === "more/hadith" ? "hadith" : h;
 const hashSub = h => SUBS.includes(h) ? h : (h.startsWith("more/") && SUBS.includes(h.slice(5)) ? h.slice(5) : null);
-const h0 = (location.hash || "").slice(1), d0 = deepParse(h0); // Face 7.3: a shared link to one item
+const h0 = oldHash((location.hash || "").slice(1)), d0 = deepParse(h0); // Face 7.3: a shared link to one item
 if (d0) R = Object.assign({ sub: null, surah: 0, ayah: 0, study: 0, story: null }, d0.r);
 else if (TABS.includes(h0)) R.tab = h0;
 else if (h0 === "quran/all") R = { tab: "quran", sub: "all", surah: 0, ayah: 0 }; // Face 7: link to the full list of 114 surahs
@@ -505,8 +520,8 @@ function paint(prev, then, back) {
   t.finished.then(end, end);
 }
 /* A route for a typed or linked hash (#stories, #more/guide, …), or null. */
-const hashRoute = h => TABS.includes(h) ? { tab: h } : h === "quran/all" ? { tab: "quran", sub: "all" } : (h === "stories" || h === "quran/stories") ? { tab: "quran", sub: "stories" }
-  : hashSub(h) ? { tab: "more", sub: hashSub(h) } : h.startsWith("more/") ? { tab: "more" } : null;
+const hashRoute = x => { const h = oldHash(x); return TABS.includes(h) ? { tab: h } : h === "quran/all" ? { tab: "quran", sub: "all" } : (h === "stories" || h === "quran/stories") ? { tab: "quran", sub: "stories" }
+  : hashSub(h) ? { tab: "more", sub: hashSub(h) } : h.startsWith("more/") ? { tab: "more" } : null; };
 /* A shared link to an item whose page data is not loaded yet: load it, then handle the link again. */
 const deepWait = hh => { const g = hashGroup(hh); if (!g || lazyDone.has(g)) return false;
   need(g).then(() => { if ((location.hash || "").slice(1) === hh) dispatchEvent(new HashChangeEvent("hashchange")); }, () => toast(t("pgfail"))); return true; };
@@ -598,9 +613,8 @@ function render(anim, viaVT) {
   // Face 7: the Qur'an tab opens the curated study library; the full reader (all 114 surahs) is R.sub === "all".
   else if (R.tab === "quran" && R.sub === "stories") f = R.story ? vStory : vStories; // Face 7.1 Qur'an Stories
   else if (R.tab === "quran") f = R.sub === "all" || R.surah ? (desk() ? vQuranDesk : (R.surah ? vReader : vQuran)) : (desk() ? vStudyDesk : (R.study ? vStudyDetail : vStudy));
-  else if (R.tab === "duas") f = vDuas;
-  
-  else f = { guide: vGuide, pray: vPray, hadith: vHadith, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy"), feedback: vFeedback }[R.sub] || vMore;
+  else if (R.tab === "hadith") f = vHadith;
+  else f = { duas: vDuas, dev: vDev, guide: vGuide, pray: vPray, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy"), feedback: vFeedback }[R.sub] || vMore;
   const g = routeGroup(R);
   if (g && !lazyDone.has(g)) { // page data not loaded yet: show a short loading state, then draw the page
     v.innerHTML = `<div class="lazy-wait" role="status"><svg class="mini-door" viewBox="96 76 320 348" aria-hidden="true"><defs><clipPath id="md-clip"><path d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392Z"/></clipPath></defs><g clip-path="url(#md-clip)"><circle class="md-sun" cx="256" cy="392" r="84"/></g><path class="md-arch" d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392M118 393H394"/></svg>${esc(t("pgloading"))}</div>`;
@@ -633,8 +647,9 @@ function burst(x, y) {
 }
 /* Bottom sheet / dialog. Focus moves into it, Tab is kept inside, and focus returns to the opener on close. */
 let sheetReturn = null;
-function openSheet(html, returnTo) {
+function openSheet(html, returnTo, kind) {
   const sh = $("sheet"), wasOpen = sh.classList.contains("on");
+  sh.classList.toggle("pop", kind === "pop"); $("scrim").classList.toggle("blur", kind === "pop"); // a centred card over the blurred page
   if (!wasOpen) sheetReturn = returnTo || document.activeElement;
   sh.innerHTML = `<div class="grab"></div><button type="button" class="icon-btn sheet-x" data-act="closesheet" aria-label="${esc(t("close"))}">${ic("x")}</button>` + html;
   const h = sh.querySelector("h2, h3"); if (h) { h.id = h.id || "sheet-title"; sh.setAttribute("aria-labelledby", h.id); } else sh.removeAttribute("aria-labelledby");
@@ -693,14 +708,47 @@ const SCENE = (() => {
     `M${cx + 92} ${G}V${G - 96}h12V${G}Z` + `M${cx + 90} ${G - 96}h16l-8 -18Z` + `M${cx + 92} ${G - 70}h12v3h-12Z` +
     `M${cx - 9} ${G}v-14a9 9 0 0 1 18 0v14Z` + `M${cx - 52} ${G - 8}v-12a5 5 0 0 1 10 0v12Z` + `M${cx + 42} ${G - 8}v-12a5 5 0 0 1 10 0v12Z`;
   const dunes = ridge(59, 344, 18, 0.45);
-  return { far: far.d, mid: mid.d, near: near.d, mosque, big, dunes: dunes.d, G };
+  /* Nov 2026: six more scenes. Same layers and time-of-day colours as the others (far --m1, middle --m2, near --m3,
+     water reflects the low sky); the features sit to the right so the text on the left stays clear. */
+  const f = n => n.toFixed(1);
+  const smooth = (pts, base) => { let d = `M0 ${H}L${f(pts[0][0])} ${f(pts[0][1])}`; for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; d += `Q${f(x0 + (x1 - x0) * 0.5)} ${f(y0)} ${f((x0 + x1) / 2)} ${f((y0 + y1) / 2)}T${f(x1)} ${f(y1)}`; } return d + `L${W} ${H}Z`; };
+  // a palm: a leaning trunk and seven drooping fronds
+  const palm = (x, g, h, lean) => { const tx = x + lean, ty = g - h; let d = `M${f(x - 3)} ${g}Q${f(x + lean * 0.3)} ${f(g - h * 0.55)} ${f(tx - 1.6)} ${f(ty)}L${f(tx + 1.6)} ${f(ty)}Q${f(x + lean * 0.3 + 4)} ${f(g - h * 0.55)} ${f(x + 3)} ${g}Z`;
+    for (const [a, L] of [[-150, 34], [-118, 38], [-80, 36], [-40, 38], [-12, 34], [-178, 26], [20, 26]]) { const r = a * Math.PI / 180, ex = tx + Math.cos(r) * L, ey = ty + Math.sin(r) * L * 0.55 + L * 0.42, mx = tx + Math.cos(r) * L * 0.5, my = ty + Math.sin(r) * L * 0.5 - 6;
+      d += `M${f(tx)} ${f(ty)}Q${f(mx)} ${f(my - 3)} ${f(ex)} ${f(ey)}Q${f(mx)} ${f(my + 4)} ${f(tx)} ${f(ty + 2)}Z`; }
+    return d; };
+  // a pine: three stacked triangles on a short trunk
+  const pine = (x, g, h) => { const w = h * 0.36; return `M${f(x - 1.5)} ${g}v${f(-h * 0.14)}h3v${f(h * 0.14)}Z` + [0, 0.28, 0.52].map((k, i) => { const top = g - h + h * k, bw = w * (1 - i * 0.18); return `M${f(x)} ${f(top)}L${f(x + bw)} ${f(top + h * 0.48)}L${f(x - bw)} ${f(top + h * 0.48)}Z`; }).join(""); };
+  const dunesF = smooth([[0, 300], [140, 284], [300, 304], [470, 276], [640, 298], [800, 280]]), dunesM = smooth([[0, 336], [180, 318], [380, 340], [560, 312], [720, 334], [800, 326]]), dunesN = smooth([[0, 372], [200, 362], [420, 378], [620, 354], [800, 368]]);
+  const crest = `M560 312Q610 330 660 326M470 276Q520 296 560 296`;
+  const pk = ridge(91, 238, 160, 0.62), pk2 = ridge(17, 286, 70, 0.55), lake = 326;
+  const sea = 300, cliff = `M${W} ${H}V246L776 250L752 262L742 280L724 290L716 312L700 326L690 348L676 360L664 376L650 ${H}Z`, rocks = `M610 372a12 6 0 0 1 24 0ZM640 380a7 4 0 0 1 14 0Z`;
+  const fh1 = ridge(33, 296, 40, 0.5), fh2 = ridge(71, 330, 30, 0.5);
+  const pines = (rd, from, to, step, g0, h0, seed) => { let s = seed, d = ""; for (let x = from; x < to; x += step) { s = (s * 16807) % 2147483647; const r = s / 2147483647; d += pine(x + r * step * 0.4, rd.at(x) + 3, h0 + r * h0 * 0.5); } return d; };
+  const forest = { far: fh1.d, farTrees: pines(fh1, 0, 800, 14, 0, 26, 3), mid: fh2.d, midTrees: pines(fh2, 380, 800, 20, 0, 44, 9), nearTrees: pine(700, 404, 120) + pine(746, 404, 150) + pine(780, 404, 104) };
+  const terr = [318, 336, 352, 366, 380, 392].map((y, i) => `M0 ${y + 4}Q200 ${y - 6 + i} 400 ${y + 2}T800 ${y - 2}`).join("");
+  const fields = { far: smooth([[0, 306], [260, 300], [520, 308], [800, 298]]), bund: terr, palms: palm(600, 330, 74, 8) + palm(646, 336, 92, -10) + palm(700, 334, 66, 6) + palm(744, 338, 84, -6), hut: `M520 334h34v-12h-34ZM514 322l23 -14 23 14Z` };
+  const mesa = (x, w, top, g) => `M${x} ${g}L${x + 6} ${top + 8}L${x + 14} ${top}H${x + w - 14}L${x + w - 6} ${top + 10}L${x + w} ${g}Z`;
+  const canyon = { far: mesa(420, 160, 236, 400) + mesa(640, 120, 262, 400), mid: mesa(520, 210, 280, 400) + mesa(330, 120, 300, 400), near: smooth([[0, 360], [300, 354], [560, 366], [800, 352]]) + `M700 ${H}V318L712 306H760L772 318V${H}Z` };
+  return { far: far.d, mid: mid.d, near: near.d, mosque, big, dunes: dunes.d, G,
+    dunesF, dunesM, dunesN, crest, oasis: palm(640, 318, 60, 6) + palm(676, 322, 76, -8) + palm(706, 320, 52, 4),
+    peaks: pk.d, peaks2: pk2.d, lake, sea, cliff, rocks, forest, fields, canyon };
 })();
 /* Prayer scene (Face 7, st.scene): "landscape" is the original scene and the default; "sky" keeps only the sky,
-   clouds and a low horizon so the sun/moon arc leads; "mosque" draws one quiet silhouette. All three use the same
+   clouds and a low horizon so the sun/moon arc leads; "mosque" draws one quiet silhouette. All use the same
    time-of-day colours (--s1…--m3) and the same scrim, so the text contrast is unchanged. If the SVG fails to draw,
-   the sky gradient and scrim behind the text remain. */
+   the sky gradient and scrim behind the text remain.
+   Nov 2026: six more (dunes, mountains, sea, forest, fields, canyon), and st.sceneAuto: a different scene each day,
+   in turn, with the mosque on Fridays. */
+/* Motion advice (Nov 2026): Android 12 and newer handle the slide smoothly; older phones get the lighter fade.
+   Read from the browser's user agent ("Android 11"); null off Android. */
+const andVer = () => { const m = /Android (\d+)/.exec(navigator.userAgent || ""); return m ? +m[1] : null; };
+const moRec = () => { const v = andVer(); return v == null ? null : v >= 12 ? "subtle" : "fade"; };
+const sceneToday = () => { if (!st.sceneAuto) return SCENES.includes(st.scene) ? st.scene : "landscape";
+  const s = snap || snapshot(); if (isFriD(s.d0)) return "mosque";
+  const pool = SCENES.filter(k => k !== "mosque"), n = Math.floor(Date.UTC(s.p.year, s.p.month - 1, s.p.day) / 864e5); return pool[n % pool.length]; };
 function heroScene() {
-  const sc = SCENES.includes(st.scene) ? st.scene : "landscape";
+  const sc = sceneToday();
   const clouds = `<svg class="sky-clouds" viewBox="0 0 800 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
     <defs><filter id="cl-f" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.0055 0.018" numOctaves="4" seed="5" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.9 0 0 0 -0.78" result="a"/><feFlood class="cl-flood" result="c"/><feComposite in="c" in2="a" operator="in"/><feGaussianBlur stdDeviation="1.2"/></filter>
     <linearGradient id="cl-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset=".75" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
@@ -710,6 +758,15 @@ function heroScene() {
   const hz = `<defs><linearGradient id="hz-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="hz0"/><stop offset="1" class="hz1"/></linearGradient></defs>`;
   if (sc === "sky") return clouds + `<svg class="sky-land" viewBox="0 0 800 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">${hz}
     <rect y="250" width="800" height="150" fill="url(#hz-g)"/><path class="hl-mid sc-low" d="M0 372 Q400 360 800 372V400H0Z"/><path class="sc-hzn" d="M0 372.5 Q400 360.5 800 372.5"/></svg>`;
+  const land = (body, align) => clouds + `<svg class="sky-land" viewBox="0 0 800 400" preserveAspectRatio="${align || "xMaxYMax"} slice" aria-hidden="true" focusable="false">${hz}
+    <defs><linearGradient id="wt-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="wt0"/><stop offset="1" class="wt1"/></linearGradient></defs>${body}</svg>`;
+  const S = SCENE;
+  if (sc === "dunes") return land(`<rect y="220" width="800" height="180" fill="url(#hz-g)"/><path class="hl-far" d="${S.dunesF}"/><path class="hl-mid" d="${S.dunesM}"/><path class="sc-crest" d="${S.crest}"/><path class="hl-mid" d="${S.oasis}"/><path class="hl-near" d="${S.dunesN}"/>`);
+  if (sc === "mountains") return land(`<path class="hl-far" d="${S.peaks}"/><rect y="220" width="800" height="180" fill="url(#hz-g)"/><path class="hl-mid" d="${S.peaks2}"/><rect class="sc-water" y="${S.lake}" width="800" height="${400 - S.lake}" fill="url(#wt-g)"/><g class="sc-mirror"><path class="hl-mid" d="${S.peaks2}" transform="translate(0 ${2 * S.lake}) scale(1 -1)"/></g><path class="sc-glint" d="M520 344h120M560 356h70M500 368h90"/><path class="hl-near" d="M0 400V388Q200 380 420 392T800 384V400Z"/>`);
+  if (sc === "sea") return land(`<rect y="220" width="800" height="180" fill="url(#hz-g)"/><rect class="sc-water" y="${S.sea}" width="800" height="${400 - S.sea}" fill="url(#wt-g)"/><path class="sc-hzn" d="M0 ${S.sea}.5H800"/><path class="sc-glint" d="M330 314h140M360 328h90M300 344h170M350 362h110"/><path class="hl-mid sc-wave" d="M0 384Q40 378 80 384T160 384T240 384T320 384T400 384T480 384T560 384V400H0Z"/><path class="hl-near" d="${S.cliff}"/><path class="hl-near" d="${S.rocks}"/>`);
+  if (sc === "forest") return land(`<rect y="220" width="800" height="180" fill="url(#hz-g)"/><path class="hl-far" d="${S.forest.far}"/><path class="hl-far" d="${S.forest.farTrees}"/><path class="hl-mid" d="${S.forest.mid}"/><path class="hl-mid" d="${S.forest.midTrees}"/><path class="hl-near" d="M0 400V390Q300 382 800 388V400Z"/><path class="hl-near" d="${S.forest.nearTrees}"/>`);
+  if (sc === "fields") return land(`<rect y="220" width="800" height="180" fill="url(#hz-g)"/><path class="hl-far" d="${S.fields.far}"/><rect class="sc-water sc-paddy" y="312" width="800" height="88" fill="url(#wt-g)"/><path class="sc-bund" d="${S.fields.bund}"/><path class="hl-mid" d="${S.fields.hut}"/><path class="hl-near" d="${S.fields.palms}"/><path class="hl-near" d="M0 400V392Q400 386 800 394V400Z"/>`);
+  if (sc === "canyon") return land(`<rect y="220" width="800" height="180" fill="url(#hz-g)"/><path class="hl-far" d="${S.canyon.far}"/><path class="hl-mid" d="${S.canyon.mid}"/><path class="hl-near" d="${S.canyon.near}"/>`);
   if (sc === "mosque") return clouds + `<svg class="sky-land" viewBox="0 0 800 400" preserveAspectRatio="xMaxYMax slice" aria-hidden="true" focusable="false">${hz}
     <rect y="240" width="800" height="160" fill="url(#hz-g)"/><path class="hl-far sc-dune" d="${SCENE.dunes}"/><path class="hl-near" fill-rule="evenodd" d="${SCENE.big}"/><rect class="hl-near" y="${SCENE.G - 1}" width="800" height="${401 - SCENE.G}"/></svg>`;
   return clouds + `
@@ -778,7 +835,7 @@ function vToday() {
   const dayV = window.IE_VOTD_DAY ? window.IE_VOTD_DAY.pick(wdNow) : null;
   const v = votdPick = dayV ? Object.assign({ day: wdNow }, dayV) : VOTD.entryFor(s.p.year, s.p.month, s.p.day);
   return `
-  <section class="sky a-hero" data-p="${per}" data-scene="${st.scene}" aria-label="${esc(t("curp"))}">
+  <section class="sky a-hero" data-p="${per}" data-scene="${sceneToday()}" aria-label="${esc(t("curp"))}">
     ${heroScene()}
     ${stars}
     <svg class="arc" viewBox="0 0 340 160" aria-hidden="true"><defs><radialGradient id="glow-g"><stop offset="0" class="gl0"/><stop offset="1" class="gl1"/></radialGradient></defs><path class="horizon" d="M0 150H340" stroke-width="1" fill="none"/><path id="arcpath" class="track" d="${ARC}" fill="none" stroke-width="1.5"/><path id="trail" class="trail" d="${ARC}" pathLength="100" stroke-dasharray="0 100" fill="none" stroke-width="2" stroke-linecap="round"/><circle id="glow" cx="178" cy="150" r="58" fill="url(#glow-g)"/><circle id="orb" class="orb${moonUp ? " hide" : ""}" cx="178" cy="150" r="9"/>${moonUp ? `<g id="moonG" class="moong" transform="translate(178 150)">${moonPhase(hj ? hj.d : 1, s.c.lat, 9)}</g>` : ""}</svg>
@@ -1290,7 +1347,7 @@ function fitDuas() { fitCards(document.querySelectorAll("#dua-list .dua"), fitDu
 function vDuas() {
   post.push(fitDuas);
   return `
-  <div class="page-head"><h2>${t("duas")}</h2></div>
+  <div class="page-head">${back()}<h2>${t("duas")}</h2></div>
   <div class="search">${ic("search")}<input id="d-search" class="field" type="search" autocomplete="off" placeholder="${esc(t("dsearch"))}" aria-label="${esc(t("dsearch"))}" value="${esc(dQuery)}"></div>
   <div class="chips">${[["all", t("all")], ["fav", "♥ " + t("saved")]].concat(DUA_CATS.map(c => [c[0], bn() ? c[2] : c[1]])).map(([k, l]) => `<button type="button" class="chip" data-act="dcat" data-k="${k}" aria-pressed="${dCat === k}">${esc(l)}</button>`).join("")}</div>
   <div id="dua-list" style="display:grid;gap:12px">${duaList()}</div>`;
@@ -1374,7 +1431,7 @@ function nawawiList() {
 function vHadith() {
   const nw = NW && st.hcol === "nawawi";
   const sel = `<div class="seg hd-col" role="group" aria-label="${esc(t("hc_label"))}">${[["general", t("hc_gen").replace("{n}", num(HD.HADITH.length))], ["nawawi", t("hc_nw").replace("{n}", num(NW_N))]].filter(([k]) => k === "general" || NW).map(([k, l]) => `<button type="button" data-act="hcol" data-k="${k}" aria-pressed="${st.hcol === k}">${esc(l)}</button>`).join("")}</div>`;
-  if (nw) return `<div class="page-head">${back()}<h2>${t("hadith")}</h2></div>
+  if (nw) return `<div class="page-head"><h2>${t("hadith")}</h2></div>
   ${hadithHero()}
   ${sel}
   <section class="card pad hd-intro nw-intro"><h3 class="sec-title">${t("nw_title")}</h3><p>${t("nw_intro")}</p>
@@ -1383,7 +1440,7 @@ function vHadith() {
     <p class="note">${t("nw_review")}</p></section>
   <div id="hadith-list" class="hd-list">${nawawiList()}</div>`;
   const counts = Object.fromEntries(HD.CATEGORIES.map(c => [c[0], HD.HADITH.filter(h => h.cats.includes(c[0])).length]));
-  return `<div class="page-head">${back()}<h2>${t("hadith")}</h2></div>
+  return `<div class="page-head"><h2>${t("hadith")}</h2></div>
   ${hadithHero()}
   ${NW ? sel : ""}
   <section class="card pad hd-intro"><p>${t("hd_intro")}</p><p class="note">${t("hd_review")}</p></section>
@@ -1399,9 +1456,14 @@ function nwGo(n) {
 /* ---------------- MORE + sub pages ---------------- */
 function vMore() {
   const s = snap || snapshot(), hj = hijriNow(s);
-  const items = [["guide", "guide", t("guide_s")], ["pray", "prayfig", t("pray_s")], ["hadith", "hadith", t("hadith_s")], ["names", "names", t("names_s")], ["calendar", "calendar", hText(hj)], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["feedback", "mail", t("feedback_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
+  // Nov 2026 order: Duas, 99 Names, Prayer guide, Calendar, Developer message, then the rest as before.
+  const items = [["duas", "duas", t("duas_s")], ["names", "names", t("names_s")], ["guide", "guide", t("guide_s")], ["calendar", "calendar", hText(hj)], ["dev", "msg", t("dev_s")], ["pray", "prayfig", t("pray_s")], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["feedback", "mail", t("feedback_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
   return `<div class="page-head"><h2>${t("more")}</h2></div>${installCard()}
   <ul class="card menu">${items.map(([k, icn, sub]) => `<li><button type="button" data-act="go" data-tab="more" data-sub="${k}"><span class="ic">${ic(icn)}</span><span class="grow"><b>${t(k === "names" ? "names99" : k)}</b><small>${esc(sub)}</small></span>${ic("chev", "chev")}</button></li>`).join("")}</ul>`;
+}
+/* Developer message (Nov 2026): left blank on purpose until the owner sends the message. */
+function vDev() {
+  return `<div class="page-head">${back()}<h2>${t("dev")}</h2></div>`;
 }
 /* Install as an app (Oct 2026). Chrome/Edge/Samsung Internet: our own button opens the browser's install dialog.
    iPhone/iPad Safari has no install API, so it gets the two-step instruction instead. Hidden once installed. */
@@ -1618,10 +1680,10 @@ function deepParse(h) {
   { const g = hashGroup(h); if (g && !lazyDone.has(g)) return null; } // its data is not loaded yet (see deepWait)
   if ((m = h.match(/^story\/([\w-]+)$/)) && window.IE_STORIES && IE_STORIES.get(m[1])) return { kind: "story", key: m[1], r: { tab: "quran", sub: "stories", story: m[1] } };
   if ((m = h.match(/^verse\/(\d+):(\d+)-(\d+)$/)) && QM.meta[+m[1] - 1] && +m[2] >= 1 && +m[2] <= +m[3] && +m[3] <= QM.meta[+m[1] - 1][3]) return { kind: "verse", key: m[1] + ":" + m[2] + "-" + m[3], r: { tab: "quran", sub: "all", surah: +m[1], ayah: +m[2] } };
-  if ((m = h.match(/^dua\/(\d+)$/)) && DUAS[+m[1]]) return { kind: "dua", key: +m[1], r: { tab: "duas" } };
+  if ((m = h.match(/^dua\/(\d+)$/)) && DUAS[+m[1]]) return { kind: "dua", key: +m[1], r: { tab: "more", sub: "duas" } };
   if ((m = h.match(/^name\/(\d+)$/)) && +m[1] >= 1 && NAMES[+m[1] - 1]) return { kind: "name", key: +m[1] - 1, r: { tab: "more", sub: "names" } };
-  if ((m = h.match(/^hadith\/(\w+)$/)) && HD.HADITH.some(z => z.id === m[1])) return { kind: "hadith", key: m[1], r: { tab: "more", sub: "hadith" } };
-  if ((m = h.match(/^nawawi\/(\d+)$/)) && NW && NW.HADITH.some(z => z.n === +m[1])) return { kind: "nawawi", key: +m[1], r: { tab: "more", sub: "hadith" } };
+  if ((m = h.match(/^hadith\/(\w+)$/)) && HD.HADITH.some(z => z.id === m[1])) return { kind: "hadith", key: m[1], r: { tab: "hadith" } };
+  if ((m = h.match(/^nawawi\/(\d+)$/)) && NW && NW.HADITH.some(z => z.n === +m[1])) return { kind: "nawawi", key: +m[1], r: { tab: "hadith" } };
   return null;
 }
 function deepPre(d) {
@@ -1653,19 +1715,23 @@ function gSources(ids) {
 }
 const unit = x => `<span class="u u-${x.kind}"><b>${num(x.n)}</b> ${t("k_" + x.kind)}</span>`;
 const unitS = x => `<span class="u u-${x.kind}" title="${esc(t("k_" + x.kind))}"><b>${num(x.n)}</b>${t("k_" + x.kind + "_s")}<span class="sr"> (${esc(t("k_" + x.kind))})</span></span>`;
+const GDET = {};
 function vGuide() {
   const sc = school();
   const cell = (p, w) => { const xs = p[sc].filter(x => x.when === w); return xs.length ? xs.map(unitS).join("") : `<span class="u-none" aria-label="${esc(t("g_none"))}">—</span>`; };
   const rows = GD.prayers.map(p => `<tr><th scope="row">${t(p.k)}</th><td>${cell(p, "before")}</td><td>${cell(p, "fard")}</td><td>${cell(p, "after")}${p[sc].some(x => x.when === "witr") ? `<div class="then">${t("g_then")} ${p[sc].filter(x => x.when === "witr").map(unitS).join("")}</div>` : ""}</td></tr>`).join("");
-  const detail = p => `<details class="card g-det"><summary><b>${t(p.k)}</b><span class="seq">${p[sc].map(x => `${num(x.n)}${t("k_" + x.kind + "_s")}`).join(" → ")}</span></summary>
-    <div class="g-body"><ol class="g-order">${p[sc].map(x => `<li>${unit(x)} <span class="note">${t("w_" + x.when)}</span></li>`).join("")}</ol>
+  /* Nov 2026: a detail opens as a pop-up over the blurred page instead of pushing the list down. */
+  const pop = (key, head, sub, body) => { GDET[key] = `<h3>${head}</h3><div class="g-body g-pop">${body}</div>`;
+    return `<button type="button" class="card g-det g-btn" data-act="gdet" data-k="${key}" aria-haspopup="dialog"><b>${head}</b>${sub ? `<span class="seq">${sub}</span>` : ""}</button>`; };
+  const detail = p => pop("p-" + p.k, t(p.k), p[sc].map(x => `${num(x.n)}${t("k_" + x.kind + "_s")}`).join(" → "),
+    `<ol class="g-order">${p[sc].map(x => `<li>${unit(x)} <span class="note">${t("w_" + x.when)}</span></li>`).join("")}</ol>
     <p>${esc(L(p.note))}</p>
-    <p class="note g-status">${t("basedon")}: ${[...new Set(p.src)].map(id => { const c = gCite(id); return `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label)}</a>`; }).join("; ")}. ${t("g_unreviewed")}</p></div></details>`;
+    <p class="note g-status">${t("basedon")}: ${[...new Set(p.src)].map(id => { const c = gCite(id); return `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label)}</a>`; }).join("; ")}. ${t("g_unreviewed")}</p>`);
   return `<div class="page-head">${back()}<h2>${t("guide")}</h2></div>
   <section class="card pad g-intro"><p>${t("g_intro")}</p>
     <div class="g-school"><p class="note" id="g-sch-l">${t("g_school")}</p><div class="seg" role="group" aria-labelledby="g-sch-l">${[["hanafi", t("hanafi_s")], ["shafii", t("shafii_s")]].map(([k, l]) => `<button type="button" data-act="school" data-k="${k}" aria-pressed="${sc === k}">${l}</button>`).join("")}</div></div>
     <p class="note">${t("g_schoolh")}</p></section>
-  <button type="button" class="card pad row pr-link" data-act="go" data-tab="more" data-sub="pray"><span class="ic" aria-hidden="true">${ic("play")}</span><span class="grow"><b>${t("pray")}</b><br><span class="note">${t("pr_link")}</span></span>${ic("chev", "chev")}</button>
+  <button type="button" class="card row pr-link" data-act="go" data-tab="more" data-sub="pray"><span class="ic" aria-hidden="true">${ic("play")}</span><span class="grow"><b>${t("pray")}</b><span class="note">${t("pr_link")}</span></span>${ic("chev", "chev")}</button>
   <section class="card pad">
     <h3 class="sec-title" id="g-sum">${t("g_summary")} · ${t(sc === "hanafi" ? "hanafi_s" : "shafii_s")}</h3>
     <div class="g-legend" aria-hidden="true">${KINDS.filter(k => GD.prayers.some(p => p[sc].some(x => x.kind === k))).map(k => `<span class="u u-${k}">${t("k_" + k)}</span>`).join("")}</div>
@@ -1673,7 +1739,7 @@ function vGuide() {
     <p class="note" style="margin-top:10px">${t("g_tablenote")}</p>
   </section>
   <section class="g-list"><h3 class="sec-title">${t("g_details")}</h3>${GD.prayers.map(detail).join("")}</section>
-  <section class="g-list"><h3 class="sec-title">${t("g_terms")}</h3>${GD.terms.map(x => `<details class="card g-det"><summary><b>${esc(L(x)[0])}</b></summary><div class="g-body"><p>${esc(L(x)[1])}</p>${x.src.length ? `<p class="note g-status">${t("basedon")}: ${x.src.map(id => { const c = gCite(id); return `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label)}</a>`; }).join("; ")}.</p>` : ""}</div></details>`).join("")}</section>
+  <section class="g-list g-terms"><h3 class="sec-title">${t("g_terms")}</h3>${GD.terms.map((x, i) => pop("t-" + i, esc(L(x)[0]), "", `<p>${esc(L(x)[1])}</p>${x.src.length ? `<p class="note g-status">${t("basedon")}: ${x.src.map(id => { const c = gCite(id); return `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label)}</a>`; }).join("; ")}.</p>` : ""}`)).join("")}</section>
   <section class="card pad"><h3 class="sec-title">${t("g_schools")}</h3>
     <p style="margin-top:6px">${esc(L(GD.notes.maliki))}</p><p class="note g-status">${t("basedon")}: ${GD.notes.maliki.src.map(id => esc(gCite(id).label)).join("; ")}.</p>
     <p style="margin-top:10px">${esc(L(GD.notes.hanbali))}</p><p class="note g-status">${t("basedon")}: ${GD.notes.hanbali.src.map(id => esc(gCite(id).label)).join("; ")}.</p>
@@ -1693,7 +1759,8 @@ const mmss = ms => { const s = Math.max(0, Math.round(ms / 1000)); return num(Ma
 const easeIO = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 function praySetup() {
   const sc = praySchool();
-  if (PR.sc !== sc || PR.lang !== st.lang) { const keep = PR.sc === sc ? PR.t : 0; PR.sc = sc; PR.lang = st.lang; PR.steps = SL.steps(sc); PR.times = SL.timeline(PR.steps, st.lang); PR.total = PR.times[PR.times.length - 1].end; PR.t = Math.min(keep, PR.total); PR.i = -1; }
+  const who = st.prWho === "woman" ? "woman" : "man";
+  if (PR.sc !== sc || PR.lang !== st.lang || PR.who !== who) { const keep = PR.sc === sc && PR.who === who ? PR.t : 0; PR.sc = sc; PR.who = who; PR.lang = st.lang; PR.steps = SL.steps(sc, who); PR.times = SL.timeline(PR.steps, st.lang); PR.total = PR.times[PR.times.length - 1].end; PR.t = Math.min(keep, PR.total); PR.i = -1; }
 }
 function prayStep(t) { const T = PR.times; let i = 0; while (i < T.length - 1 && t >= T[i].end) i++; return i; }
 function prayFrame() {
@@ -1708,15 +1775,17 @@ function prayFrame() {
   }
   const hold = PR.t >= tm.moved || still, ht = (PR.t - tm.moved) / (tm.end - tm.moved);
   // The camera frames the figure: closer for sitting and prostration, wider for standing; it glides with the movement.
-  const svg = $("pray-fig"); if (svg) { const box = SF.bbox(p), H = Math.max(128, Math.min(200, box[3] - box[1] + 34)), W = H * 356 / 200, cx = (box[0] + box[2]) / 2;
-    svg.setAttribute("viewBox", `${(cx - W / 2 - W * 0.08).toFixed(1)} ${(SF.G + 8 - H).toFixed(1)} ${W.toFixed(1)} ${H.toFixed(1)}`); }
-  g.innerHTML = SF.draw(p, { points: s.points && hold, turbah: s.turbah, finger: hold && /^finger/.test(s.inset || ""), turnArrow: hold && s.turn ? Math.sign(s.turn) : 0 });
-  if (s.turn && hold) { const q = Object.assign({}, SF.pose(s.pose), { turn: s.turn * Math.min(1, ht * 4) }); g.innerHTML = SF.draw(q, { turbah: s.turbah, turnArrow: Math.sign(s.turn) }); }
+  // Nov 2026: three-quarter front view (SF.draw), man or woman (PR.who).
+  const svg = $("pray-fig"); if (svg) { const box = SF.bbox3(p), H = Math.max(140, Math.min(210, box[3] - box[1] + 30)), W = H * 356 / 200, cx = (box[0] + box[2]) / 2;
+    svg.setAttribute("viewBox", `${(cx - W / 2).toFixed(1)} ${(box[3] + 6 - H).toFixed(1)} ${W.toFixed(1)} ${H.toFixed(1)}`); }
+  const who = PR.who;
+  g.innerHTML = SF.draw(p, { who, points: s.points && hold, turbah: s.turbah, finger: hold && /^finger/.test(s.inset || ""), turnArrow: hold && s.turn ? Math.sign(s.turn) : 0 });
+  if (s.turn && hold) { const q = Object.assign({}, SF.pose(s.pose), { turn: s.turn * Math.min(1, ht * 4) }); g.innerHTML = SF.draw(q, { who, turbah: s.turbah, turnArrow: Math.sign(s.turn) }); }
   // Close-up (front view of the hands, or the feet from behind): a card over the picture's top-left corner.
   const ins = $("pray-inset");
   if (ins) { const kind = hold ? s.inset : null;
     if (ins.dataset.k !== (kind || "") || (kind && /^finger/.test(kind))) { ins.dataset.k = kind || "";
-      if (kind) ins.innerHTML = `<svg viewBox="0 0 110 118" aria-hidden="true">${SF.inset(kind, Math.max(0, ht))}</svg><p>${esc(L(SL.INSET[kind]))}</p>`;
+      if (kind) ins.innerHTML = `<svg viewBox="0 0 110 118" aria-hidden="true">${SF.inset(kind, Math.max(0, ht), PR.who)}</svg><p>${esc(L(SL.INSET[kind]))}</p>`;
       ins.classList.toggle("on", !!kind); } }
   if (PR.i !== i) { PR.i = i; prayCaption(); }
   const bar = $("pray-seek"); if (bar && !bar.dataset.drag) { bar.value = Math.round(PR.t); bar.style.setProperty("--p", (PR.t / PR.total * 100).toFixed(2) + "%"); }
@@ -1755,12 +1824,13 @@ function vPray() {
   post.push(() => { prayFrame(); prayButtons(); });
   return `<div class="page-head">${back()}<h2>${t("pray")}</h2></div>
   <section class="card pad pr-intro"><p>${t("pr_intro")}</p>
-    <div class="pr-schools" role="group" aria-label="${esc(t("pr_school"))}">${SL.SCHOOLS.map(k => `<button type="button" class="chip" data-act="prschool" data-k="${k}" aria-pressed="${k === sc}">${esc(L(SL.NAMES[k]))}</button>`).join("")}</div></section>
+    <div class="pr-schools" role="group" aria-label="${esc(t("pr_school"))}">${SL.SCHOOLS.map(k => `<button type="button" class="chip" data-act="prschool" data-k="${k}" aria-pressed="${k === sc}">${esc(L(SL.NAMES[k]))}</button>`).join("")}</div>
+    <div class="pr-who seg" role="group" aria-label="${esc(t("pr_who"))}">${SL.WHO.map(k => `<button type="button" data-act="prwho" data-k="${k}" aria-pressed="${k === PR.who}">${t("pr_" + k)}</button>`).join("")}</div></section>
   <section class="pr-video" id="pr-video" aria-label="${esc(t("pray") + ": " + L(SL.NAMES[sc]))}">
-    <div class="pv-pic">
+    <div class="pv-pic" data-who="${PR.who}">
       <svg id="pray-fig" viewBox="70 0 356 200" role="img" aria-labelledby="pray-t"><g id="pray-g"></g></svg>
       <div class="pv-inset si" id="pray-inset"></div>
-      <span class="pv-badge" aria-hidden="true">${esc(L(SL.NAMES[sc]))}</span><span class="pv-qibla" aria-hidden="true">${t("pr_qibla")} →</span>
+      <span class="pv-badge" aria-hidden="true">${esc(L(SL.NAMES[sc]))}</span><span class="pv-qibla" aria-hidden="true">${t("pr_qibla")} ↘</span>
       <button type="button" class="pv-big" id="pray-big" data-act="prplay" aria-label="${esc(t("pr_play"))}">${ic("play")}</button>
     </div>
     <div class="pv-ctl">
@@ -1774,7 +1844,7 @@ function vPray() {
     </div>
     <div class="pv-sub" aria-live="polite"><p class="pv-k" id="pray-k"></p><p class="pv-say" id="pray-say" hidden></p><p class="pv-text"><b id="pray-t"></b> <span id="pray-d"></span></p></div>
   </section>
-  <section class="card pad"><h3 class="sec-title">${t("pr_notes")} · ${esc(L(SL.NAMES[sc]))}</h3><ul class="pr-notes">${SL.NOTES[sc].map(x => `<li>${escS(L(x))}</li>`).join("")}</ul></section>
+  <section class="card pad"><h3 class="sec-title">${t("pr_notes")} · ${esc(L(SL.NAMES[sc]))}</h3><ul class="pr-notes">${SL.notes(sc, PR.who).map(x => `<li>${escS(L(x))}</li>`).join("")}</ul></section>
   <section class="card pad"><h3 class="sec-title">${t("pr_steps")}</h3><ol class="pr-list">${PR.steps.map((s, i) => `<li><button type="button" data-act="prgo" data-i="${i}"><span class="n">${num(i + 1)}</span><span class="grow">${esc(L(s.t))}</span><span class="note">${mmss(PR.times[i].start)}</span></button></li>`).join("")}</ol></section>
   <section class="card pad"><p class="note st-draft" role="note">${t("pr_review")}</p><p class="note" style="margin-top:10px"><b>${t("pr_src")}:</b> ${SL.SOURCES[sc].map(esc).join("; ")}.</p></section>`;
 }
@@ -1951,8 +2021,8 @@ function vZakat() {
 }
 /* Face 7 settings previews. Theme cards draw a miniature of the real tokens (ground, card, ink, accent, gold);
    the selected card is marked with a check and the word "Chosen", not colour alone. */
-const TH_PREV = { classic: ["#EEF3F1", "#FFFFFF", "#0F2420", "#0E6B5C", "#996010"], emerald: ["#F6F1E4", "#FFFDF7", "#12261E", "#0A6247", "#835308"], sandstone: ["#F3EADB", "#FCF7EE", "#2A2118", "#0F5C66", "#874C12"],
-  jade: ["#08120F", "#101C18", "#F1EADB", "#5DCAAE", "#E6BA62"], indigo: ["#0A0D1E", "#12172F", "#E9EAF3", "#AEB6FF", "#E3BF6E"], plum: ["#140D14", "#1E141E", "#F3E8E3", "#E7A3B4", "#E2AE78"] };
+const TH_PREV = { classic: ["#EEF3F1", "#FFFFFF", "#0F2420", "#0E6B5C", "#996010"], sky: ["#EDF3FA", "#FFFFFF", "#0F1E33", "#1D5FAE", "#8A5A0E"], sandstone: ["#F3EADB", "#FCF7EE", "#2A2118", "#0F5C66", "#874C12"],
+  jade: ["#08120F", "#101C18", "#F1EADB", "#5DCAAE", "#E6BA62"], indigo: ["#0A0D1E", "#12172F", "#E9EAF3", "#AEB6FF", "#E3BF6E"], teal: ["#051416", "#0B1F22", "#E4F2F0", "#4FD0D8", "#E8C06A"] };
 const CHECK = '<svg class="ck" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 function themeCards() {
   const now = themeNow();
@@ -1966,10 +2036,17 @@ function themeCards() {
 const SC_PREV = {
   landscape: '<path d="M0 46 L14 38 L26 42 L40 32 L54 40 L66 34 L80 41 V60 H0Z" class="f1"/><path d="M0 52 L18 46 L34 50 L50 44 L66 49 L80 46 V60 H0Z" class="f2"/><path d="M0 56 L30 53 L56 55 L80 52 V60 H0Z" class="f3"/>',
   sky: '<path d="M14 50 Q40 6 66 50" class="arcp"/><circle cx="52" cy="24" r="4" class="sun"/><path d="M0 50 H80" class="hzn"/><rect y="50" width="80" height="10" class="f3"/>',
-  mosque: '<rect y="54" width="80" height="6" class="f3"/><path d="M42 54 V46 H66 V54Z M44 46 a10 10 0 0 1 20 0Z M53.5 36 h1 v-3 h-1Z M38 54 V30 h3 V54Z M37.5 30 h4 l-2 -4Z M68 54 V34 h3 V54Z M67.5 34 h4 l-2 -4Z" class="f3"/>'
+  mosque: '<rect y="54" width="80" height="6" class="f3"/><path d="M42 54 V46 H66 V54Z M44 46 a10 10 0 0 1 20 0Z M53.5 36 h1 v-3 h-1Z M38 54 V30 h3 V54Z M37.5 30 h4 l-2 -4Z M68 54 V34 h3 V54Z M67.5 34 h4 l-2 -4Z" class="f3"/>',
+  dunes: '<path d="M0 44 Q20 38 40 45 T80 40 V60 H0Z" class="f1"/><path d="M0 52 Q24 46 46 53 T80 49 V60 H0Z" class="f2"/><path d="M58 48 v-10 M58 38 l-6 3 M58 38 l6 3 M58 38 l-4 -3 M58 38 l4 -3" class="palmp"/><path d="M0 57 Q40 53 80 56 V60 H0Z" class="f3"/>',
+  mountains: '<path d="M0 44 L18 22 L30 34 L46 14 L62 32 L80 24 V44Z" class="f1"/><rect y="44" width="80" height="16" class="wat"/><path d="M0 44 L18 52 L30 48 L46 56 L62 49 L80 51 V44Z" class="f1 mir"/><path d="M0 58 Q40 55 80 58 V60 H0Z" class="f3"/>',
+  sea: '<rect y="40" width="80" height="20" class="wat"/><path d="M0 40 H80" class="hzn"/><path d="M30 44 h20 M34 48 h12" class="gl"/><path d="M80 60 V30 L72 32 L68 40 L62 44 L58 52 L54 60Z" class="f3"/>',
+  forest: '<path d="M0 46 Q40 40 80 44 V60 H0Z" class="f1"/><path d="M8 46 l5 -12 l5 12Z M22 45 l5 -14 l5 14Z M48 44 l5 -12 l5 12Z" class="f2"/><path d="M60 58 l7 -28 l7 28Z M70 58 l6 -22 l6 22Z" class="f3"/><rect y="56" width="80" height="4" class="f3"/>',
+  fields: '<path d="M0 42 Q40 39 80 41 V60 H0Z" class="f1"/><rect y="44" width="80" height="16" class="wat"/><path d="M0 48 Q40 46 80 48 M0 53 Q40 51 80 53" class="bund"/><path d="M62 52 v-14 M62 38 l-6 3 M62 38 l6 3 M62 38 l-4 -3 M62 38 l4 -3 M72 52 v-11 M72 41 l-5 3 M72 41 l5 3" class="palmp"/>',
+  canyon: '<path d="M38 60 L40 30 H58 L60 60Z M62 60 L64 38 H76 L78 60Z" class="f1"/><path d="M44 60 L46 40 H66 L68 60Z" class="f2"/><path d="M0 56 Q40 52 80 55 V60 H0Z" class="f3"/>'
 };
 function sceneCards() {
-  return `<div class="sc-grid" role="group" aria-label="${esc(t("scene"))}">${SCENES.map(k => `<button type="button" class="sc-card" data-act="setscene" data-k="${k}" aria-pressed="${st.scene === k}">
+  const auto = `<div class="sc-auto"><div><span>${t("sc_auto")}</span><small class="muted">${t("sc_auto_d")}</small></div><button type="button" class="switch" role="switch" data-act="sceneauto" aria-checked="${!!st.sceneAuto}" aria-label="${esc(t("sc_auto"))}"></button></div>`;
+  return auto + `<div class="sc-grid${st.sceneAuto ? " sc-off" : ""}" role="group" aria-label="${esc(t("scene"))}">${SCENES.map(k => `<button type="button" class="sc-card" data-act="setscene" data-k="${k}" aria-pressed="${st.scene === k}">
     <svg class="sc-prev" viewBox="0 0 80 60" aria-hidden="true" focusable="false"><rect width="80" height="60" class="skyb"/>${SC_PREV[k]}</svg>
     <span class="th-name">${t("sc_" + k)}</span><span class="th-state">${st.scene === k ? CHECK + t("th_chosen") : ""}</span></button>`).join("")}</div>`;
 }
@@ -1982,21 +2059,23 @@ function vSettings() {
     <li class="set-block"><span class="lb">${t("theme")}<small>${t("theme_h")}</small></span>${themeCards()}</li>
     <li class="set-block"><span class="lb">${t("scene")}<small>${t("scene_h")}</small></span>${sceneCards()}</li>
     <li><span class="lb">${t("glass")}<small>${t("glass_h")}</small></span><div style="width:100%">${segb("setglass", st.glass, GLASS.map(k => [k, t("gl_" + k)]))}</div></li>
-    <li><span class="lb">${t("motion")}<small>${t("motion_h")}</small></span><div style="width:100%">${segb("setmotion", st.motion, MOTION.map(k => [k, t("mo_" + k)]))}</div></li>
+    <li><span class="lb">${t("motion")}<small>${t("motion_h")}</small></span><div style="width:100%">${segb("setmotion", st.motion, MOTION.map(k => [k, t("mo_" + k) + (k === moRec() ? `<span class="rec">${t("mo_rec")}</span>` : "")]))}${andVer() ? `<small class="mo-rec">${t("mo_rec_h").replace("{v}", num(andVer())).replace("{m}", t("mo_" + moRec()))}</small>` : ""}</div></li>
     <li><span class="lb">${t("location")}<small>${esc(cname(city()))}</small></span><button type="button" class="btn ghost" data-act="loc">${t("change")}</button></li>
   </ul>
   <p class="eyebrow">${t("sv_head")}</p>
   <ul class="card set">
     <li><span class="lb">${t("vib")}<small>${t("vib_h")}</small></span><div style="width:100%">${segb("setvib", st.vib, VIBS.map(k => [k, t("vb_" + k)]))}</div></li>
     <li><span class="lb">${t("snd")}<small>${t("snd_h")}</small></span><button type="button" class="switch" role="switch" data-act="snd" aria-checked="${!!st.snd}" aria-label="${esc(t("snd"))}"></button></li>
-    <li><span class="lb">${t("amb")}<small>${t("amb_h")}</small></span><button type="button" class="switch" role="switch" data-act="amb" aria-checked="${!!st.amb}" aria-label="${esc(t("amb"))}"></button></li>
-    <li class="set-block"><div class="amb-kinds" role="group" aria-label="${esc(t("amb_pick"))}">${(SND ? SND.KINDS : []).map(k => `<button type="button" class="chip" data-act="ambk" data-k="${k}" aria-pressed="${st.ambK === k}">${t("ab_" + k)}</button>`).join("")}</div></li>
+    <li class="set-block"><span class="lb">${t("snd_k")}<small>${t("snd_k_h")}</small></span><div class="amb-kinds" role="group" aria-label="${esc(t("snd_k"))}">${(SND ? SND.TOUCH : []).map(k => `<button type="button" class="chip" data-act="sndk" data-k="${k}" aria-pressed="${st.sndK === k}">${t("tk_" + k)}</button>`).join("")}</div></li>
     <li><span class="lb">${t("vol")}</span><input id="vol" type="range" min="0" max="100" step="5" value="${st.vol}" aria-label="${esc(t("vol"))}"></li>
     <li><p class="note" id="snd-prof">${sndProfile()}</p></li>
   </ul>
   <p class="eyebrow">${t("nf_head")}</p>
   <ul class="card set">
     ${["pray", "forb", "thu"].map(k => `<li><span class="lb">${t("nf_" + k)}<small>${t("nf_" + k + "_h")}</small></span><button type="button" class="switch" role="switch" data-act="nf" data-k="${k}" aria-checked="${!!st.nf[k]}" aria-label="${esc(t("nf_" + k))}"${nfCan() ? "" : " disabled"}></button></li>`).join("")}
+    <li class="set-sub"><p class="th-h">${t("nf_nafl")}</p></li>
+    ${["tahajjud", "duha"].map(k => `<li><span class="lb">${t("nf_" + k)}<small>${t("nf_" + k + "_h")}</small></span><button type="button" class="switch" role="switch" data-act="nf" data-k="${k}" aria-checked="${!!st.nf[k]}" aria-label="${esc(t("nf_" + k))}"${nfCan() ? "" : " disabled"}></button></li>`).join("")}
+    ${NATIVE ? `<li class="set-block"><span class="lb">${t("nf_snd")}<small>${t("nf_snd_h")}</small></span><div class="amb-kinds" role="group" aria-label="${esc(t("nf_snd"))}">${NF_SND.map(k => `<button type="button" class="chip" data-act="nfsnd" data-k="${k}" aria-pressed="${st.nfSnd === k}">${t("ns_" + k)}</button>`).join("")}</div></li>` : ""}
     <li><p class="note">${nfCan() ? (NATIVE ? t("nf_app").replace("{n}", num(NF_DAYS)) : t("nf_web")) : t("nf_unsup")}</p></li>
   </ul>
   <p class="eyebrow">${t("ptimes")}</p>
@@ -2122,12 +2201,18 @@ function saveQuranOffline(b) {
 }
 
 /* ---------------- location sheet ---------------- */
+/* Nov 2026: grouped by region, then country. Search matches the city or the country, in either language. The region
+   with the chosen city comes first. */
 function locSheet(filter = "") {
-  const q = filter.trim().toLowerCase();
-  const groups = [["au", t("au")], ["bd", t("bd")], ["world", t("world")]];
-  const opts = groups.map(([g, lab]) => {
-    const cs = CITIES.filter(c => c.g === g && (!q || c.en.toLowerCase().includes(q) || c.bn.includes(filter.trim())));
-    return cs.length ? `<p class="group">${lab}</p>` + cs.map(c => `<button type="button" class="opt" data-act="city" data-id="${c.id}" aria-pressed="${st.city === c.id}">${esc(L(c))}${st.city === c.id ? " ✓" : ""}</button>`).join("") : "";
+  const raw = filter.trim(), q = raw.toLowerCase(), cur = city(), here = COUNTRIES[cur.g] ? COUNTRIES[cur.g].r : null;
+  const hit = c => { if (!q) return true; const k = COUNTRIES[c.g] || { en: "", bn: "" }; return c.en.toLowerCase().includes(q) || c.bn.includes(raw) || k.en.toLowerCase().includes(q) || k.bn.includes(raw); };
+  const regs = REGIONS.slice().sort((a, b) => (b[0] === here) - (a[0] === here));
+  const opts = regs.map(([r, en, bnn]) => {
+    const body = Object.keys(COUNTRIES).filter(cc => COUNTRIES[cc].r === r).map(cc => {
+      const cs = CITIES.filter(c => c.g === cc && hit(c)); if (!cs.length) return "";
+      return `<p class="loc-cc">${esc(L(COUNTRIES[cc]))}</p>` + cs.map(c => `<button type="button" class="opt" data-act="city" data-id="${c.id}" aria-pressed="${st.city === c.id}">${esc(L(c))}${st.city === c.id ? " ✓" : ""}</button>`).join("");
+    }).join("");
+    return body ? `<p class="group">${esc(bn() ? bnn : en)}</p>` + body : "";
   }).join("");
   return opts || `<p class="note" style="padding:12px 4px">${t("none")}</p>`;
 }
@@ -2151,8 +2236,8 @@ function locate() {
 
 /* ---------------- desktop ---------------- */
 let sideNext = null;
-const SIDE = [["today", "today", "today"], ["study_nav", "quran", "quran"], ["stories_nav", "stories", "quran/stories"], ["duas", "duas", "duas"], null,
-  ["guide", "guide", "more/guide"], ["hadith", "hadith", "more/hadith"], ["calendar", "calendar", "more/calendar"], ["names99", "names", "more/names"], null,
+const SIDE = [["today", "today", "today"], ["study_nav", "quran", "quran"], ["stories_nav", "stories", "quran/stories"], ["duas", "duas", "more/duas"], null,
+  ["guide", "guide", "more/guide"], ["hadith", "hadith", "hadith"], ["calendar", "calendar", "more/calendar"], ["names99", "names", "more/names"], null,
   ["settings", "gear", "more/settings"], ["about", "info", "more/about"], ["feedback", "mail", "more/feedback"]];
 function side() {
   const el = $("side"); if (!el) return;
@@ -2189,7 +2274,7 @@ function openSurahDesk(s, a) {
 
 /* Switching language or English variant keeps the page, its filters and category, the selected date and the
    reading position: the first card or verse in view stays where it was on screen. */
-const KEEP_SEL = () => R.sub === "hadith" ? ".hadith" : R.tab === "duas" ? ".dua" : R.tab === "quran" && R.surah ? ".ayah" : R.sub === "names" ? ".name" : null;
+const KEEP_SEL = () => R.tab === "hadith" ? ".hadith" : R.sub === "duas" ? ".dua" : R.tab === "quran" && R.surah ? ".ayah" : R.sub === "names" ? ".name" : null;
 function switchLang(apply) {
   nfSync(); // reminders are written in the chosen language
   const sel = KEEP_SEL(), y = scrollY;
@@ -2226,7 +2311,7 @@ function holdPos(get, off) {
    arrive when the app is closed. Website: there is no server to push from, so they can only be shown while the page is
    open (checked every 15 s). ids are stable per day and slot, so re-scheduling replaces rather than duplicates. */
 const NF_DAYS = 10;
-const nfAny = () => !!(st.nf.pray || st.nf.forb || st.nf.thu);
+const nfAny = () => !!(st.nf.pray || st.nf.forb || st.nf.thu || st.nf.tahajjud || st.nf.duha);
 const nfCan = () => { try { return NATIVE || "Notification" in window; } catch (e) { return false; } };
 const nfGranted = () => { try { return "Notification" in window && Notification.permission === "granted"; } catch (e) { return false; } };
 function nfPlan(days) {
@@ -2239,6 +2324,11 @@ function nfPlan(days) {
     if (st.nf.forb) [["fsun", D.abs("sunrise"), tm.sunrise + 0.25], ["fzaw", D.abs("dhuhr") - 6e5, tm.dhuhr], ["fset", D.abs("maghrib") - 9e5, tm.maghrib]]
       .forEach(([w, at, end], j) => out.push({ id: n * 16 + 6 + j, at, ch: "forb", title: t("nf_forb_t"), body: t("nf_forb_b").replace("{w}", t(w)).replace("{e}", clock(end)) }));
     if (st.nf.thu && new Date(Date.UTC(y, m - 1, d)).getUTCDay() === 4) out.push({ id: n * 16 + 10, at: D.base + 20 * 36e5, ch: "thu", title: t("nf_thu_t"), body: heroNote(HR.forWeek(n)) });
+    /* Voluntary prayers (Nov 2026). Tahajjud: when the last third of the night begins (Isha's night from this
+       Maghrib to the next Fajr). Duha: halfway from sunrise to Dhuhr, when the sun is well up. */
+    if (st.nf.tahajjud) { const D1 = dayTimes(c, ...shiftDay(y, m, d, 1)); if (timesOk(D1)) { const mg = D.abs("maghrib"), fj = D1.abs("fajr"), at = fj - (fj - mg) / 3;
+      out.push({ id: n * 16 + 11, at, ch: "nafl", title: t("nf_tahajjud_t"), body: t("nf_tahajjud_b").replace("{f}", clock(D1.tm.fajr)) }); } }
+    if (st.nf.duha) { const sr = D.abs("sunrise"), dh = D.abs("dhuhr"); out.push({ id: n * 16 + 12, at: sr + (dh - sr) / 2, ch: "nafl", title: t("nf_duha_t"), body: t("nf_duha_b").replace("{e}", clock(tm.dhuhr - 0.17)) }); }
   }
   return out.filter(x => x.at > now + 5000).sort((a, b) => a.at - b.at);
 }
@@ -2248,9 +2338,30 @@ function nfRun() {
   if (!NATIVE) { webPlan = nfAny() && nfGranted() ? nfPlan(2) : []; return; }
   nat("LocalNotifications", "getPending").then(r => { const ns = ((r && r.notifications) || []).map(x => ({ id: x.id })); return ns.length ? nat("LocalNotifications", "cancel", { notifications: ns }) : 0; }).catch(() => {})
     .then(() => { if (!nfAny()) return 0;
-      [["pray", "nf_pray", 4], ["forb", "nf_forb", 3], ["thu", "nf_thu", 3]].forEach(([id, k, importance]) => natQ("LocalNotifications", "createChannel", { id, name: t(k), importance, visibility: 1 }));
-      const list = nfPlan(NF_DAYS).map(x => ({ id: x.id, title: x.title, body: x.body, largeBody: x.body, channelId: x.ch, smallIcon: "ic_stat_door", iconColor: "#0E6B5C", schedule: { at: new Date(x.at).toISOString(), allowWhileIdle: true } }));
+      nfChannels();
+      const s = st.nfSnd, list = nfPlan(NF_DAYS).map(x => ({ id: x.id, title: x.title, body: x.body, largeBody: x.body, channelId: nfCh(x.ch, s), smallIcon: "ic_stat_door", iconColor: "#0E6B5C", sound: s === "default" ? undefined : "ie_" + s + ".wav", schedule: { at: new Date(x.at).toISOString(), allowWhileIdle: true } }));
       return list.length ? nat("LocalNotifications", "schedule", { notifications: list }) : 0; }).catch(() => {});
+}
+/* Android fixes a channel's sound when the channel is first made, so each sound has its own channels: "pray" keeps the
+   phone's sound, "pray_drop" plays the app's water drop, and so on. A channel with the app's sound plays only that file
+   (the phone's own sound is not played as well), and the unused variants are deleted so Settings ▸ Notifications on the
+   phone lists one channel per kind. */
+const NF_KINDS = [["pray", "nf_pray", 4], ["forb", "nf_forb", 3], ["thu", "nf_thu", 3], ["nafl", "nf_nafl", 4]];
+const nfCh = (base, s) => s === "default" ? base : base + "_" + s;
+function nfChannels() {
+  const s = st.nfSnd;
+  NF_KINDS.forEach(([base, k, importance]) => {
+    NF_SND.forEach(o => { if (o !== s) natQ("LocalNotifications", "deleteChannel", { id: nfCh(base, o) }); });
+    const ch = { id: nfCh(base, s), name: t(k), importance, visibility: 1, vibration: true };
+    if (s !== "default") ch.sound = "ie_" + s + ".wav";
+    natQ("LocalNotifications", "createChannel", ch);
+  });
+}
+/* Plays the chosen notification sound once (Settings). The phone's own sound cannot be played from here. */
+function nfPreview(k) {
+  if (k === "default") { toast(t("ns_default_h")); return; }
+  if (NATIVE && ringer !== "normal") { toast(t("snd_muted")); return; }
+  try { const a = new Audio("assets/sounds/ie_" + k + ".wav"); a.volume = Math.max(0.15, SND ? SND.gainOf(st.vol / 100) : 0.6); a.play().catch(() => {}); } catch (e) {}
 }
 function nfShow(x) {
   const o = { body: x.body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "ie-" + x.id, lang: st.lang };
@@ -2273,10 +2384,10 @@ function nfSet(k, on) {
   const redraw = () => { const y = scrollY; render(false); scrollTo(0, y); };
   if (!on) { st.nf[k] = false; save(); nfSync(); redraw(); return; }
   nfAsk().then(ok => { st.nfAsk = true;
-    if (ok) { if (k === "all") st.nf = { pray: true, forb: true, thu: true }; else st.nf[k] = true; toast(t("nf_done")); } else toast(t(ok === null ? "nf_unsup" : "nf_denied"));
+    if (ok) { if (k === "all") Object.assign(st.nf, { pray: true, forb: true, thu: true }); else st.nf[k] = true; toast(t("nf_done")); } else toast(t(ok === null ? "nf_unsup" : "nf_denied"));
     save(); nfSync(); redraw(); });
 }
-const SELF_FX = new Set(["trk", "xw", "markread", "nwread", "setvib", "snd"]);
+const SELF_FX = new Set(["trk", "xw", "markread", "nwread", "setvib", "snd", "sndk", "nfsnd"]);
 
 /* ---------------- events ---------------- */
 document.addEventListener("click", e => {
@@ -2311,8 +2422,8 @@ function act(a, d, b) {
     case "setmotion": if (MOTION.includes(d.k)) { st.motion = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
     case "setvib": if (VIBS.includes(d.k)) { st.vib = d.k; save(); b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); buzz(18); } break;
     case "snd": st.snd = !st.snd; save(); b.setAttribute("aria-checked", st.snd); sndApply(); if (SND) SND.tap(); break;
-    case "amb": st.amb = !st.amb; save(); b.setAttribute("aria-checked", st.amb); sndApply(); break;
-    case "ambk": if (SND && SND.KINDS.includes(d.k)) { st.ambK = d.k; st.amb = true; save(); sndApply(); b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); const sw = document.querySelector('[data-act="amb"]'); if (sw) sw.setAttribute("aria-checked", "true"); } break;
+    case "sndk": if (SND && SND.TOUCH.includes(d.k)) { st.sndK = d.k; save(); sndApply(); b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); SND.preview(d.k); } break;
+    case "nfsnd": if (NF_SND.includes(d.k)) { st.nfSnd = d.k; save(); b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); nfPreview(d.k); nfSync(); } break;
     case "nf": nfSet(d.k, !st.nf[d.k]); break;
     case "nfon": nfSet("all", true); break;
     case "nflater": st.nfAsk = true; save(); { const c = b.closest(".nf-card"); if (c) c.remove(); } break;
@@ -2322,19 +2433,22 @@ function act(a, d, b) {
     case "prgo": if (SL) { praySeek(PR.times[+d.i].start); const el = $("pr-video"); if (el && el.getBoundingClientRect().top < 60) el.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); if (!PR.playing) prayPlay(true); } break;
     case "prspeed": { const S = [1, 0.75, 0.5, 1.25], i = (S.indexOf(PR.speed) + 1) % S.length; PR.speed = S[i]; b.textContent = num(PR.speed) + "×"; break; }
     case "prfs": prayFull(!$("pr-video").classList.contains("pv-full")); break;
+    case "prwho": if (SL && SL.WHO.includes(d.k)) { st.prWho = d.k; save(); prayPlay(false); PR.sc = ""; const y = scrollY; render(false); scrollTo(0, y); } break;
     case "prschool": if (SL && SL.SCHOOLS.includes(d.k)) { st.pray = d.k; save(); prayPlay(false); PR.sc = ""; const y = scrollY; render(false); scrollTo(0, y); } break;
-    case "setscene": if (SCENES.includes(d.k)) { st.scene = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "setscene": if (SCENES.includes(d.k)) { st.scene = d.k; st.sceneAuto = false; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "gdet": if (GDET[d.k]) openSheet(GDET[d.k], b, "pop"); break;
+    case "sceneauto": st.sceneAuto = !st.sceneAuto; save(); { const y = scrollY; render(false); scrollTo(0, y); } break;
     case "setasr": st.asr = +d.k; save(); render(false); nfSync(); break;
     case "hadj": st.hadj = Math.max(-2, Math.min(2, st.hadj + +d.d)); save(); render(false); nfSync(); break;
     case "gloss": st.gloss = !st.gloss; save(); b.setAttribute("aria-checked", st.gloss); if (R.tab === "quran" || R.tab === "today") { const y = scrollY; render(false); scrollTo(0, y); } break;
-    case "tl": st.tl = !st.tl; save(); b.setAttribute("aria-checked", st.tl); if (R.tab === "quran" || R.tab === "duas") { const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "tl": st.tl = !st.tl; save(); b.setAttribute("aria-checked", st.tl); if (R.tab === "quran" || R.sub === "duas") { const y = scrollY; render(false); scrollTo(0, y); } break;
     case "aa": aaSheet(); break;
     case "closesheet": closeSheet(); break;
     case "name": nameSheet(+d.i, b); break;
     case "savequran": saveQuranOffline(b); break;
     case "loc": openLoc(); break;
     case "gps": locate(); break;
-    case "city": { st.city = d.id; const c = city(); if (c.g === "bd") { st.method = "KAR"; st.asr = 2; } else if (c.g === "au") { st.method = "MWL"; st.asr = 1; } save(); closeSheet(); render(true); nfSync(); break; }
+    case "city": { st.city = d.id; const c = city(), k = COUNTRIES[c.g]; if (k && METHODS[k.m]) { st.method = k.m; st.asr = k.a; } save(); closeSheet(); render(true); nfSync(); break; }
     case "trk": {
       if (!snap) break;
       const k = trackKey(snap);
@@ -2471,7 +2585,7 @@ document.addEventListener("change", e => {
 const LOGO = `<svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="104" fill="#0E6B5C"/><clipPath id="ie-door"><path d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392Z"/></clipPath><g clip-path="url(#ie-door)"><rect width="512" height="512" fill="#167C68"/><circle cx="256" cy="392" r="84" fill="#F2BE5C"/></g><path d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392Z" fill="none" stroke="#F6EEDC" stroke-width="40" stroke-linejoin="round"/><path d="M118 393H394" stroke="#F6EEDC" stroke-width="40" stroke-linecap="round"/></svg>`;
 const g0 = !d0 && hashGroup(h0);
 if (g0 && !lazyDone.has(g0)) { // opened from a shared link: show that page loading, then open the item
-  R = Object.assign({ sub: null, surah: 0, ayah: 0, study: 0, story: null }, { stories: { tab: "quran", sub: "stories" }, names: { tab: "more", sub: "names" }, hadith: { tab: "more", sub: "hadith" } }[g0]);
+  R = Object.assign({ sub: null, surah: 0, ayah: 0, study: 0, story: null }, { stories: { tab: "quran", sub: "stories" }, names: { tab: "more", sub: "names" }, hadith: { tab: "hadith" } }[g0]);
   render(true); deepWait(h0);
 } else {
   if (d0) deepPre(d0);

@@ -30,13 +30,13 @@
   --r-night:#1B3238; --r-twi:#B97B36; --r-day:#3F8F97; --r-day2:#3A8072; --r-late:#B8943F;
   --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.25); --shadow-up:0 2px 6px rgba(0,0,0,.45),0 16px 36px rgba(0,0,0,.42);
   color-scheme:dark}
-/* Emerald Ivory (light) */
-:root[data-palette="emerald"]{
-  --ground:#F6F1E4; --surface:#FFFDF7; --surface-2:#F0EADA; --ink:#12261E; --muted:#56655B; --line:#E2D9C4;
-  --accent:#0A6247; --accent-2:#DCEDE3; --on-accent:#FFFFFF; --gold:#835308; --gold-soft:#F5E8CC;
-  --danger:#A13B2B; --ok:#1F7149;
-  --r-night:#24423A; --r-twi:#D3964B; --r-day:#93C9B5; --r-day2:#BBDCC9; --r-late:#E7C46E;
-  --shadow:0 1px 2px rgba(20,20,30,.05),0 8px 24px rgba(20,20,30,.07); --shadow-up:0 2px 4px rgba(20,20,30,.08),0 14px 32px rgba(20,20,30,.14);
+/* Sky Blue (light, Nov 2026; replaces Emerald Ivory): clear morning blue on cool white, warm gold kept for focus */
+:root[data-palette="sky"]{
+  --ground:#EDF3FA; --surface:#FFFFFF; --surface-2:#F2F7FC; --ink:#0F1E33; --muted:#526379; --line:#D6E2EF;
+  --accent:#1D5FAE; --accent-2:#E0EBF8; --on-accent:#FFFFFF; --gold:#8A5A0E; --gold-soft:#F6EAD2;
+  --danger:#B03A32; --ok:#2B7652;
+  --r-night:#22385A; --r-twi:#D8925C; --r-day:#8FC2E9; --r-day2:#B8D8F0; --r-late:#ECC679;
+  --shadow:0 1px 2px rgba(15,30,51,.05),0 8px 24px rgba(15,30,51,.07); --shadow-up:0 2px 4px rgba(15,30,51,.08),0 14px 32px rgba(15,30,51,.14);
   color-scheme:light}
 /* Sandstone Teal (light) */
 :root[data-palette="sandstone"]{
@@ -54,12 +54,12 @@
   --r-night:#1C2350; --r-twi:#B9853C; --r-day:#5462A8; --r-day2:#46508E; --r-late:#B9963F;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
   color-scheme:dark}
-/* Plum Dusk (dark): deep aubergine surfaces, muted rose/copper accents, warm pale text */
-:root[data-palette="plum"][data-theme="dark"]{
-  --ground:#140D14; --surface:#1E141E; --surface-2:#271B27; --ink:#F3E8E3; --muted:#BBA5AE; --line:#3B2939;
-  --accent:#E7A3B4; --accent-2:#40202F; --on-accent:#2A0B17; --gold:#E2AE78; --gold-soft:#36261F;
-  --danger:#F29C8C; --ok:#86CFA2;
-  --r-night:#2C1A2A; --r-twi:#B27748; --r-day:#7C5A70; --r-day2:#6A4E62; --r-late:#B48A50;
+/* Deep Teal (dark, Nov 2026; replaces Plum Dusk): dark blue-green surfaces, bright aqua accent, warm gold */
+:root[data-palette="teal"][data-theme="dark"]{
+  --ground:#051416; --surface:#0B1F22; --surface-2:#11292C; --ink:#E4F2F0; --muted:#9BB6B3; --line:#1D3A3E;
+  --accent:#4FD0D8; --accent-2:#0F3B40; --on-accent:#032125; --gold:#E8C06A; --gold-soft:#2A2A1C;
+  --danger:#F09A8A; --ok:#6FD4A4;
+  --r-night:#0E2E34; --r-twi:#B5803D; --r-day:#2E8890; --r-day2:#2B726E; --r-late:#B9963F;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
   color-scheme:dark}
 
@@ -763,7 +763,7 @@ details.fn>div{font-size:.9rem;line-height:1.7;padding-bottom:12px;color:var(--i
 .themes button{display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 12px 6px 8px;border-radius:14px;border:1px solid var(--line);background:var(--surface);text-align:left;font-size:.88rem;line-height:1.25}
 .themes button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;font-weight:600}
 .themes .sw{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid rgba(0,0,0,.12);background:conic-gradient(var(--a) 0 50%,var(--b) 0 100%)}
-.sw-classic{--a:#EEF3F1;--b:#0E6B5C}.sw-emerald{--a:#F6F1E4;--b:#0A6247}.sw-sandstone{--a:#F3EADB;--b:#0F5C66}.sw-burgundy{--a:#F4ECDD;--b:#7A1F33}.sw-indigo{--a:#12172F;--b:#EBC266}
+.sw-classic{--a:#EEF3F1;--b:#0E6B5C}.sw-sky{--a:#EDF3FA;--b:#1D5FAE}.sw-sandstone{--a:#F3EADB;--b:#0F5C66}.sw-burgundy{--a:#F4ECDD;--b:#7A1F33}.sw-indigo{--a:#12172F;--b:#EBC266}
 
 /* Restrained glass (Phase 5.2): only navigation and controls that float over content — the header, the tab bar,
    the language/location chips, segmented controls, the tracker date picker, the sidebar's next-prayer box,
@@ -918,9 +918,10 @@ button.c{font:inherit;color:inherit;cursor:pointer;transition:transform .15s var
 .zk-q{border-top:1px solid var(--line);padding:8px 0}
 .zk-q summary{cursor:pointer;font-weight:600;min-height:32px;display:flex;align-items:center}
 .zk-q p{margin-top:6px;line-height:1.6;font-size:.93rem}
-/* Interaction motion (Face 7; Phase 5.3 spring kept as "Playful"). st.motion → :root[data-motion]: "subtle" (default)
-   lifts controls by 1px with a gentle ease and a slight press; "playful" adds the small spring and scale; "off" keeps
-   only immediate colour/border feedback. Only controls and card shells move: Qur'an, hadith and dua texts never do.
+/* Interaction motion (Face 7; Nov 2026). st.motion → :root[data-motion]: "subtle" (Slide, the default) lifts controls
+   by 1px with a gentle ease and a slight press, and pages slide; "fade" moves nothing: controls dim softly when pressed
+   and pages cross-fade (lighter for older phones); "off" keeps only immediate colour/border feedback. "Playful" (the
+   spring) was removed in Nov 2026. Only controls and card shells move: Qur'an, hadith and dua texts never do.
    prefers-reduced-motion always wins over the setting. State never depends on hover: pressed/selected/checked use
    borders, fills and marks. */
 .btn,.chip,.chip-btn,.icon-btn,.seg button,.nw-jump button,.themes button,.wd-next .chip,.th-card,.sc-card{transition:transform .22s var(--ease),box-shadow .2s var(--ease),background-color .2s,border-color .2s,color .2s,opacity .2s}
@@ -929,14 +930,11 @@ button.c{font:inherit;color:inherit;cursor:pointer;transition:transform .15s var
   :is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card):hover{transform:translateY(-1px)}
   :is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card):hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
   .seg button:not([aria-pressed="true"]):hover{background:color-mix(in srgb,var(--surface) 60%,transparent)}
-  :root[data-motion="playful"] :is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card):hover{transform:translateY(-1px) scale(1.03)}
 }
 :is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card):focus-visible{transform:translateY(-1px)}
 :is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card):active,.seg button:active{transform:scale(.98);transition-duration:.08s}
-:root[data-motion="playful"] :is(.btn,.chip,.chip-btn,.icon-btn,.seg button,.nw-jump button,.themes button,.wd-next .chip,.th-card,.sc-card){transition-timing-function:var(--spring),var(--ease),ease,ease,ease,ease;transition-duration:.32s,.2s,.2s,.2s,.2s,.2s}
-:root[data-motion="playful"] :is(.name,.tile,button.card,.v-more .menu li,.hcal,.g-det){transition-timing-function:var(--spring),var(--ease),var(--ease);transition-duration:.34s,.2s,.2s}
-:root[data-motion="playful"] :is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card):focus-visible{transform:translateY(-1px) scale(1.03)}
-:root[data-motion="playful"] :is(.btn,.chip,.chip-btn,.icon-btn,.nw-jump button,.themes button,.th-card,.sc-card,.seg button):active{transform:scale(.95)}
+:root[data-motion="fade"] :is(.btn,.chip,.chip-btn,.icon-btn,.seg button,.nw-jump button,.themes button,.wd-next .chip,.th-card,.sc-card,.name,.tile,button.card,.v-more .menu li,.hcal,.g-det,.card.menu li>button){transform:none!important;transition-property:opacity,background-color,border-color,color,box-shadow;transition-duration:.22s}
+:root[data-motion="fade"] :is(.btn,.chip,.chip-btn,.icon-btn,.seg button,.nw-jump button,.themes button,.th-card,.sc-card,.name,.tile,button.card,.hcal,.card.menu li>button):active{opacity:.72;transition-duration:.06s}
 :root[data-motion="off"] :is(.btn,.chip,.chip-btn,.icon-btn,.seg button,.nw-jump button,.themes button,.wd-next .chip,.th-card,.sc-card,.name,.tile,button.card,.v-more .menu li,.hcal,.g-det){transition-property:background-color,border-color,color,opacity,box-shadow;transform:none!important}
 :root[data-motion="off"] .view.enter>*,:root[data-motion="off"] .tick.just i,:root[data-motion="off"] .tick.just path,:root[data-motion="off"] .xw li.just,:root[data-motion="off"] .view.enter .ribbon .rb{animation:none}
 @media (prefers-reduced-motion:reduce){
@@ -1036,7 +1034,6 @@ button.c{font:inherit;color:inherit;cursor:pointer;transition:transform .15s var
 .cal .c.today.wh[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink),0 0 0 2px var(--gold) inset}
 button.c:focus-visible{outline:3px solid var(--ink);outline-offset:2px;z-index:1}
 @media (hover:hover) and (pointer:fine){.cal .c[data-k]:not([aria-pressed="true"]):not(.today):hover{border:1px dashed color-mix(in srgb,var(--accent) 70%,var(--ink));transform:none}}
-:root[data-motion="playful"] .cal .c[data-k]:hover{transform:translateY(-1px)}
 .cal-legend .lg-ev{border-radius:1px;transform:rotate(45deg)}
 .cal-legend .lg-sel{background:var(--surface);border:2px solid var(--accent)}
 /* Sticky header: an opaque strip of page ground above the rounded bar, so text never peeks through the gap. */
@@ -1329,13 +1326,17 @@ html[data-vt="left"]{--vtx:1}html[data-vt="right"]{--vtx:-1}
 ::view-transition-old(ie-top),::view-transition-old(ie-tabs){display:none}
 ::view-transition-new(ie-top),::view-transition-new(ie-tabs){animation:none}
 /* Nov 2026: a real slide. The old page moves away and fades; the new one slides in from the side it lives on and
-   settles with a small spring (a little more with Motion: Playful). Both are snapshots, so only transform and opacity
-   change: no layout or painting during the slide. */
-html[data-vt]::view-transition-old(root){animation:vt-out .24s cubic-bezier(.4,0,.7,.4) both}
-html[data-vt]::view-transition-new(root){animation:vt-in .5s var(--bounce) both}
-html[data-vt][data-motion="playful"]::view-transition-new(root){animation:vt-in .56s var(--bounce-2) both}
-@keyframes vt-out{to{opacity:0;transform:translateX(calc(var(--vtx,1) * -24%)) scale(.985)}}
-@keyframes vt-in{from{opacity:0;transform:translateX(calc(var(--vtx,1) * 46%))}}
+   settles on one long ease-out (no overshoot: the bounce read as a wobble on slower phones). With Motion: Fade the
+   pages only cross-fade, with a 10px drift. Both are snapshots, so only transform and opacity change: no layout or
+   painting during the change. */
+html[data-vt]::view-transition-old(root){animation:vt-out .22s cubic-bezier(.4,0,1,1) both}
+html[data-vt]::view-transition-new(root){animation:vt-in .42s cubic-bezier(.16,1,.3,1) both}
+html[data-vt][data-motion="fade"]::view-transition-old(root){animation:vt-fo .18s linear both}
+html[data-vt][data-motion="fade"]::view-transition-new(root){animation:vt-fi .34s cubic-bezier(.2,.7,.2,1) .04s both}
+@keyframes vt-out{to{opacity:0;transform:translateX(calc(var(--vtx,1) * -18%))}}
+@keyframes vt-in{from{opacity:0;transform:translateX(calc(var(--vtx,1) * 32%))}}
+@keyframes vt-fo{to{opacity:0}}
+@keyframes vt-fi{from{opacity:0;transform:translateY(10px)}}
 /* The door opening into the app: one composited layer on touch screens, so scaling it never repaints. */
 @media (pointer:coarse){.sp-door{will-change:transform}}
 /* Android app only (html.native, set by theme-boot.js). */
@@ -1382,8 +1383,9 @@ html.closing nav.tabs{transform:translateY(12px)}
 /* Phones and the app: a page that appears without a slide (first open, a link) rises with the same spring; the tab
    marker and icons answer a press at once. Desktop keeps its own, earlier motion. */
 @media (pointer:coarse){
-  .view.enter>*{animation:rise-b .6s var(--bounce) both;animation-delay:calc(var(--i,0)*36ms)}
-  nav.tabs .ind{transition:transform .5s var(--bounce)}
+  /* Nov 2026: one long ease-out, no overshoot, so the page settles instead of wobbling; a shorter stagger. */
+  .view.enter>*{animation:rise-b .46s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(min(var(--i,0),6)*28ms)}
+  nav.tabs .ind{transition:transform .42s cubic-bezier(.22,1,.36,1)}
   nav.tabs button:active svg{transform:scale(.86);transition-duration:.08s}
   nav.tabs button[aria-current="page"] svg{transition:transform .45s var(--bounce-2)}
   .card.menu li>button:active,.hcal:active,button.card:active{transform:scale(.985)}
@@ -1391,7 +1393,11 @@ html.closing nav.tabs{transform:translateY(12px)}
   .sheet{transition:transform .42s cubic-bezier(.2,.9,.25,1)}
   .switch::after{transition:transform .34s var(--bounce-2)}
 }
-@keyframes rise-b{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes rise-b{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+:root[data-motion="fade"] .view.enter>*{animation:fade-in .4s ease-out both;animation-delay:calc(var(--i,0)*30ms)}
+:root[data-motion="fade"] nav.tabs .ind{transition:transform .3s cubic-bezier(.2,.7,.2,1),opacity .2s}
+:root[data-motion="fade"] .switch::after{transition:transform .2s ease-out}
 :root[data-motion="off"] .view.enter>*{animation:none}
 @media (prefers-reduced-motion:reduce){.view.enter>*{animation:none}}
 /* Filter rows (All, Saved, categories): the row scrolls edge to edge, but its first chip rests on the page margin. Without
@@ -1562,3 +1568,49 @@ nav.tabs button span{transition:color .25s,transform .35s var(--bounce)}
 @media (pointer:coarse) and (max-width:1023px){.v-today>:nth-child(n+5){content-visibility:auto;contain-intrinsic-height:auto 340px}}
 /* Desktop: the How to pray video keeps a comfortable size instead of filling the whole column. */
 @media (min-width:1024px){.pr-video{max-width:720px}.pr-video.pv-full{max-width:none}}
+
+/* Nov 2026: six more hero scenes (dunes, mountains, sea, forest, fields, canyon). Water takes the low sky and darkens
+   toward the shore; the reflection and the glints are faint so the text above them keeps its contrast. */
+.sky-land .wt0{stop-color:var(--s3);stop-opacity:.9}.sky-land .wt1{stop-color:var(--m3);stop-opacity:.95}
+.sky-land .sc-mirror{opacity:.32}
+.sky-land .sc-glint{fill:none;stroke:var(--hz);stroke-width:1.6;stroke-linecap:round;opacity:.45}
+.sky-land .sc-crest{fill:none;stroke:var(--hz);stroke-width:1.2;opacity:.35}
+.sky-land .sc-bund{fill:none;stroke:var(--m2);stroke-width:2;opacity:.8}
+.sky-land .sc-paddy{opacity:.85}
+.sky-land .sc-wave{opacity:.7}
+.sc-prev .wat{fill:#5F8FB4}.sc-prev .mir{opacity:.35}.sc-prev .gl{stroke:rgba(255,255,255,.6);stroke-width:1;fill:none}
+.sc-prev .palmp,.sc-prev .bund{fill:none;stroke:#1F3F4B;stroke-width:1.6;stroke-linecap:round}.sc-prev .bund{stroke:#46717F;stroke-width:.8}
+:root[data-theme="dark"] .sc-prev .wat{fill:#1B3550}:root[data-theme="dark"] .sc-prev .palmp{stroke:#0A1520}
+.sc-auto{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 10px}
+.sc-auto>div{display:grid;gap:2px}
+.sc-grid.sc-off .sc-card{opacity:.55}
+.mo-rec{display:block;margin-top:6px;font-size:.82rem;color:var(--muted)}
+.seg button .rec{display:block;font-size:.68rem;font-weight:600;color:var(--accent);line-height:1.1}
+/* Nov 2026: Prayer guide. The How to pray link is one compact row across the page (it used to sit beside the summary
+   table on wide screens and take its full height). Details and terms open as a centred pop-up over the blurred page. */
+.pr-link{padding:12px 16px;gap:12px;align-items:center}
+.pr-link .grow{display:grid;gap:2px}
+@media (min-width:1024px){.v-guide>.pr-link{grid-column:1/-1;margin-bottom:20px}}
+.g-btn{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;width:100%;padding:14px 16px;min-height:52px;text-align:start;font:inherit;color:inherit;cursor:pointer}
+.g-btn::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-top:2px solid var(--muted);transform:rotate(45deg);align-self:center}
+.g-terms{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.g-terms>.sec-title{grid-column:1/-1}
+.g-pop{padding:4px 0 0}
+@media (max-width:1023px){
+  .sheet.pop{top:50%;bottom:auto;left:16px;right:16px;max-width:520px;max-height:min(78vh,640px);border-radius:24px;padding:18px 18px 20px;opacity:0;pointer-events:none;transform:translateY(-44%) scale(.97);transition:transform .34s cubic-bezier(.16,1,.3,1),opacity .2s ease-out}
+  .sheet.pop.on{opacity:1;pointer-events:auto;transform:translateY(-50%)}
+  .sheet.pop .grab{display:none}
+}
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  .scrim.blur{background:rgba(5,15,12,.3);-webkit-backdrop-filter:blur(12px) saturate(1.1);backdrop-filter:blur(12px) saturate(1.1)}
+}
+:root[data-motion="fade"] .sheet.pop{transform:translateY(-50%)}
+@media (prefers-reduced-motion:reduce){.sheet.pop{transition:opacity .15s}}
+.set-sub .th-h{margin:4px 0 0}
+.sheet .loc-cc{font-size:.82rem;font-weight:600;color:var(--ink);padding:10px 4px 2px;opacity:.8}
+/* Nov 2026: the woman's version: a long loose dress and a headscarf over the shoulders. */
+.pv-pic[data-who="woman"] .sl-shirt{fill:#e7d9d0}.pv-pic[data-who="woman"] .sl-shirt.far{fill:#c9b8ad}
+.sl-scarf{fill:#5f7186}.pv-pic[data-who="woman"] .sl-skin.far{fill:#a67858}
+.pr-who{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.si-scarf{fill:#5f7186;stroke:#1d2b27;stroke-width:1.6}
+.pr-who{margin-top:12px;max-width:320px}

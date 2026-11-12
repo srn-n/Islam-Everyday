@@ -104,7 +104,7 @@ test("switching language keeps the page and reading position", () => {
 });
 
 test("every new interface string exists in English and Bangla", () => {
-  const keys = ["lang_h", "vd_expl", "vd_expl_label", "vd_expl_src", "vd_flag", "began", "startsat", "adhannote", "theme_h", "pl_emerald", "pl_indigo",
+  const keys = ["lang_h", "vd_expl", "vd_expl_label", "vd_expl_src", "vd_flag", "began", "startsat", "adhannote", "theme_h", "pl_sky", "pl_indigo",
     "cal_today", "cal_hint", "cal_calc", "cal_method", "cal_eve", "wd_title", "wd_intro", "wd_h1", "wd_r1", "wd_h2", "wd_r2", "wd_h3", "wd_h4", "wd_tash", "fp_check", "fp_note", "viz_cap", "viz_polar", "sunset"];
   for (const k of keys) { assert.ok(I18N.en[k], "en " + k); assert.ok(I18N.bn[k], "bn " + k); }
   const used = [...app.matchAll(/\bt\("(th_|wd_|cal_|fp_|viz_)?([a-z0-9_]+)"\)/g)].map(m => (m[1] || "") + m[2]);
@@ -143,15 +143,16 @@ const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
    themes per appearance (changed intentionally): Classic Teal / Emerald Ivory / Sandstone Teal are light only;
    Midnight Jade (the base dark tokens) / Indigo Moon / Plum Dusk are dark only. The same contrast checks cover all six. */
 const THEMES = { light: block(":root"), dark: block(':root[data-theme="dark"]') };
-for (const p of ["emerald", "sandstone"]) THEMES[p] = block(`:root[data-palette="${p}"]`);
-for (const p of ["indigo", "plum"]) THEMES[p + "-dark"] = block(`:root[data-palette="${p}"][data-theme="dark"]`);
+// Nov 2026 (intentional): Emerald Ivory → Sky Blue, Plum Dusk → Deep Teal.
+for (const p of ["sky", "sandstone"]) THEMES[p] = block(`:root[data-palette="${p}"]`);
+for (const p of ["indigo", "teal"]) THEMES[p + "-dark"] = block(`:root[data-palette="${p}"][data-theme="dark"]`);
 
 test("every palette, light and dark, defines every colour token the primary theme defines", () => {
   const need = Object.keys(THEMES.dark);
   for (const n of Object.keys(THEMES).filter(n => n !== "light" && n !== "dark")) for (const k of need) assert.ok(THEMES[n][k], `${n}: --${k}`);
   assert.match(app, /const MODES = \["system", "light", "dark"\]/);
-  assert.match(app, /LIGHT_TH = \["classic", "emerald", "sandstone"\], DARK_TH = \["jade", "indigo", "plum"\]/); // Face 7 (was PALETTES)
-  assert.ok(!css.includes('[data-palette="burgundy"]') && !css.includes('[data-palette="emerald"][data-theme="dark"]'), "no light/dark crossover sets remain");
+  assert.match(app, /LIGHT_TH = \["classic", "sky", "sandstone"\], DARK_TH = \["jade", "indigo", "teal"\]/); // Face 7 (was PALETTES)
+  assert.ok(!css.includes('[data-palette="burgundy"]') && !css.includes('[data-palette="sky"][data-theme="dark"]') && !css.includes('[data-palette="emerald"]') && !css.includes('[data-palette="plum"]'), "no light/dark crossover sets remain");
   assert.match(css, /:root:not\(\[data-theme\]\)\{/, "the system dark fallback applies only when no mode has been set");
 });
 

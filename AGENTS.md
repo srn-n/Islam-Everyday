@@ -179,14 +179,12 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 *Last updated: 12 November 2026.*
 
-- Latest pushed commit: `040d7e0` (12 November, second batch: 15 Notion tasks; Android build #10 succeeded and is
-  signed with the upload key). Its three WAV sounds were damaged in transfer (bytes added); the working tree has the
-  fixed files, `*.wav binary` in `.gitattributes` and a test that checks each WAV's header sizes. Build #10 is NOT
-  copied to `IslamEverydayApp`: wait for the build of the fix.
+- Latest pushed commit: `7e9b31e` (12 November: sound files repaired, after `040d7e0`, the 15 Notion tasks).
+  Working tree: only this note (AGENTS.md) changed since.
 - `npm test`: 191 pass.
-- The Android build in `IslamEverydayApp` is build #9 for `1ae6b4a` (12 Nov): checksums OK, the `.aab` signed with the
-  upload key, the bundled `app.js`/`salah-fig.js` identical to the repo. Not yet tested on a phone; nothing uploaded
-  to Play. It contains the notifications plugin, `RingerPlugin`, the new launch-screen doorway and the 12 Nov work.
+- The Android build in `IslamEverydayApp` is build #11 for `7e9b31e` (12 Nov): checksums OK, the `.aab` signed with the
+  upload key, the bundled web files and all three WAVs identical to the repo. Not yet tested on a phone; nothing
+  uploaded to Play. (Build #10 for `040d7e0` had damaged sounds and was not used.)
 - New Android permissions come with the notifications plugin's own manifest: `POST_NOTIFICATIONS`,
   `RECEIVE_BOOT_COMPLETED`, `WAKE_LOCK`, `SCHEDULE_EXACT_ALARM`. Play Console: Data safety stays "no data collected";
   the exact-alarm permission may need a declaration (or remove it with `tools:node="remove"` in the app manifest;
@@ -223,7 +221,7 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 Add a new entry at the top for every change: date, summary, files, tests, open items.
 
-### 2026-11-12: sound files repaired (uncommitted)
+### 2026-11-12: sound files repaired (`7e9b31e`, build #11 in IslamEverydayApp)
 - `040d7e0` shipped `ie_drop/tap/breeze.wav` 5–6 KB too large: copying them to the PC treated them as text. Regenerated
   on the PC with the same script (byte-identical to the originals), in `assets/sounds/` and `res/raw/`.
 - `.gitattributes`: `*.wav binary`. `tests/nov12.test.mjs`: the RIFF and data sizes must match the file, and both

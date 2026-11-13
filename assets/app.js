@@ -48,9 +48,10 @@ const natQ = (p, m, o) => { nat(p, m, o).catch(() => {}); };
 /* ---------------- state ---------------- */
 const KEY = "dinsathi.web.v1";
 /* Notification sounds (Nov 2026): the phone's own sound, or one of three soft sounds that ship with the app
-   (res/raw/ie_drop, ie_tap, ie_breeze; previews in assets/sounds). */
-const NF_SND = ["default", "drop", "tap", "breeze"];
-const DEF = { lang: "en", loc: "en-IN", mode: "system", lightTheme: "classic", darkTheme: "jade", glass: "balanced", motion: "subtle", scene: "landscape", sceneAuto: false, city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
+   (res/raw/ie_drop, ie_ripple, ie_bubble; previews in assets/sounds). */
+const NF_SND = ["default", "drop", "ripple", "bubble"]; // Nov 2026: "tap" and "breeze" were replaced
+const NF_OLD = ["tap", "breeze"]; // their channels are removed from the phone
+const DEF = { lang: "en", loc: "en-IN", mode: "system", lightTheme: "sandstone", darkTheme: "jade", glass: "balanced", motion: "subtle", scene: "landscape", sceneAuto: false, heroKind: "anim", photo: "mosque", city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
   school: null, vib: "light", snd: true, sndK: "soft", vol: 60, nfSnd: "default", nf: { pray: false, forb: false, thu: false, tahajjud: false, duha: false }, nfAsk: false, pray: null, log: {}, xlog: {}, fplan: {}, gloss: false, last: null, read: [], bm: [], fav: [], tab: "today", hcol: "general", nwread: [],
   zk: { cur: "AUD", basis: "silver", w: "tola", price: "", v: {} } };
 let st = JSON.parse(JSON.stringify(DEF));
@@ -64,9 +65,13 @@ try {
   if (!["off", "light", "medium", "strong"].includes(st.vib)) st.vib = "light";
   st.vol = Math.max(0, Math.min(100, +st.vol || 0));
   delete st["amb"]; delete st["ambK"]; // background sounds were removed (Nov 2026)
-  if (!["soft", "drop", "air"].includes(st.sndK)) st.sndK = "soft";
+  if (st.sndK === "air") st.sndK = "bubble"; // Light air was replaced (Nov 2026)
+  if (!["soft", "drop", "bubble"].includes(st.sndK)) st.sndK = "soft";
+  st.nfSnd = { tap: "bubble", breeze: "ripple" }[st.nfSnd] || st.nfSnd;
   if (!NF_SND.includes(st.nfSnd)) st.nfSnd = "default";
   st.sceneAuto = !!st.sceneAuto;
+  if (st.heroKind !== "photo") st.heroKind = "anim";
+  if (!PHOTOS.includes(st.photo)) st.photo = "mosque";
   st.xlog = XT.clean(st.xlog);
   if (!st.fplan || typeof st.fplan !== "object" || Array.isArray(st.fplan)) st.fplan = {};
   if (st.hcol !== "nawawi") st.hcol = "general";
@@ -175,12 +180,15 @@ const ic = (n, cls) => `<svg viewBox="0 0 24 24" aria-hidden="true"${cls ? ` cla
 const MODES = ["system", "light", "dark"], LIGHT_TH = ["classic", "sky", "sandstone"], DARK_TH = ["jade", "indigo", "teal"];
 const GLASS = ["subtle", "balanced", "high", "solid"], MOTION = ["off", "subtle", "fade"];
 const SCENES = ["landscape", "sky", "mosque", "dunes", "mountains", "sea", "forest", "fields", "canyon"];
+/* Nov 2026 (13th): pictures, as an alternative to the drawn scenes (st.heroKind "photo"). Generated for this app with
+   Figma's AI image tool; they show no real place. assets/heroes-img/<k>.webp (1200 px) and <k>-s.webp (720 px). */
+const PHOTOS = ["mosque", "dunes", "lake", "paddy", "coast", "pines", "tea"]; // the mosque is Friday's picture when it changes daily
 (() => {
   const old = st.theme, raw = (() => { try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { return {}; } })();
   if (!MODES.includes(raw.mode) || !MODES.includes(st.mode)) st.mode = old === "light" || old === "dark" ? old : old === "emerald" ? "light" : old === "indigo" ? "dark" : MODES.includes(raw.mode) ? raw.mode : "system";
   const pal = raw.palette || (old === "emerald" || old === "indigo" ? old : "classic");
   if (raw.lightTheme === "emerald") st.lightTheme = "sky";
-  else if (!LIGHT_TH.includes(raw.lightTheme)) st.lightTheme = pal === "emerald" ? "sky" : pal === "sandstone" ? pal : "classic";
+  else if (!LIGHT_TH.includes(raw.lightTheme)) st.lightTheme = pal === "emerald" ? "sky" : pal === "sandstone" ? pal : (raw.palette || raw.theme) ? "classic" : "sandstone"; // new installs: Sandstone Teal
   if (raw.darkTheme === "plum") st.darkTheme = "teal";
   else if (!DARK_TH.includes(raw.darkTheme)) st.darkTheme = pal === "indigo" ? "indigo" : pal === "burgundy" ? "teal" : "jade";
   if (!GLASS.includes(st.glass)) st.glass = "balanced";
@@ -744,11 +752,13 @@ const SCENE = (() => {
    Read from the browser's user agent ("Android 11"); null off Android. */
 const andVer = () => { const m = /Android (\d+)/.exec(navigator.userAgent || ""); return m ? +m[1] : null; };
 const moRec = () => { const v = andVer(); return v == null ? null : v >= 12 ? "subtle" : "fade"; };
-const sceneToday = () => { if (!st.sceneAuto) return SCENES.includes(st.scene) ? st.scene : "landscape";
-  const s = snap || snapshot(); if (isFriD(s.d0)) return "mosque";
-  const pool = SCENES.filter(k => k !== "mosque"), n = Math.floor(Date.UTC(s.p.year, s.p.month - 1, s.p.day) / 864e5); return pool[n % pool.length]; };
+const sceneToday = () => { const ph = st.heroKind === "photo", list = ph ? PHOTOS : SCENES;
+  if (!st.sceneAuto) return ph ? (PHOTOS.includes(st.photo) ? st.photo : "mosque") : SCENES.includes(st.scene) ? st.scene : "landscape";
+  const s = snap || snapshot(); if (isFriD(s.d0)) return "mosque"; // both lists have the mosque, for Fridays
+  const pool = list.filter(k => k !== "mosque"), n = Math.floor(Date.UTC(s.p.year, s.p.month - 1, s.p.day) / 864e5); return pool[n % pool.length]; };
 function heroScene() {
   const sc = sceneToday();
+  if (st.heroKind === "photo") return `<img class="sky-photo" src="assets/heroes-img/${sc}-s.webp" srcset="assets/heroes-img/${sc}-s.webp 720w, assets/heroes-img/${sc}.webp 1200w" sizes="(min-width:1024px) 60vw, 100vw" alt="" decoding="async"><div class="sky-tint" aria-hidden="true"></div>`;
   const clouds = `<svg class="sky-clouds" viewBox="0 0 800 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
     <defs><filter id="cl-f" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.0055 0.018" numOctaves="4" seed="5" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.9 0 0 0 -0.78" result="a"/><feFlood class="cl-flood" result="c"/><feComposite in="c" in2="a" operator="in"/><feGaussianBlur stdDeviation="1.2"/></filter>
     <linearGradient id="cl-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset=".75" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
@@ -811,6 +821,20 @@ function nfCard() {
     <div class="nf-acts"><button type="button" class="btn sm" data-act="nfon">${t("nf_on")}</button><button type="button" class="btn ghost sm" data-act="nflater">${t("nf_later")}</button></div></div></section>`;
 }
 let snap = null;
+/* Today, Nov 2026 (13th), phones: under the current prayer, the five prayers of the day in one row (time, now/next,
+   and a tick to record it, the same record as the Prayer tracker), then four shortcuts. Desktop keeps its layout
+   (both are hidden there by CSS). */
+function todayStrip(s, cur, nx, done) {
+  const fri = isFriD(s.d0);
+  const pills = PRAYERS.map(k => { const isC = cur && cur.k === k && cur.D === s.d0, isN = nx.k === k && !nx.tomorrow, on = !!done[k];
+    return `<li class="ts-p${isC ? " cur" : ""}${isN ? " nxt" : ""}${on ? " on" : ""}"><button type="button" data-act="qtrk" data-k="${k}" aria-pressed="${on}" aria-label="${esc(t("markp"))}: ${esc(pName(k, fri))}">
+      <span class="ts-n">${pName(k, fri)}</span><b class="tnum">${clock(s.d0.tm[k])}</b><i class="ts-c" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-9"/></svg></i>
+      ${isC ? `<span class="ts-b">${t("curb")}</span>` : isN ? `<span class="ts-b">${t("next")}</span>` : ""}</button></li>`; }).join("");
+  const sc = [["duas", "duas", t("duas")], ["names", "names", t("ts_names")], ["pray", "prayfig", t("pray")], ["calendar", "calendar", t("cal_s")]];
+  return `<section class="today-strip" aria-label="${esc(t("ts_head"))}"><div class="ts-head"><h3>${t("ts_head")}</h3><span class="note">${t("ts_done").replace("{n}", num(PRAYERS.filter(k => done[k]).length))}</span></div>
+    <ol class="ts-row">${pills}</ol></section>
+  <nav class="today-short" aria-label="${esc(t("ts_short"))}">${sc.map(([sub, icn, l]) => `<button type="button" data-act="go" data-tab="more" data-sub="${sub}"><span class="ic" aria-hidden="true">${ic(icn)}</span><span>${l}</span></button>`).join("")}</nav>`;
+}
 function vToday() {
   const s = snap = snapshot(), tm = s.d0.tm, ex = extras(s), done = st.log[s.key] || {};
   const per = skyPeriod(s), n = PRAYERS.filter(k => done[k]).length, ok = timesOk(s.d0), fri = isFriD(s.d0);
@@ -835,7 +859,7 @@ function vToday() {
   const dayV = window.IE_VOTD_DAY ? window.IE_VOTD_DAY.pick(wdNow) : null;
   const v = votdPick = dayV ? Object.assign({ day: wdNow }, dayV) : VOTD.entryFor(s.p.year, s.p.month, s.p.day);
   return `
-  <section class="sky a-hero" data-p="${per}" data-scene="${sceneToday()}" aria-label="${esc(t("curp"))}">
+  <section class="sky a-hero" data-p="${per}" data-scene="${sceneToday()}" data-kind="${st.heroKind === "photo" ? "photo" : "anim"}" aria-label="${esc(t("curp"))}">
     ${heroScene()}
     ${stars}
     <svg class="arc" viewBox="0 0 340 160" aria-hidden="true"><defs><radialGradient id="glow-g"><stop offset="0" class="gl0"/><stop offset="1" class="gl1"/></radialGradient></defs><path class="horizon" d="M0 150H340" stroke-width="1" fill="none"/><path id="arcpath" class="track" d="${ARC}" fill="none" stroke-width="1.5"/><path id="trail" class="trail" d="${ARC}" pathLength="100" stroke-dasharray="0 100" fill="none" stroke-width="2" stroke-linecap="round"/><circle id="glow" cx="178" cy="150" r="58" fill="url(#glow-g)"/><circle id="orb" class="orb${moonUp ? " hide" : ""}" cx="178" cy="150" r="9"/>${moonUp ? `<g id="moonG" class="moong" transform="translate(178 150)">${moonPhase(hj ? hj.d : 1, s.c.lat, 9)}</g>` : ""}</svg>
@@ -858,6 +882,7 @@ function vToday() {
     </div>
   </section>
 
+  ${todayStrip(s, cur, nx, done)}
   ${nfCard()}
 
   <section class="card a-times">
@@ -1732,19 +1757,22 @@ function vGuide() {
     <div class="g-school"><p class="note" id="g-sch-l">${t("g_school")}</p><div class="seg" role="group" aria-labelledby="g-sch-l">${[["hanafi", t("hanafi_s")], ["shafii", t("shafii_s")]].map(([k, l]) => `<button type="button" data-act="school" data-k="${k}" aria-pressed="${sc === k}">${l}</button>`).join("")}</div></div>
     <p class="note">${t("g_schoolh")}</p></section>
   <button type="button" class="card row pr-link" data-act="go" data-tab="more" data-sub="pray"><span class="ic" aria-hidden="true">${ic("play")}</span><span class="grow"><b>${t("pray")}</b><span class="note">${t("pr_link")}</span></span>${ic("chev", "chev")}</button>
-  <section class="card pad">
+  <div class="g-col g-col-a">
+  <section class="card pad g-sumc">
     <h3 class="sec-title" id="g-sum">${t("g_summary")} · ${t(sc === "hanafi" ? "hanafi_s" : "shafii_s")}</h3>
     <div class="g-legend" aria-hidden="true">${KINDS.filter(k => GD.prayers.some(p => p[sc].some(x => x.kind === k))).map(k => `<span class="u u-${k}">${t("k_" + k)}</span>`).join("")}</div>
     <div class="g-wrap"><table class="g-table" aria-labelledby="g-sum"><thead><tr><th scope="col">${t("g_prayer")}</th><th scope="col">${t("w_before")}</th><th scope="col">${t("w_fard")}</th><th scope="col">${t("w_after")}</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="note" style="margin-top:10px">${t("g_tablenote")}</p>
   </section>
-  <section class="g-list"><h3 class="sec-title">${t("g_details")}</h3>${GD.prayers.map(detail).join("")}</section>
   <section class="g-list g-terms"><h3 class="sec-title">${t("g_terms")}</h3>${GD.terms.map((x, i) => pop("t-" + i, esc(L(x)[0]), "", `<p>${esc(L(x)[1])}</p>${x.src.length ? `<p class="note g-status">${t("basedon")}: ${x.src.map(id => { const c = gCite(id); return `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label)}</a>`; }).join("; ")}.</p>` : ""}`)).join("")}</section>
-  <section class="card pad"><h3 class="sec-title">${t("g_schools")}</h3>
+</div>
+  <div class="g-col g-col-b">
+  <section class="g-list g-detc"><h3 class="sec-title">${t("g_details")}</h3>${GD.prayers.map(detail).join("")}</section>
+  <section class="card pad g-othc"><h3 class="sec-title">${t("g_schools")}</h3>
     <p style="margin-top:6px">${esc(L(GD.notes.maliki))}</p><p class="note g-status">${t("basedon")}: ${GD.notes.maliki.src.map(id => esc(gCite(id).label)).join("; ")}.</p>
     <p style="margin-top:10px">${esc(L(GD.notes.hanbali))}</p><p class="note g-status">${t("basedon")}: ${GD.notes.hanbali.src.map(id => esc(gCite(id).label)).join("; ")}.</p>
-    <p style="margin-top:10px">${esc(L(GD.notes.scope))}</p></section>
-  <section class="card pad"><h3 class="sec-title">${t("sources")}</h3>${gSources(GD.prayers.flatMap(p => p.src).concat(GD.terms.flatMap(x => x.src), GD.notes.maliki.src))}
+    <p style="margin-top:10px">${esc(L(GD.notes.scope))}</p></section></div>
+  <section class="card pad g-srcc"><h3 class="sec-title">${t("sources")}</h3>${gSources(GD.prayers.flatMap(p => p.src).concat(GD.terms.flatMap(x => x.src), GD.notes.maliki.src))}
     <p class="note" style="margin-top:10px">${esc(L(GD.notes.review))}</p></section>`;
 }
 
@@ -1844,9 +1872,9 @@ function vPray() {
     </div>
     <div class="pv-sub" aria-live="polite"><p class="pv-k" id="pray-k"></p><p class="pv-say" id="pray-say" hidden></p><p class="pv-text"><b id="pray-t"></b> <span id="pray-d"></span></p></div>
   </section>
-  <section class="card pad"><h3 class="sec-title">${t("pr_notes")} · ${esc(L(SL.NAMES[sc]))}</h3><ul class="pr-notes">${SL.notes(sc, PR.who).map(x => `<li>${escS(L(x))}</li>`).join("")}</ul></section>
-  <section class="card pad"><h3 class="sec-title">${t("pr_steps")}</h3><ol class="pr-list">${PR.steps.map((s, i) => `<li><button type="button" data-act="prgo" data-i="${i}"><span class="n">${num(i + 1)}</span><span class="grow">${esc(L(s.t))}</span><span class="note">${mmss(PR.times[i].start)}</span></button></li>`).join("")}</ol></section>
-  <section class="card pad"><p class="note st-draft" role="note">${t("pr_review")}</p><p class="note" style="margin-top:10px"><b>${t("pr_src")}:</b> ${SL.SOURCES[sc].map(esc).join("; ")}.</p></section>`;
+  <section class="card pad pr-notes-c"><h3 class="sec-title">${t("pr_notes")} · ${esc(L(SL.NAMES[sc]))}</h3><ul class="pr-notes">${SL.notes(sc, PR.who).map(x => `<li>${escS(L(x))}</li>`).join("")}</ul></section>
+  <section class="card pad pr-steps-c"><h3 class="sec-title">${t("pr_steps")}</h3><ol class="pr-list">${PR.steps.map((s, i) => `<li><button type="button" data-act="prgo" data-i="${i}"><span class="n">${num(i + 1)}</span><span class="grow">${esc(L(s.t))}</span><span class="note">${mmss(PR.times[i].start)}</span></button></li>`).join("")}</ol></section>
+  <section class="card pad pr-src-c"><p class="note st-draft" role="note">${t("pr_review")}</p><p class="note" style="margin-top:10px"><b>${t("pr_src")}:</b> ${SL.SOURCES[sc].map(esc).join("; ")}.</p></section>`;
 }
 
 let calM = null, calSel = null;
@@ -1907,7 +1935,7 @@ function vCalendar() {
     const label = `${calLong(i)}, ${hLong(i.h)}${i.today ? ", " + t("todayl") : ""}${i.wh ? ", " + t("wd_badge") : ""}${i.evs.length ? ", " + i.evs.map(L).join(", ") : ""}${i.plan && i.plan.f ? ", " + t("fp_planned") : ""}`;
     cells += `<button type="button" class="c${i.today ? " today" : ""}${i.major.length ? " ev" : ""}${i.wh ? " wh" : ""}${i.h && i.h.d === 1 ? " h1" : ""}${i.plan && i.plan.f ? " fp" : ""}" data-act="calday" data-k="${i.k}" aria-label="${esc(label)}" aria-pressed="${i.k === calSel}"${i.today ? ' aria-current="date"' : ""} tabindex="${i.k === calSel ? 0 : -1}"><b aria-hidden="true">${num(d)}</b><small aria-hidden="true">${i.h ? (i.h.d === 1 ? esc(HM[st.lang][i.h.m - 1].split(/[\s']/)[0]) : num(i.h.d)) : ""}</small></button>`;
   }
-  const hm = [...hms].map(k => { const [mm, yy] = k.split("/"); return `<span class="nw">${esc(HM[st.lang][mm - 1])} ${num(yy)}</span>`; }).join(" – "); // each month name stays on one line
+  const hm = [...hms].map(k => { const [mm, yy] = k.split("/"); return `<span class="nowrap-m">${esc(HM[st.lang][mm - 1])} ${num(yy)}</span>`; }).join(" – "); // each month name stays on one line
   const up = []; let [a, b, c] = [s.p.year, s.p.month, s.p.day];
   for (let i = 0; i < 400 && up.length < 4; i++) { const [a1, b1, c1] = shiftDay(a, b, c, i), h = hijri(localNoon(a1, b1, c1)); for (const e of eventsOn(h)) if (!e.minor) up.push({ e, i, h, g: new Date(Date.UTC(a1, b1 - 1, c1, 12)) }); }
   // Next White Days: the next run of Hijri 13–15 that has not finished yet.
@@ -2027,10 +2055,11 @@ const CHECK = '<svg class="ck" viewBox="0 0 24 24" aria-hidden="true"><path d="M
 function themeCards() {
   const now = themeNow();
   const card = (k, grp) => { const [g, sf, ink, ac, gd] = TH_PREV[k], on = (grp === "light" ? st.lightTheme : st.darkTheme) === k;
-    return `<button type="button" class="th-card" data-act="setth" data-g="${grp}" data-k="${k}" aria-pressed="${on}">
+    // Nov 2026: only the theme on screen now gets the strong outline; the other appearance's choice keeps its tick.
+    return `<button type="button" class="th-card${on && now === k ? " in-use" : ""}" data-act="setth" data-g="${grp}" data-k="${k}" aria-pressed="${on}">
       <span class="th-prev" aria-hidden="true" style="--p-g:${g};--p-s:${sf};--p-i:${ink};--p-a:${ac};--p-o:${gd}"><i class="p-bar"></i><span class="p-card"><b>${t("th_sample")}</b><i class="p-l"></i><i class="p-l s"></i><span class="p-row"><i class="p-btn"></i><i class="p-dot"></i></span></span></span>
       <span class="th-name">${t("pl_" + k)}</span>
-      <span class="th-state">${on ? CHECK + t("th_chosen") : ""}${now === k ? `<em>${t("th_now")}</em>` : ""}</span></button>`; };
+      <span class="th-state">${on && now === k ? CHECK + t("th_chosen") : ""}</span></button>`; }; // Nov 2026 (13th): only the theme in use is marked
   return `<div class="th-groups">${[["light", LIGHT_TH], ["dark", DARK_TH]].map(([grp, ks]) => `<div class="th-group" role="group" aria-labelledby="thg-${grp}"><p class="th-h" id="thg-${grp}">${t("th_" + grp)}</p><div class="th-grid">${ks.map(k => card(k, grp)).join("")}</div></div>`).join("")}</div>`;
 }
 const SC_PREV = {
@@ -2045,8 +2074,14 @@ const SC_PREV = {
   canyon: '<path d="M38 60 L40 30 H58 L60 60Z M62 60 L64 38 H76 L78 60Z" class="f1"/><path d="M44 60 L46 40 H66 L68 60Z" class="f2"/><path d="M0 56 Q40 52 80 55 V60 H0Z" class="f3"/>'
 };
 function sceneCards() {
+  const ph = st.heroKind === "photo";
+  const kind = `<div class="seg sc-kind" role="group" aria-label="${esc(t("sc_kind"))}">${["anim", "photo"].map(k => `<button type="button" data-act="herokind" data-k="${k}" aria-pressed="${(ph ? "photo" : "anim") === k}">${t("sc_" + k)}</button>`).join("")}</div>`;
+  const photos = `<div class="sc-grid" role="group" aria-label="${esc(t("sc_photo"))}">${PHOTOS.map(k => `<button type="button" class="sc-card ph" data-act="setphoto" data-k="${k}" aria-pressed="${st.photo === k}">
+    <img class="sc-img" src="assets/heroes-img/${k}-s.webp" alt="" loading="lazy" decoding="async" width="160" height="90">
+    <span class="th-name">${t("ph_" + k)}</span><span class="th-state">${st.photo === k ? CHECK + t("th_chosen") : ""}</span></button>`).join("")}</div><p class="note sc-ai">${t("ph_note")}</p>`;
   const auto = `<div class="sc-auto"><div><span>${t("sc_auto")}</span><small class="muted">${t("sc_auto_d")}</small></div><button type="button" class="switch" role="switch" data-act="sceneauto" aria-checked="${!!st.sceneAuto}" aria-label="${esc(t("sc_auto"))}"></button></div>`;
-  return auto + `<div class="sc-grid${st.sceneAuto ? " sc-off" : ""}" role="group" aria-label="${esc(t("scene"))}">${SCENES.map(k => `<button type="button" class="sc-card" data-act="setscene" data-k="${k}" aria-pressed="${st.scene === k}">
+  if (ph) return kind + auto + photos;
+  return kind + auto + `<div class="sc-grid" role="group" aria-label="${esc(t("scene"))}">${SCENES.map(k => `<button type="button" class="sc-card" data-act="setscene" data-k="${k}" aria-pressed="${st.scene === k}">
     <svg class="sc-prev" viewBox="0 0 80 60" aria-hidden="true" focusable="false"><rect width="80" height="60" class="skyb"/>${SC_PREV[k]}</svg>
     <span class="th-name">${t("sc_" + k)}</span><span class="th-state">${st.scene === k ? CHECK + t("th_chosen") : ""}</span></button>`).join("")}</div>`;
 }
@@ -2128,6 +2163,7 @@ function vAbout() {
     ["Prohibited-time notes", "Based on Sahih Muslim 831, Sahih al-Bukhari 586 and Shaykh Ibn Baz's fatwa 18495 (binbaz.org.sa); sunrise, solar noon and sunset are calculated by the app for your location. The minute margins are approximations."],
     ["Verse for today", "A fixed 180-day schedule (counted from 1 January 2026). Each passage was read with the verses before it and the Al-Mukhtasar tafsir, and a context note is shown where the passage needs one. Not yet reviewed by a qualified scholar."],
     ["Prayer guide", "Summarised from hadith checked on sunnah.com and from Hanafi and Shafi'i fatwa answers (IslamQA.org), IslamWeb and IslamQA.info. It is not a fatwa and has not yet been independently reviewed by a qualified scholar."],
+    ["Pictures for the Today card", "The seven pictures (Settings → Picture behind the prayer → Pictures) were generated for this app with Figma's AI image tool in November 2026. They are not photographs of real places."],
     ["Logo", "A mihrab-shaped open doorway framing a rising sun: original vector artwork drawn for this app (brand/ folder)."],
     ["Fonts", "Hind Siliguri, Scheherazade New and Tiro Bangla, SIL Open Font License 1.1, bundled with the app."]
   ];
@@ -2351,7 +2387,7 @@ const nfCh = (base, s) => s === "default" ? base : base + "_" + s;
 function nfChannels() {
   const s = st.nfSnd;
   NF_KINDS.forEach(([base, k, importance]) => {
-    NF_SND.forEach(o => { if (o !== s) natQ("LocalNotifications", "deleteChannel", { id: nfCh(base, o) }); });
+    NF_SND.concat(NF_OLD).forEach(o => { if (o !== s) natQ("LocalNotifications", "deleteChannel", { id: nfCh(base, o) }); });
     const ch = { id: nfCh(base, s), name: t(k), importance, visibility: 1, vibration: true };
     if (s !== "default") ch.sound = "ie_" + s + ".wav";
     natQ("LocalNotifications", "createChannel", ch);
@@ -2380,12 +2416,17 @@ function nfAsk() {
   if (NATIVE) return nat("LocalNotifications", "requestPermissions").then(r => !!r && r.display === "granted", () => false);
   try { if (!("Notification" in window)) return Promise.resolve(null); return Promise.resolve(Notification.requestPermission()).then(x => x === "granted", () => false); } catch (e) { return Promise.resolve(null); }
 }
-function nfSet(k, on) {
+/* Nov 2026: a switch slides first and the page redraws after, so the movement is seen (a redraw at once replaced the
+   switch before it could move). */
+const SW_MS = 320;
+function flipSw(b, on, then) { if (b && b.classList && b.classList.contains("switch")) { b.setAttribute("aria-checked", on); b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); } if (then) setTimeout(then, b ? SW_MS : 0); }
+function nfSet(k, on, b) {
   const redraw = () => { const y = scrollY; render(false); scrollTo(0, y); };
-  if (!on) { st.nf[k] = false; save(); nfSync(); redraw(); return; }
+  if (!on) { st.nf[k] = false; save(); nfSync(); flipSw(b, false, redraw); return; }
+  flipSw(b, true);
   nfAsk().then(ok => { st.nfAsk = true;
     if (ok) { if (k === "all") Object.assign(st.nf, { pray: true, forb: true, thu: true }); else st.nf[k] = true; toast(t("nf_done")); } else toast(t(ok === null ? "nf_unsup" : "nf_denied"));
-    save(); nfSync(); redraw(); });
+    save(); nfSync(); if (b && !ok) flipSw(b, false, redraw); else setTimeout(redraw, b ? SW_MS : 0); });
 }
 const SELF_FX = new Set(["trk", "xw", "markread", "nwread", "setvib", "snd", "sndk", "nfsnd"]);
 
@@ -2421,10 +2462,10 @@ function act(a, d, b) {
     case "setglass": if (GLASS.includes(d.k)) { st.glass = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
     case "setmotion": if (MOTION.includes(d.k)) { st.motion = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
     case "setvib": if (VIBS.includes(d.k)) { st.vib = d.k; save(); b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); buzz(18); } break;
-    case "snd": st.snd = !st.snd; save(); b.setAttribute("aria-checked", st.snd); sndApply(); if (SND) SND.tap(); break;
+    case "snd": st.snd = !st.snd; save(); flipSw(b, st.snd); sndApply(); if (SND) SND.tap(); break;
     case "sndk": if (SND && SND.TOUCH.includes(d.k)) { st.sndK = d.k; save(); sndApply(); b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); SND.preview(d.k); } break;
     case "nfsnd": if (NF_SND.includes(d.k)) { st.nfSnd = d.k; save(); b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); nfPreview(d.k); nfSync(); } break;
-    case "nf": nfSet(d.k, !st.nf[d.k]); break;
+    case "nf": nfSet(d.k, !st.nf[d.k], b); break;
     case "nfon": nfSet("all", true); break;
     case "nflater": st.nfAsk = true; save(); { const c = b.closest(".nf-card"); if (c) c.remove(); } break;
     case "heroinfo": openSheet(`<h3>${t("hq_title")}</h3><div class="fw-sheet"><p>${t("hq_b1")}</p><p>${t("hq_b2")}</p><p class="note">${t("hq_b3")}</p></div>`, b); break;
@@ -2435,13 +2476,23 @@ function act(a, d, b) {
     case "prfs": prayFull(!$("pr-video").classList.contains("pv-full")); break;
     case "prwho": if (SL && SL.WHO.includes(d.k)) { st.prWho = d.k; save(); prayPlay(false); PR.sc = ""; const y = scrollY; render(false); scrollTo(0, y); } break;
     case "prschool": if (SL && SL.SCHOOLS.includes(d.k)) { st.pray = d.k; save(); prayPlay(false); PR.sc = ""; const y = scrollY; render(false); scrollTo(0, y); } break;
-    case "setscene": if (SCENES.includes(d.k)) { st.scene = d.k; st.sceneAuto = false; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "setscene": if (SCENES.includes(d.k)) {
+      // Nov 2026: with "Change every day" on, a scene is not picked silently: ask to turn the daily change off first.
+      if (st.sceneAuto) { openSheet(`<h3>${t("sc_auto_on")}</h3><p class="muted">${t("sc_auto_q").replace("{s}", esc(t("sc_" + d.k)))}</p>
+        <div class="sh-actions"><button type="button" class="btn" data-act="sceneoff" data-k="${d.k}">${t("sc_auto_off")}</button><button type="button" class="btn soft" data-act="closesheet">${t("sc_auto_keep")}</button></div>`, b, "pop"); break; }
+      st.scene = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "sceneoff": if (SCENES.includes(d.k) || PHOTOS.includes(d.k)) { st.sceneAuto = false; if (d.ph) st.photo = d.k; else st.scene = d.k; save(); closeSheet(); const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "setphoto": if (PHOTOS.includes(d.k)) {
+      if (st.sceneAuto) { openSheet(`<h3>${t("sc_auto_on")}</h3><p class="muted">${t("sc_auto_q").replace("{s}", esc(t("ph_" + d.k)))}</p>
+        <div class="sh-actions"><button type="button" class="btn" data-act="sceneoff" data-ph="1" data-k="${d.k}">${t("sc_auto_off")}</button><button type="button" class="btn soft" data-act="closesheet">${t("sc_auto_keep")}</button></div>`, b, "pop"); break; }
+      st.photo = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "herokind": if (d.k === "anim" || d.k === "photo") { st.heroKind = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
     case "gdet": if (GDET[d.k]) openSheet(GDET[d.k], b, "pop"); break;
-    case "sceneauto": st.sceneAuto = !st.sceneAuto; save(); { const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "sceneauto": st.sceneAuto = !st.sceneAuto; save(); flipSw(b, st.sceneAuto, () => { const y = scrollY; render(false); scrollTo(0, y); }); break;
     case "setasr": st.asr = +d.k; save(); render(false); nfSync(); break;
     case "hadj": st.hadj = Math.max(-2, Math.min(2, st.hadj + +d.d)); save(); render(false); nfSync(); break;
-    case "gloss": st.gloss = !st.gloss; save(); b.setAttribute("aria-checked", st.gloss); if (R.tab === "quran" || R.tab === "today") { const y = scrollY; render(false); scrollTo(0, y); } break;
-    case "tl": st.tl = !st.tl; save(); b.setAttribute("aria-checked", st.tl); if (R.tab === "quran" || R.sub === "duas") { const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "gloss": st.gloss = !st.gloss; save(); flipSw(b, st.gloss, (R.tab === "quran" || R.tab === "today") ? () => { const y = scrollY; render(false); scrollTo(0, y); } : null); break;
+    case "tl": st.tl = !st.tl; save(); flipSw(b, st.tl, (R.tab === "quran" || R.sub === "duas") ? () => { const y = scrollY; render(false); scrollTo(0, y); } : null); break;
     case "aa": aaSheet(); break;
     case "closesheet": closeSheet(); break;
     case "name": nameSheet(+d.i, b); break;
@@ -2459,6 +2510,12 @@ function act(a, d, b) {
       break;
     }
     case "tday": { if (!snap) break; const cur = trackKey(snap); tSel = d.k === "today" ? null : XT.shift(cur, d.k === "prev" ? -1 : 1); if (tSel && XT.clamp(tSel, XT.shift(snap.key, -(KEEP_DAYS - 1)), snap.key) === snap.key) tSel = null; const y = scrollY; render(false); scrollTo(0, y); break; }
+    case "qtrk": { // Today's row of five: always today, whatever date the tracker below is showing
+      if (!snap) break; if (snapshot().key !== snap.key) { render(false); break; }
+      const r = XT.togglePrayer(st.log, snap.key, d.k); st.log = r.log; pruneLog(snap); save();
+      const rc = b.getBoundingClientRect(), y = scrollY; render(false); scrollTo(0, y);
+      if (r.done) { fx(15); const o = st.log[snap.key]; if (PRAYERS.every(p => o[p])) { burst(rc.left + rc.width / 2, rc.top + rc.height / 2); toast(t("alldone")); buzz([30, 50, 30]); } }
+      break; }
     case "tsel": { if (!snap) break; tSel = d.k === snap.key ? null : d.k; const y = scrollY; render(false); scrollTo(0, y); break; }
     case "xw": {
       if (!snap) break;
@@ -2614,9 +2671,10 @@ nfSync();
     sp.classList.add("out"); if (rise) { v.classList.remove("hold"); v.classList.add("enter"); }
     setTimeout(() => { sp.remove(); v.classList.remove("door"); }, 700);
     if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), rise ? 260 : 0); } };
-  // How long the opening lasts once it is on screen. First open: the website 3.1 s (unchanged); the app 1.6 s, because
-  // Android's own launch screen has already shown the doorway (Nov 2026: it was 3.1 s on top of that wait).
-  const MIN = first ? (NATIVE ? 1600 : 3100) : 0;
+  // How long the opening lasts once it is on screen. Nov 2026 (13th): the first open in a session (a cold start in the
+  // app) plays the full five-second opening (html.sp-long, set by theme-boot.js); a tap or a key skips it at any time.
+  // Later opens in the same session do not wait.
+  const MIN = first ? 5000 : 0;
   const arm = t0 => { settled.then(() => setTimeout(go, Math.max(0, MIN - (performance.now() - t0)))); setTimeout(go, MIN + 1200); };
   if (sp) { sp.addEventListener("pointerdown", go); addEventListener("keydown", go, { once: true }); }
   if (!NATIVE) { if (sp) arm(0); return; }
@@ -2626,6 +2684,7 @@ nfSync();
   let rel = false; const release = () => { if (rel) return; rel = true; natQ("SplashScreen", "hide", { fadeOutDuration: 150 }); h.classList.remove("sp-hold"); if (sp) arm(performance.now()); };
   requestAnimationFrame(() => requestAnimationFrame(release));
   setTimeout(release, 1200); })();
+setTimeout(() => document.documentElement.classList.remove("sp-long"), 6500);
 /* Android app: the Back button and leaving the app. Back closes an open sheet, then steps back through pages, then returns
    to Today; on Today the app closes into its door (a short fade into the doorway) and Android takes it to the background.
    Coming back reverses that fade. Presses while it is closing are ignored. */

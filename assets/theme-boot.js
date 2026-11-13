@@ -14,7 +14,8 @@
   var lt = st.lightTheme, dt = st.darkTheme;
   // Nov 2026: Emerald Ivory → Sky Blue, Plum Dusk (and the older Burgundy) → Deep Teal.
   if (lt === "emerald") lt = "sky";
-  else if (lt !== "classic" && lt !== "sky" && lt !== "sandstone") lt = pal === "emerald" ? "sky" : pal === "sandstone" ? pal : "classic";
+  // Nov 2026 (13th): a new install starts on Sandstone Teal; settings saved before keep their light theme.
+  else if (lt !== "classic" && lt !== "sky" && lt !== "sandstone") lt = pal === "emerald" ? "sky" : pal === "sandstone" ? pal : (st.palette || old) ? "classic" : "sandstone";
   if (dt === "plum") dt = "teal";
   else if (dt !== "jade" && dt !== "indigo" && dt !== "teal") dt = pal === "indigo" ? "indigo" : pal === "burgundy" ? "teal" : "jade";
   // A host app (the Android wrapper) may set data-theme before this runs; keep it as the "system" answer.
@@ -32,4 +33,6 @@
   r.setAttribute("data-lang", st.lang === "bn" ? "bn" : "en");
   // Android app (Nov 2026): app-only styles, and the splash holds its first frame until Android's launch screen fades (app.js).
   try { if (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) r.className += " native sp-hold"; } catch (e) {}
+  // Nov 2026 (13th): the first open in a session (a cold start in the app) plays the full five-second opening.
+  try { if (!sessionStorage.getItem("ie.splash")) r.className += " sp-long"; } catch (e) {}
 })();

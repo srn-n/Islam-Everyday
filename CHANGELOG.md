@@ -2,6 +2,28 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## New opening, a fresh Today, pictures, softer sounds (13 November 2026)
+
+### Added
+- **A five-second opening** when the app starts: a starry night in the doorway with a crescent moon, then dawn and the sunrise, the name and the three promises. Tap anywhere to skip. It takes the colours of your theme.
+- **Today (phones):** the five prayers in one row under the current prayer: see each time, which is now and next, and tick a prayer to record it. Shortcuts to Duas, 99 Names, How to pray and the Calendar.
+- **Pictures behind the prayer:** seven landscape pictures (a mosque at dawn, a desert oasis, a mountain lake, rice fields, a quiet coast, misty pines, tea garden hills); with "Change every day" the mosque is Friday's picture, as an alternative to the drawn scenes, tinted for the time of day. They were made with an AI image tool and are not photographs of real places.
+- **New sounds:** Ripple and Soft bubble for notifications (Water drop stays), and Soft bubble as a touch sound.
+
+### Changed
+- New installs start on the Sandstone Teal theme.
+- Only the theme you are using now has the strong outline in Settings.
+- With "Change every day" on, picking a scene asks whether to turn the daily change off.
+- Switches slide smoothly; page changes no longer show two pages on top of each other.
+- How to pray: a clearer angle, better sujud and sitting, and a better headscarf and dress in the women's version. On wide screens the steps sit beside the video.
+
+### Fixed
+- An-Nawawi's Forty on phones no longer runs off the side of the screen.
+- The close button of a sheet no longer overlaps "Use my current location".
+
+### Tests
+- `npm test`: 201 pass.
+
 ## Hadith tab, softer sounds, new scenes, more places, How to pray for men and women (12 November 2026, second update)
 
 ### Added

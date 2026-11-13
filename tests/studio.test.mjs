@@ -31,7 +31,10 @@ test("the splash respects reduced motion and the app's Motion off setting", () =
 
 test("the splash leaves after the first screen; only the first open in a session waits for dawn", () => {
   const i = app.indexOf('const sp = $("splash")'); assert.ok(i > app.indexOf("render(true);"), "after the first render");
-  assert.match(app, /const MIN = first \? \(NATIVE \? 1600 : 3100\) : 0;/, "website 3.1 s; the app 1.6 s after Android's launch screen");
+  // Nov 2026 (13th, intentional): a five-second opening on the first open in a session, skippable with a tap.
+  assert.match(app, /const MIN = first \? 5000 : 0;/, "five seconds on a cold start");
+  assert.match(read("assets/theme-boot.js"), /if \(!sessionStorage\.getItem\("ie\.splash"\)\) r\.className \+= " sp-long"/);
+  assert.match(app, /sp\.addEventListener\("pointerdown", go\)/, "a tap skips it");
   assert.match(app, /const arm = t0 => \{ settled\.then\(\(\) => setTimeout\(go, Math\.max\(0, MIN - \(performance\.now\(\) - t0\)\)\)\); setTimeout\(go, MIN \+ 1200\); \};/, "the door waits for fonts and the verse, with a failsafe");
   assert.match(app, /if \(!NATIVE\) \{ if \(sp\) arm\(0\); return; \}/, "on the web it counts from page start, as before");
   assert.match(app, /sp\.classList\.add\("out"\); if \(rise\) \{ v\.classList\.remove\("hold"\); v\.classList\.add\("enter"\); \}/, "the page rises in the same frame as the door opens");

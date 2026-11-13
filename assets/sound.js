@@ -3,13 +3,13 @@
  * Three soft kinds to choose from, each with a slightly fuller variant when something is completed:
  *   - "soft":  a muted, cushioned tap (low filtered noise with a faint body);
  *   - "drop":  a small water drop (a short rising sine "plip");
- *   - "air":   a light breath of air (a few milliseconds of soft, high filtered noise).
+ *   - "bubble": a small, round bubble (a soft sine rising gently, with a slow start; Nov 2026, replaces "air").
  * Nothing plays until the person has touched the page (browsers require that) and nothing plays while muted
  * (in the Android app the phone's sound profile mutes it: silent or vibrate means no sound).
  */
 (function (root, factory) { const api = factory(root); if (typeof module === "object" && module.exports) module.exports = api; else root.IE_SOUND = api; })(typeof self !== "undefined" ? self : this, function (root) {
   "use strict";
-  const TOUCH = ["soft", "drop", "air"];
+  const TOUCH = ["soft", "drop", "bubble"];
   let ctx = null, master = null, vol = 0.6, muted = false, touch = true, kind = "soft", unlocked = false, noise = null;
   const AC = root.AudioContext || root.webkitAudioContext;
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -38,10 +38,17 @@
     o.type = "sine"; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + (ramp || len * 0.6));
     env(g, t, peak, 0.003, len); o.connect(g); g.connect(master); o.start(t); o.stop(t + len + 0.02);
   }
+  // a soft bubble: a slow 7 ms start (no click) and a low-pass so nothing sharp reaches the ear
+  function bub(t, f0, f1, peak, len) {
+    const o = ctx.createOscillator(), g = ctx.createGain(), fl = filt("lowpass", 1600, 0.5);
+    o.type = "sine"; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + len * 0.7);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + 0.007); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    o.connect(fl); fl.connect(g); g.connect(master); o.start(t); o.stop(t + len + 0.02);
+  }
   function play(k, full) {
     const t = ctx.currentTime;
     if (k === "drop") { sine(t, 640, 1080, full ? 0.34 : 0.24, full ? 0.14 : 0.1, 0.05); if (full) sine(t + 0.12, 900, 1320, 0.14, 0.09, 0.04); }
-    else if (k === "air") { noiseHit(t, "bandpass", 3200, 0.8, full ? 0.16 : 0.11, full ? 0.11 : 0.06); if (full) noiseHit(t + 0.09, "bandpass", 2600, 0.8, 0.1, 0.1); }
+    else if (k === "bubble") { bub(t, 420, 620, full ? 0.26 : 0.2, full ? 0.11 : 0.08); if (full) bub(t + 0.1, 500, 740, 0.16, 0.09); }
     else { noiseHit(t, "lowpass", 900, 0.7, full ? 0.55 : 0.4, full ? 0.07 : 0.045); sine(t, 210, 160, full ? 0.2 : 0.14, full ? 0.07 : 0.045); if (full) { noiseHit(t + 0.1, "lowpass", 1100, 0.7, 0.32, 0.05); sine(t + 0.1, 240, 180, 0.1, 0.05); } }
   }
   function tick(full, k) {

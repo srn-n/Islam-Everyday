@@ -179,9 +179,9 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 *Last updated: 12 November 2026.*
 
-- Latest pushed commit: `7e9b31e` (12 November: sound files repaired, after `040d7e0`, the 15 Notion tasks).
-  Working tree: only this note (AGENTS.md) changed since.
-- `npm test`: 191 pass.
+- Latest pushed commit: `0c85346` (12 November: AGENTS note for build #11). Working tree: the 13 Nov batch (12 Notion
+  tasks, see the agent log) is written but not yet committed.
+- `npm test`: 201 pass.
 - The Android build in `IslamEverydayApp` is build #11 for `7e9b31e` (12 Nov): checksums OK, the `.aab` signed with the
   upload key, the bundled web files and all three WAVs identical to the repo. Not yet tested on a phone; nothing
   uploaded to Play. (Build #10 for `040d7e0` had damaged sounds and was not used.)
@@ -193,11 +193,11 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 **Next tasks, in order**
 
-0. Owner: commit and push the 15-task batch; get the new build. On the phone check in particular: the three
-   notification sounds (and that switching back to the phone default works; Android keeps one channel per sound),
-   Tahajjud/Duha reminders, the Slide and Fade motion and the suggestion shown for the phone's Android version, the
-   Hadith tab, the location list (search by country), the guide pop-ups, the six new scenes at different times of day,
-   and the How to pray player in both the men's and women's versions.
+0. Owner: commit and push the 13 Nov batch; get the new build. On the phone check: the five-second opening (cold start;
+   a tap skips it; colours follow the chosen theme), the new Today row of five prayers and shortcuts, the Ripple and
+   Soft bubble notification sounds (Android deletes the old Soft tap/Breeze channels), the Soft bubble touch sound,
+   Settings → Pictures (and the time-of-day tint), the Today ↔ More slide, An-Nawawi on a phone, How to pray (men and
+   women), switches animating.
 0b. Developer message (More) is a blank page on purpose: the owner will send the text.
 1. Test the `.apk` on a real Android phone: opening animation smoothness, Duas/Hadith opening speed, Back button and
    back gesture (Android 14–16), closing/reopening animation, rapid tab taps, light/dark theme and status bar,
@@ -220,6 +220,35 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 ## 10. Agent log (newest first)
 
 Add a new entry at the top for every change: date, summary, files, tests, open items.
+
+### 2026-11-13: 12 Notion tasks: opening, Today, pictures, sounds, How to pray, fixes (uncommitted)
+- From the owner's Notion task list (the 12 Islam Everyday "Up next" items of 12–13 Nov). Owner's answers: pictures made
+  with Figma AI; "new landing page" = refreshed Today; the 5 s opening on every cold start, tap to skip.
+- **Opening** (`index.html`, `theme-boot.js`, `app.css` end, `app.js` boot): `html.sp-long` on the first open in a
+  session (sessionStorage `ie.splash`): night with stars and a crescent moon in the doorway, dawn and the sun, the name,
+  studio, a tagline and the promises; a 5 s bar and "Tap to skip". `MIN = first ? 5000 : 0` (web and app). Colours are
+  the theme's tokens. New installs start on **Sandstone Teal** (`DEF.lightTheme`, theme-boot fallback); saved themes keep.
+- **Today on phones** (`todayStrip()`; hidden ≥1024 px): the five prayers in a row (time, now/next, tick = today's
+  record via `qtrk`, same log as the tracker) and four shortcuts (Duas, 99 Names, How to pray, Calendar).
+- **Pictures** (`assets/heroes-img/*.webp`, 7 × 1200 px + 720 px; tea garden hills added later the same day): generated with Figma's AI image tool (file "Islam
+  Everyday – hero pictures" in the owner's Figma drafts), not real places; labelled in Settings and About. Settings:
+  Drawn scenes | Pictures (`st.heroKind`, `st.photo`); daily rotation shared (`sceneToday()`), mosque on Fridays; a
+  multiply tint per time of day (`.sky-tint`).
+- **Sounds**: Soft tap and Breeze replaced by Ripple and Soft bubble (`tools/notification-sounds.py`, low and soft:
+  slow attack, low-pass, short echo); `NF_OLD` channels deleted on the phone; saved choices migrate. Touch sound Light
+  air replaced by Soft bubble (`sound.js`).
+- **Fixes**: An-Nawawi cards overflowed on phones because the calendar's phone-only `.nw{white-space:nowrap}` also
+  matched `.hadith.nw` (now `.nowrap-m`). Theme cards: only the theme in use has the strong outline (`.in-use`). Sheet
+  titles leave room for the ✕. Switches slide before a redraw (`flipSw`). With "Change every day" on, tapping a scene
+  asks to turn it off (pop-up) instead of a faded grid. Tab slides: old page out (0.16 s) before the new one in, no
+  plus-lighter blending. How to pray on wide screens: steps list beside the video, notes and sources full width.
+- **How to pray** (`salah-fig.js`): camera turned closer to the side (PHI 66°, was 42°) so sitting and sujud read
+  clearly while both arms and legs still show; sujud with palms beside the head and elbows raised, head drawn last;
+  women: scarf falls over shoulders and chest like a cape and lies over the sleeves; A-line dress.
+- Tests: `tests/nov13.test.mjs` (new); studio/phase53/rework updated (5 s opening, Sandstone default, slide timing).
+  `npm test` 201 pass. Browser: 320/360/412/1366 px, EN/BN, light/dark, 9 pages: no errors, no sideways overflow.
+- Binary files (WAV, WebP) are made on the PC by script (the file copy alters binaries; see the 12 Nov sound repair).
+- Open: real-phone check; the figure still needs a scholar's review; the owner may want further character polish.
 
 ### 2026-11-12: sound files repaired (`7e9b31e`, build #11 in IslamEverydayApp)
 - `040d7e0` shipped `ie_drop/tap/breeze.wav` 5–6 KB too large: copying them to the PC treated them as text. Regenerated

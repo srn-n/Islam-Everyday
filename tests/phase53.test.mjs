@@ -194,7 +194,9 @@ function boot(saved, { prefersDark = false, host = null } = {}) {
 }
 test("theme boot: mode and palette applied before paint, system preference followed, old settings migrated", () => {
   // Face 7 (intentional): boot also sets data-glass and data-motion; their defaults are balanced and subtle.
-  assert.deepEqual(boot(null), { theme: "light", palette: "classic", scheme: "light", host: undefined, glass: "balanced", motion: "subtle" });
+  // Nov 2026 (13th, intentional): a new install starts on Sandstone Teal.
+  assert.deepEqual(boot(null), { theme: "light", palette: "sandstone", scheme: "light", host: undefined, glass: "balanced", motion: "subtle" });
+  assert.equal(boot({ mode: "light", lightTheme: "classic" }).palette, "classic", "a saved Classic Teal stays");
   assert.equal(boot(null, { prefersDark: true }).theme, "dark");
   assert.equal(boot({ mode: "light" }, { prefersDark: true }).theme, "light", "explicit light beats the system");
   // Face 7 migration (intentional): Phase 5.3 burgundy became Plum Dusk in dark, and Nov 2026 replaced Plum Dusk with

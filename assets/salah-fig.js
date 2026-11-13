@@ -159,7 +159,7 @@
      shoulders get their width, arms and legs their sideways hints (ze/zw, zk/za), and everything is seen from the
      front-right (PHI from the qibla line) and a little from above (BETA). Parts are drawn far to near. Faceless.
      who: "man" (cap, kurta to the knees, trousers) or "woman" (headscarf over the shoulders, a long loose dress). */
-  const PHI = 42 * D2R, BETA = 13 * D2R, cP = Math.cos(PHI), sP = Math.sin(PHI), cB = Math.cos(BETA), sB = Math.sin(BETA);
+  const PHI = 66 * D2R, BETA = 11 * D2R, cP = Math.cos(PHI), sP = Math.sin(PHI), cB = Math.cos(BETA), sB = Math.sin(BETA);
   const proj = q => { const x = q[0] - X0, y = q[1] - G, z = q[2], d = x * cP + z * sP; return [X0 + x * sP - z * cP, G + y * cB + d * sB, d]; };
   const add3 = (a, v, k) => [a[0] + v[0] * k, a[1] + v[1] * k, a[2] + v[2] * k];
   function hull(pts) { // monotone chain, 2D
@@ -211,8 +211,9 @@
     const sk = []; section(tc(-2), fd, 11, 13, sk);
     const skirt = W ? 0.94 : (p.sit ? 0.6 : 0.72);
     for (const s of ["n", "f"]) { const l = k.L[s], kn = [l.Hp[0] + (l.K[0] - l.Hp[0]) * skirt, l.Hp[1] + (l.K[1] - l.Hp[1]) * skirt, l.Hp[2] + (l.K[2] - l.Hp[2]) * skirt];
-      blob(kn, W ? 11 : 10.5, sk);
-      if (W) { const an = [l.K[0] + (l.A[0] - l.K[0]) * 0.86, l.K[1] + (l.A[1] - l.K[1]) * 0.86, l.K[2] + (l.A[2] - l.K[2]) * 0.86]; blob(an, 9.5, sk); blob(l.K, 10, sk); } }
+      blob(kn, W ? 12.5 : 10.5, sk);
+      // the dress falls loose and a little wider towards the hem (an A-line), as a long abaya does
+      if (W) { const an = [l.K[0] + (l.A[0] - l.K[0]) * 0.86, l.K[1] + (l.A[1] - l.K[1]) * 0.86, l.K[2] + (l.A[2] - l.K[2]) * 0.86]; blob(an, 14, sk); blob(l.K, 12.5, sk); } }
     const legTop = Math.max(...["n", "f"].map(s => dep(k.L[s].Hp, k.L[s].K)));
     const skD = Math.max(torsoD, legTop) + 0.5;
     put("sl-shirt", smooth(hull(tp)), torsoD);
@@ -229,10 +230,14 @@
       const sc = []; blob(k.C, LEN.hr + 3.2, sc, 14);
       const sh = at(k.b.H, u, 50), ch = at(at(k.b.H, u, 38), u + 90, 7);
       for (const z of [-15, 15]) sc.push(proj([sh[0], sh[1], z]));
+      for (const z of [-10, 10]) sc.push(proj([sh[0] + dir(u + 90)[0] * 13, sh[1] + dir(u + 90)[1] * 13, z]), proj([sh[0] - dir(u + 90)[0] * 13, sh[1] - dir(u + 90)[1] * 13, z]));
       sc.push(proj([ch[0], ch[1], -9]), proj([ch[0], ch[1], 9]), proj([at(sh, u + 270, 6)[0], at(sh, u + 270, 6)[1], 0]));
+      // Nov 2026 (13th): the scarf falls over the upper back and the chest too, so it reads as a scarf from the side
+      const nk = at(k.b.H, u, 34), fdv = dir(u + 90);
+      for (const z of [-14, 0, 14]) sc.push(proj([nk[0] + fdv[0] * 17, nk[1] + fdv[1] * 17, z]), proj([nk[0] - fdv[0] * 16, nk[1] - fdv[1] * 16, z])); // wider than the body: a cape-like fall
       head.push(`<path class="sl-ol" d="${smooth(hull(sc))}"/><path class="sl-scarf" d="${smooth(hull(sc))}"/>`);
       const vis = fwd[0] * cP + fwd[2] * sP; // how much of the face turns to the viewer
-      if (vis > 0.05) { const fc = proj(add3(k.C, fwd, LEN.hr * 0.42)), rx = 6.2 * Math.min(1, 0.45 + vis * 0.7), ry = 8.2;
+      if (vis > 0.05) { const fc = proj(add3(k.C, fwd, LEN.hr * 0.5)), rx = 7 * Math.min(1, 0.5 + vis * 0.7), ry = 9;
         head.push(`<ellipse class="sl-skin" cx="${f1(fc[0])}" cy="${f1(fc[1])}" rx="${f1(rx)}" ry="${f1(ry)}" transform="rotate(${f1(Np)} ${f1(fc[0])} ${f1(fc[1])})"/>`); }
     } else {
       head.push(`<path class="sl-ol" d="${circ(C2, LEN.hr)}"/><path class="sl-skin" d="${circ(C2, LEN.hr)}"/>`);
@@ -246,8 +251,13 @@
         head.push(`<path class="sl-face" d="M${P(proj(add3(add3(k.C, fwd, LEN.hr - 0.5), [up[0], up[1], 0], 2.5)))}L${P(n1)}L${P(n0)}"/>`); }
     }
     // the scarf lies over the shoulders: drawn after the upper arms, before forearms in front of the chest
-    const upperN = dep(k.A.n.S, k.A.n.E);
-    put("", head.join(""), W ? Math.max(hd, upperN) + 0.1 : hd + 0.3, false);
+    // the scarf drapes over the shoulders and upper arms: above both sleeves' upper parts (a hand raised in front of the
+    // chest is still drawn over it, as its forearm is nearer)
+    const upperN = Math.max(dep(k.A.n.S, k.A.n.E), dep(k.A.n.S) + 0.5);
+    // In prostration the head lies between the hands: draw it over the near arm so the forehead on the ground stays in
+    // view (as in the side view).
+    const headLow = p.N > 115 && p.N < 245;
+    put("", head.join(""), headLow ? 1e6 : W ? Math.max(hd, upperN, skD + 0.02) + 0.1 : hd + 0.3, false); // the scarf lies over the dress
     parts.sort((a, b) => a.depth - b.depth);
     const out = parts.map(x => x.cls ? (x.ol ? `<path class="sl-ol" d="${x.d}"/>` : "") + `<path class="${x.cls}" d="${x.d}"/>` : x.d);
     const fh = proj(add3(k.C, fwd, LEN.hr)), gp = (x, z) => proj([x, G, z]);
@@ -288,7 +298,9 @@
     ruku:     { T: 90, N: 92, legs: { n: { th: 176, sh: 182, ft: 90, to: 90 }, f: { th: 178, sh: 183, ft: 90, to: 90 } }, arms: { n: { at: "n.K", dx: 3, dy: -3, bend: 1, ha: 172, hand: "grip", ze: 1.3, zw: 0.64 }, f: { at: "f.K", dx: 1, dy: -4, bend: 1, ha: 172, hand: "grip", ze: 1.3, zw: 0.64 } } },
     kneel:    { T: 2, N: 14, legs: KNEEL_LEGS, arms: { n: { at: "n.K", dx: 8, dy: -16, bend: 1, ha: 100, hand: "open", zw: 0.62 }, f: { at: "f.K", dx: 6, dy: -17, bend: 1, ha: 100, hand: "open", zw: 0.62 } } },
     reach:    { T: 120, N: 132, legs: { n: { th: 150, sh: 200, ft: 120, to: 95 }, f: { th: 152, sh: 202, ft: 120, to: 95 } }, arms: { n: { at: "ground", dx: -4, dy: 3, bend: -1, ha: 90, hand: "open", ze: 1.15, zw: 1.0 }, f: { at: "ground", dx: -6, dy: 3, bend: -1, ha: 90, hand: "open", ze: 1.15, zw: 1.0 } } },
-    sujud:    { T: 115, N: 150, legs: { n: { th: 170, sh: 284, ft: 176, to: 90 }, f: { th: 168, sh: 284, ft: 176, to: 90 } }, arms: { n: { at: "ground", dx: -19, dy: 3.5, bend: -1, ha: 92, hand: "open", ze: 1.5, zw: 1.15 }, f: { at: "ground", dx: -21, dy: 3.5, bend: -1, ha: 92, hand: "open", ze: 1.5, zw: 1.15 } } },
+    // Nov 2026 (13th): palms flat beside the head, level with the ears; elbows lifted and away from the sides; thighs
+    // upright under the hips; the back long and level rather than hunched.
+    sujud:    { T: 115, N: 150, legs: { n: { th: 170, sh: 284, ft: 176, to: 90 }, f: { th: 168, sh: 284, ft: 176, to: 90 } }, arms: { n: { at: "ground", dx: -9, dy: 3.5, bend: -1, ha: 92, hand: "open", ze: 1.75, zw: 1.3 }, f: { at: "ground", dx: -11, dy: 3.5, bend: -1, ha: 92, hand: "open", ze: 1.75, zw: 1.3 } } },
     sit:      { T: 0, N: 22, legs: SIT_LEGS, sit: 1, arms: { n: { at: "n.K", dx: -4, dy: -9, bend: 1, ha: 96, hand: "open", zw: 0.62 }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 96, hand: "open", zw: 0.62 } } },
     tashahhud:{ T: 0, N: 22, legs: SIT_LEGS, sit: 1, arms: { n: { at: "n.K", dx: -6, dy: -9, bend: 1, ha: 96, hand: "point", zw: 0.62 }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 96, hand: "open", zw: 0.62 } } },
     tawarruk: { T: 4, N: 22, legs: TAW_LEGS, sit: 2, arms: { n: { at: "n.K", dx: -6, dy: -9, bend: 1, ha: 98, hand: "point", zw: 0.62 }, f: { at: "f.K", dx: -6, dy: -10, bend: 1, ha: 98, hand: "open", zw: 0.62 } } },

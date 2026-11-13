@@ -442,7 +442,9 @@ nav.tabs .ind::before{content:"";width:56px;height:32px;border-radius:99px;backg
   .page-head .icon-btn[data-act="back"]{display:none}
 
   /* today: three-column dashboard */
-  .v-today{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"hero hero times" "verse verse track" "forb tiles extra" "forb fast extra";grid-template-rows:auto auto auto 1fr;align-items:start}
+  .v-today{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"hero hero times" "verse verse track" "forb tiles track" "forb fast extra";grid-template-rows:auto auto auto 1fr;align-items:start}
+  /* Nov 2026 (13th): the tall Prayer tracker runs down beside the Verse for today and the boxes under it, instead of
+     stretching the verse card to its height (which left a large empty area inside the verse card). */
   .a-hero{grid-area:hero;min-height:300px;padding:30px 32px;align-self:stretch}
   .a-hero h1{font-size:4.2rem}
   .a-hero .count{font-size:2.1rem}
@@ -450,9 +452,9 @@ nav.tabs .ind::before{content:"";width:56px;height:32px;border-radius:99px;backg
   .a-hero .next-pill{max-width:470px}
   .a-hero .sky-scrim{background:linear-gradient(90deg,rgba(5,14,22,.7) 0%,rgba(5,14,22,.6) 40%,rgba(5,14,22,.22) 66%,rgba(5,14,22,.04) 86%),linear-gradient(0deg,rgba(5,14,22,.3) 0%,rgba(5,14,22,0) 45%)}
   .a-hero .arc{left:auto;right:0;width:auto;height:100%}
-  .a-times{grid-area:times}.a-track{grid-area:track;align-self:stretch}.a-fast{grid-area:fast}
+  .a-times{grid-area:times}.a-track{grid-area:track;align-self:start}.a-fast{grid-area:fast}
   .a-fast .duo{grid-template-columns:1fr;gap:14px}
-  .a-forb{grid-area:forb}.a-verse{grid-area:verse;align-self:stretch}
+  .a-forb{grid-area:forb}.a-verse{grid-area:verse;align-self:start}
   .a-tiles{grid-area:tiles}
 
   /* qur'an: list + reader side by side */
@@ -614,11 +616,24 @@ details.fn>div{font-size:.9rem;line-height:1.7;padding-bottom:12px;color:var(--i
 .g-order li{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .g-order li::before{counter-increment:g;content:counter(g);width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;background:var(--surface-2);font-size:.75rem;color:var(--muted)}
 .g-status a,.cites a{color:var(--accent)}
+/* Nov 2026 (13th): two independent columns on wide screens (summary, terms and sources on the left; the prayers and the
+   other schools on the right), so a tall box on one side no longer leaves a gap on the other. On phones the columns
+   dissolve and the boxes keep their reading order: summary, prayers, terms, other schools, sources. */
+.g-col{display:contents}
+.v-guide>.g-col>.g-sumc{order:1}.v-guide>.g-col>.g-detc{order:2}.v-guide>.g-col>.g-terms{order:3}.v-guide>.g-col>.g-othc{order:4}.v-guide>.g-srcc,.v-guide>.site-foot{order:5}
 @media (min-width:1024px){
   .v-guide{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);column-gap:24px;align-items:start}
   .v-guide>.page-head{grid-column:1/-1}
   .v-guide>.g-intro{grid-column:1/-1}
+  .v-guide>.g-srcc{grid-column:1/-1;margin-top:20px!important}
+  .v-guide>.g-col{margin-bottom:0!important}
+  .g-col{display:flex;flex-direction:column;gap:20px;min-width:0}
+  .g-col>*{margin:0!important}
+  .g-col>.g-sumc,.g-col>.g-detc,.g-col>.g-terms,.g-col>.g-othc{order:0}
 }
+/* the term buttons: one height per row, title and arrow centred */
+.g-terms .g-btn{height:100%;min-height:68px;align-items:center;flex-wrap:nowrap}
+.g-terms .g-btn b{flex:1;min-width:0}
 
 /* ---- Phase 4: Bangla short tafsir (shown apart from the translation) ---- */
 .tafsir{margin-top:10px;padding:8px 12px 10px;border-left:3px solid var(--gold);border-radius:4px 12px 12px 4px;background:var(--gold-soft);font-size:.93rem;line-height:1.75}
@@ -989,7 +1004,7 @@ button.c{font:inherit;color:inherit;cursor:pointer;transition:transform .15s var
 :root[lang="bn"] .th-h{letter-spacing:0;text-transform:none;font-size:.85rem}
 .th-grid,.sc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
 .th-card,.sc-card{display:grid;gap:6px;align-content:start;padding:6px 6px 8px;border-radius:16px;border:1px solid var(--line);background:var(--surface);text-align:left;color:var(--ink);min-width:0;cursor:pointer}
-.th-card[aria-pressed="true"],.sc-card[aria-pressed="true"]{border:2px solid var(--accent);padding:5px 5px 7px;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.th-card.in-use,.sc-card[aria-pressed="true"]{border:2px solid var(--accent);padding:5px 5px 7px;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
 .th-card:focus-visible,.sc-card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .th-name{font-size:.84rem;font-weight:600;line-height:1.25;padding-inline:2px}
 .th-state{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;min-height:1.1rem;font-size:.74rem;color:var(--accent);font-weight:600;padding-inline:2px}
@@ -1009,7 +1024,7 @@ button.c{font:inherit;color:inherit;cursor:pointer;transition:transform .15s var
 .sc-prev .arcp{fill:none;stroke:rgba(255,255,255,.55);stroke-width:1;stroke-dasharray:1.5 2.5}.sc-prev .sun{fill:#FFE6A8}.sc-prev .hzn{stroke:rgba(255,255,255,.5);stroke-width:.8}
 :root[data-theme="dark"] .sc-prev .skyb{fill:#14273D}:root[data-theme="dark"] .sc-prev .f1{fill:#22384E}:root[data-theme="dark"] .sc-prev .f2{fill:#152739}:root[data-theme="dark"] .sc-prev .f3{fill:#0A1520}:root[data-theme="dark"] .sc-prev .sun{fill:#E8ECF6}
 @media (max-width:380px){.th-grid,.sc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (prefers-contrast:more){.th-card[aria-pressed="true"],.sc-card[aria-pressed="true"]{border-color:var(--ink)}}
+@media (prefers-contrast:more){.th-card.in-use,.sc-card[aria-pressed="true"]{border-color:var(--ink)}}
 /* Prayer scenes (Face 7) */
 .sky[data-scene="sky"] .arc .horizon{stroke:rgba(255,255,255,.28)}
 .sky-land .sc-hzn{fill:none;stroke:rgba(255,255,255,.3);stroke-width:1}
@@ -1247,7 +1262,9 @@ ul.sg-legend li{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
   .fp-row input[type=checkbox]{width:22px;height:22px;flex:none}
   .switch::before{content:"";position:absolute;inset:-7px -4px} /* 50x30 switch, 58x44 tap area */
 }
-@media (pointer:coarse){.nw{white-space:nowrap}}
+/* Month names in the calendar stay on one line. (Nov 2026: was ".nw", which also matched the An-Nawawi cards
+   (".hadith.nw") and stopped their text wrapping on phones.) */
+@media (pointer:coarse){.nowrap-m{white-space:nowrap}}
 /* Install-as-app card (More page) */
 .install{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .install img{width:44px;height:44px;border-radius:11px;flex:none}
@@ -1329,12 +1346,16 @@ html[data-vt="left"]{--vtx:1}html[data-vt="right"]{--vtx:-1}
    settles on one long ease-out (no overshoot: the bounce read as a wobble on slower phones). With Motion: Fade the
    pages only cross-fade, with a 10px drift. Both are snapshots, so only transform and opacity change: no layout or
    painting during the change. */
-html[data-vt]::view-transition-old(root){animation:vt-out .22s cubic-bezier(.4,0,1,1) both}
-html[data-vt]::view-transition-new(root){animation:vt-in .42s cubic-bezier(.16,1,.3,1) both}
+/* Nov 2026 (13th): the old page is gone before the new one shows (no moment with two half-faded pages on top of each
+   other, which read as a glitch on long jumps such as Today → More), and the pair is not blended (plus-lighter). */
+html[data-vt]::view-transition-image-pair(root){isolation:auto}
+html[data-vt]::view-transition-old(root),html[data-vt]::view-transition-new(root){mix-blend-mode:normal}
+html[data-vt]::view-transition-old(root){animation:vt-out .16s cubic-bezier(.4,0,1,1) both}
+html[data-vt]::view-transition-new(root){animation:vt-in .4s cubic-bezier(.16,1,.3,1) .09s both}
 html[data-vt][data-motion="fade"]::view-transition-old(root){animation:vt-fo .18s linear both}
-html[data-vt][data-motion="fade"]::view-transition-new(root){animation:vt-fi .34s cubic-bezier(.2,.7,.2,1) .04s both}
-@keyframes vt-out{to{opacity:0;transform:translateX(calc(var(--vtx,1) * -18%))}}
-@keyframes vt-in{from{opacity:0;transform:translateX(calc(var(--vtx,1) * 32%))}}
+html[data-vt][data-motion="fade"]::view-transition-new(root){animation:vt-fi .34s cubic-bezier(.2,.7,.2,1) .12s both}
+@keyframes vt-out{to{opacity:0;transform:translateX(calc(var(--vtx,1) * -10%))}}
+@keyframes vt-in{from{opacity:0;transform:translateX(calc(var(--vtx,1) * 22%))}}
 @keyframes vt-fo{to{opacity:0}}
 @keyframes vt-fi{from{opacity:0;transform:translateY(10px)}}
 /* The door opening into the app: one composited layer on touch screens, so scaling it never repaints. */
@@ -1567,7 +1588,16 @@ nav.tabs button span{transition:color .25s,transform .35s var(--bounce)}
    opening waits for) is ready sooner. The size is a first guess; once shown, the real size is remembered (auto). */
 @media (pointer:coarse) and (max-width:1023px){.v-today>:nth-child(n+5){content-visibility:auto;contain-intrinsic-height:auto 340px}}
 /* Desktop: the How to pray video keeps a comfortable size instead of filling the whole column. */
-@media (min-width:1024px){.pr-video{max-width:720px}.pr-video.pv-full{max-width:none}}
+/* Nov 2026 (13th), wide screens: the player and the list of steps side by side (the list scrolls beside the video
+   instead of leaving an empty half page), then this school's notes and the sources across the full width. */
+@media (min-width:1024px){
+  .v-pray{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:16px;align-items:start}
+  .v-pray>.page-head,.v-pray>.pr-intro,.v-pray>.pr-notes-c,.v-pray>.pr-src-c,.v-pray>.site-foot{grid-column:1/-1}
+  .v-pray>*{margin-bottom:0!important}
+  .v-pray>.pr-video{grid-column:1;max-width:none}
+  .v-pray>.pr-steps-c{grid-column:2;grid-row:3;max-height:calc((100vw - 300px) * .58 * 200 / 356 + 190px);overflow:auto;overscroll-behavior:contain;position:sticky;top:76px}
+  .pr-video.pv-full{max-width:none}
+}
 
 /* Nov 2026: six more hero scenes (dunes, mountains, sea, forest, fields, canyon). Water takes the low sky and darkens
    toward the shore; the reflection and the glints are faint so the text above them keeps its contrast. */
@@ -1583,7 +1613,6 @@ nav.tabs button span{transition:color .25s,transform .35s var(--bounce)}
 :root[data-theme="dark"] .sc-prev .wat{fill:#1B3550}:root[data-theme="dark"] .sc-prev .palmp{stroke:#0A1520}
 .sc-auto{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 10px}
 .sc-auto>div{display:grid;gap:2px}
-.sc-grid.sc-off .sc-card{opacity:.55}
 .mo-rec{display:block;margin-top:6px;font-size:.82rem;color:var(--muted)}
 .seg button .rec{display:block;font-size:.68rem;font-weight:600;color:var(--accent);line-height:1.1}
 /* Nov 2026: Prayer guide. The How to pray link is one compact row across the page (it used to sit beside the summary
@@ -1614,3 +1643,97 @@ nav.tabs button span{transition:color .25s,transform .35s var(--bounce)}
 .pr-who{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .si-scarf{fill:#5f7186;stroke:#1d2b27;stroke-width:1.6}
 .pr-who{margin-top:12px;max-width:320px}
+/* Nov 2026: a sheet's title is at least as tall as the close button and leaves room beside it, so the content
+   under it (such as "Use my current location") never slides under the round ✕. */
+.sheet>h3:first-of-type{min-height:44px;display:flex;align-items:center;padding-right:52px;margin-top:0}
+/* Nov 2026: switches. The knob stretches while pressed and lands with a small settle; the track fades its colour. */
+.switch{transition:background-color .28s ease,box-shadow .28s ease}
+.switch::after{transition:transform .32s cubic-bezier(.3,1.4,.5,1),width .18s ease,left .18s ease}
+.switch:active::after{width:30px}
+.switch[aria-checked="true"]:active::after{transform:translateX(14px)}
+.switch[aria-checked="true"]{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 60%,#000 0%)}
+.switch.pop::after{animation:sw-pop .36s ease-out}
+@keyframes sw-pop{40%{box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 20%,transparent),0 1px 3px rgba(0,0,0,.25)}}
+:root[data-motion="off"] .switch::after,:root[data-motion="off"] .switch{transition:none;animation:none}
+@media (prefers-reduced-motion:reduce){.switch::after{transition:none;animation:none}}
+.sh-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.pv-inset:empty{display:none}
+/* Nov 2026 (13th): pictures behind the prayer (st.heroKind "photo"). The picture fills the card; a tint gives it the
+   colour of the time of day (dark blue at night, warm at sunrise and golden hour) so it sits with the rest of the app,
+   and the same scrim as the drawn scenes keeps the text readable. */
+.sky-photo{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;object-position:72% 62%;pointer-events:none;user-select:none}
+.sky-tint{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:multiply;background:transparent;transition:background 1s}
+.sky[data-kind="photo"] .sky-clouds{display:none}
+.sky[data-p="night"] .sky-tint{background:rgba(22,40,78,.78)}
+.sky[data-p="dawn"] .sky-tint{background:rgba(92,96,150,.5)}
+.sky[data-p="sunrise"] .sky-tint{background:rgba(236,170,128,.32)}
+.sky[data-p="golden"] .sky-tint{background:rgba(238,172,96,.3)}
+.sky[data-p="dusk"] .sky-tint{background:rgba(120,82,130,.5)}
+.sky[data-kind="photo"][data-p="night"] .sky-photo{filter:saturate(.55) brightness(.85)}
+.sc-img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;background:var(--surface-2)}
+.sc-kind{margin-bottom:12px}
+.sc-ai{margin-top:10px}
+/* ---------- Opening, Nov 2026 (13th): five seconds on the first open in a session (html.sp-long) ----------
+   Night in the doorway with stars and a crescent moon, then dawn: the night lifts and the sun rises; the name, the
+   studio, a short line and the three promises follow; a thin bar fills over the five seconds. A tap skips it. The
+   colours are the theme's own (the doorway and sun take --accent and --r-*), so it matches the chosen theme. */
+.sp-moon{fill:#F4EBD3;opacity:0}
+.sp-tag,.sp-bar,.sp-skip{display:none}
+html.sp-long .sp-moon{animation:sp-moon 2.6s ease-in-out .15s forwards}
+html.sp-long .sp-night{animation:sp-night2 2.8s ease-in-out 0s forwards}
+html.sp-long .sp-stars circle{animation:sp-twinkle2 2.4s ease-in-out .15s forwards}
+html.sp-long .sp-stars circle:nth-child(2){animation-delay:.45s}html.sp-long .sp-stars circle:nth-child(3){animation-delay:.3s}html.sp-long .sp-stars circle:nth-child(4){animation-delay:.6s}html.sp-long .sp-stars circle:nth-child(5){animation-delay:.52s}
+html.sp-long .sp-sky{animation:sp-fade .9s var(--ease) .1s forwards}
+html.sp-long .sp-sun{animation:sp-up 1.9s cubic-bezier(.22,1,.36,1) 1.5s forwards}
+html.sp-long .sp-glow{animation:sp-glowup 1.9s cubic-bezier(.22,1,.36,1) 1.5s forwards,sp-breathe 2.6s ease-in-out 3.4s infinite}
+html.sp-long .sp-name{animation:sp-name 1s var(--ease) 2.4s forwards}
+html.sp-long .sp-by{animation:sp-by .9s var(--ease) 3s forwards}
+html.sp-long .sp-line{animation:sp-fade .4s ease 3.3s forwards,sp-sweep 1.5s linear 3.3s infinite}
+html.sp-long .sp-promise{animation-delay:3.9s}
+html.sp-long .sp-tag{display:block;margin:16px 0 0;font-size:.95rem;color:var(--muted);opacity:0;animation:sp-fade .9s var(--ease) 3.5s forwards}
+html.sp-long .sp-bar{display:block;position:absolute;left:50%;bottom:calc(64px + var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px)));width:120px;height:3px;margin-left:-60px;border-radius:3px;background:color-mix(in srgb,var(--accent) 16%,transparent);overflow:hidden}
+html.sp-long .sp-bar i{display:block;height:100%;width:100%;border-radius:inherit;background:var(--accent);transform-origin:0 50%;transform:scaleX(0);animation:sp-bar 5s linear forwards}
+html.sp-long .sp-skip{display:block;position:absolute;top:calc(18px + var(--safe-area-inset-top,env(safe-area-inset-top,0px)));right:18px;font-size:.78rem;font-weight:600;color:var(--muted);opacity:0;animation:sp-fade .5s ease .8s forwards}
+.sp-tag [lang="bn"],html[data-lang="bn"] .sp-tag [lang="en"],.sp-skip [lang="bn"],html[data-lang="bn"] .sp-skip [lang="en"]{display:none}
+html[data-lang="bn"] .sp-tag [lang="bn"],html[data-lang="bn"] .sp-skip [lang="bn"]{display:inline}
+html.native.sp-long .sp-tag{position:absolute;left:0;right:0;top:calc(50% + 166px);margin:0;text-align:center}
+html.native.sp-long .sp-line{display:none}
+.splash.out .sp-tag,.splash.out .sp-bar,.splash.out .sp-skip{opacity:0!important;transition:opacity .2s}
+@keyframes sp-moon{0%{opacity:0;transform:translateY(10px)}20%,62%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
+@keyframes sp-night2{0%{opacity:0}8%,55%{opacity:.95}100%{opacity:0}}
+@keyframes sp-twinkle2{0%{opacity:0}25%{opacity:.95}45%{opacity:.4}60%{opacity:.9}100%{opacity:0}}
+@keyframes sp-bar{to{transform:scaleX(1)}}
+@media (prefers-reduced-motion:reduce){html.sp-long .sp-tag{opacity:1}.sp-moon,.sp-bar{display:none!important}}
+:root[data-motion="off"] .sp-tag{opacity:1}
+:root[data-motion="off"] :is(.sp-moon,.sp-bar){display:none!important}
+/* The doorway grows a little as the night begins (it starts the size of Android's launch-screen icon). */
+html.sp-long .sp-door{animation:sp-grow 1.8s cubic-bezier(.22,1,.36,1) .25s forwards}
+html.sp-long .splash.out .sp-door{animation:sp-through2 .5s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes sp-grow{to{transform:scale(1.22)}}
+@keyframes sp-through2{from{transform:scale(1.22)}to{transform:scale(1.8);opacity:0}}
+:root[data-motion="off"] html.sp-long .sp-door,html.sp-long[data-motion="off"] .sp-door{animation:none}
+/* Today, Nov 2026 (13th), phones: the day's five prayers in one row, and four shortcuts. Hidden on wide screens. */
+.today-strip,.today-short{display:none}
+@media (max-width:1023.98px){
+  .today-strip{display:block;margin:-4px 0 14px}
+  .ts-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 8px}
+  .ts-head h3{margin:0;font-size:1rem}
+  .ts-row{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+  .ts-p button{position:relative;width:100%;min-height:92px;display:grid;justify-items:center;align-content:center;gap:4px;padding:10px 2px 8px;border-radius:16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer;box-shadow:var(--shadow-sm,none);transition:background-color .2s,border-color .2s,transform .2s var(--ease)}
+  .ts-n{font-size:.78rem;font-weight:600;line-height:1.15;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .ts-p b{font-size:.78rem;font-weight:600;color:var(--muted)}
+  .ts-c{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;transition:background-color .2s,border-color .2s}
+  .ts-c svg{width:14px;height:14px;fill:none;stroke:var(--on-accent);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:scale(.6);transition:opacity .2s,transform .3s cubic-bezier(.3,1.5,.5,1)}
+  .ts-p.on .ts-c{background:var(--accent);border-color:var(--accent)}
+  .ts-p.on .ts-c svg{opacity:1;transform:none}
+  .ts-p.cur button{border:2px solid var(--accent);padding:9px 1px 7px;background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+  .ts-p.nxt button{border-color:color-mix(in srgb,var(--gold) 60%,var(--line))}
+  .ts-b{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:.62rem;font-weight:700;letter-spacing:.03em;padding:1px 7px;border-radius:99px;background:var(--accent);color:var(--on-accent);white-space:nowrap}
+  .ts-p.nxt .ts-b{background:var(--gold-soft);color:var(--gold)}
+  .ts-p button:active{transform:scale(.95)}
+  .today-short{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 16px}
+  .today-short button{display:grid;justify-items:center;gap:6px;padding:12px 4px;border-radius:16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:.76rem;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
+  .today-short .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--accent-2);color:var(--accent)}
+  .today-short .ic svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .today-short button:active{transform:scale(.95)}
+}

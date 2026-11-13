@@ -3,3 +3,8 @@ data/** -text
 
 # Sound files are binary: never convert line endings.
 *.wav binary
+
+# The prayer figure (assets/figure/*.bin) is binary too.
+*.bin binary
+*.blend binary
+*.webp binary

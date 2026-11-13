@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Prayer times widget (PrayerWidget). Colours and text are set from the app's data (WidgetData). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/wg_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/wg_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_bg" />
+
+    <LinearLayout
+        android:id="@+id/wg_body"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/wg_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="#5F6B66"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/wg_place"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:maxWidth="140dp"
+                android:textColor="#5F6B66"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="true"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/wg_next_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="#14211D"
+                android:textSize="21sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/wg_next_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:textColor="#0E6B5C"
+                android:textSize="21sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal">
+
+            <LinearLayout style="@style/WidgetCell">
+                <TextView android:id="@+id/wg_p0n" style="@style/WidgetCellName" />
+                <TextView android:id="@+id/wg_p0t" style="@style/WidgetCellTime" />
+            </LinearLayout>
+            <LinearLayout style="@style/WidgetCell">
+                <TextView android:id="@+id/wg_p1n" style="@style/WidgetCellName" />
+                <TextView android:id="@+id/wg_p1t" style="@style/WidgetCellTime" />
+            </LinearLayout>
+            <LinearLayout style="@style/WidgetCell">
+                <TextView android:id="@+id/wg_p2n" style="@style/WidgetCellName" />
+                <TextView android:id="@+id/wg_p2t" style="@style/WidgetCellTime" />
+            </LinearLayout>
+            <LinearLayout style="@style/WidgetCell">
+                <TextView android:id="@+id/wg_p3n" style="@style/WidgetCellName" />
+                <TextView android:id="@+id/wg_p3t" style="@style/WidgetCellTime" />
+            </LinearLayout>
+            <LinearLayout style="@style/WidgetCell">
+                <TextView android:id="@+id/wg_p4n" style="@style/WidgetCellName" />
+                <TextView android:id="@+id/wg_p4t" style="@style/WidgetCellTime" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/wg_empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:padding="16dp"
+        android:text="@string/wg_empty"
+        android:textColor="#14211D"
+        android:textSize="14sp"
+        android:visibility="gone" />
+</FrameLayout>

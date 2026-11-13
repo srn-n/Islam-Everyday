@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12 and later: the system launch screen. Its light or dark colour follows the appearance chosen in the
+         app (AppearancePlugin: setApplicationNightMode), so it is shown as before. -->
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door</item>
+        <item name="windowSplashScreenAnimationDuration">0</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+        <item name="android:windowBackground">@color/ground</item>
+    </style>
+</resources>

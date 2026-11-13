@@ -26,6 +26,30 @@
 
         </activity>
 
+        <!-- Home-screen widgets: prayer times and the Verse for today (content written by the app, see WidgetData) -->
+        <receiver
+            android:name=".PrayerWidget"
+            android:exported="false"
+            android:label="@string/wg_prayer_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_prayer_info" />
+        </receiver>
+        <receiver
+            android:name=".VerseWidget"
+            android:exported="false"
+            android:label="@string/wg_verse_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_verse_info" />
+        </receiver>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

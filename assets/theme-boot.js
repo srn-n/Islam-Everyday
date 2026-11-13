@@ -29,6 +29,8 @@
   r.setAttribute("data-glass", gl === "subtle" || gl === "high" || gl === "solid" ? gl : "balanced");
   r.setAttribute("data-motion", mo === "off" || mo === "fade" ? mo : "subtle"); // "playful" was removed (Nov 2026): Slide
   r.style.colorScheme = dark ? "dark" : "light";
+  // the page's blank canvas (before any style applies) follows the chosen appearance too, not the device's
+  try { var cs = document.querySelector('meta[name="color-scheme"]'); if (cs) cs.setAttribute("content", dark ? "dark" : "light"); } catch (e) {}
   // Nov 2026: the splash shows its one line of text in the chosen language before app.js runs.
   r.setAttribute("data-lang", st.lang === "bn" ? "bn" : "en");
   // Android app (Nov 2026): app-only styles, and the splash holds its first frame until Android's launch screen fades (app.js).

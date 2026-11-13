@@ -2,6 +2,26 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Home-screen widgets, clearer avoided times, today's scene (13 November 2026, evening)
+
+### Added
+- **Pictures for the widgets:** seven scenes of their own (a forest waterfall, a river at sunset, a snowy valley, wheat fields, a courtyard garden, a crescent moon and stars, an autumn path). In Settings ▸ Home-screen widgets choose the theme colour, one picture, or "Change automatically" for a new picture at each prayer time.
+- **Android widgets:** "Prayer times" shows the next prayer and the five times of its day; "Verse for today" shows the day's verse with its reference. They use the app's language and theme colours, work offline, and stay right for a week without opening the app. Tap either to open the app.
+
+### Changed
+- **Times when voluntary prayer is avoided:** while one is on, the top of Today now says so plainly ("Voluntary prayer is avoided now") with the time left, above the explanation.
+- **Settings ▸ Scene:** with "Change every day" on, the card marked is the scene showing today ("✓ Today"), not the last one you tapped.
+
+## How to pray in 3D, the earlier Today, a clean first second (13 November 2026, later)
+
+### Changed
+- **How to pray** now shows a three-dimensional figure, a man or a woman in loose clothes on a prayer mat, moving through every step from one steady angle. In sujud, seven small dots mark where the body rests, in place of the large rings. The words, order, schools and the "not reviewed by a scholar" notice are unchanged. Where 3D cannot run, the earlier drawing is shown. Everything is inside the app; nothing is downloaded.
+- **Today** is back to the earlier page, without the row of five prayers and the shortcuts.
+
+### Fixed
+- **Android:** the app could open on a very dark screen for about a second when the phone was in dark mode but the app was set to light (or the other way round). The launch screen now follows the app's own setting (Android 12 and later). On Android 11 and older, where the phone decides that colour, the launch picture is skipped and the app's own first screen appears instead.
+- **Android 14 and later:** reminders could arrive minutes late because the phone holds back exact alarms for new apps. Settings ▸ Notifications now says so when it happens and offers a button to allow on-time reminders.
+
 ## New opening, a fresh Today, pictures, softer sounds (13 November 2026)
 
 ### Added

@@ -114,7 +114,7 @@ test("How to pray: five schools, complete two-rak'ah sequences in both languages
   assert.ok(SL.steps("jafari").every(s => s.pose !== "sujud" || s.turbah), "Ja'fari: turbah in sujud");
   assert.equal(SL.steps("hanafi").find(s => s.id === "qiyam").inset, "low"); assert.equal(SL.steps("shafii").find(s => s.id === "qiyam").inset, "mid");
   assert.match(I18N.en.pr_review, /not yet been reviewed by a qualified scholar/); assert.match(app, /\$\{t\("pr_review"\)\}/);
-  assert.match(app, /pray: \["salah-fig", "salah"\]/); assert.ok(sw.includes('"assets/salah-fig.js", "assets/salah.js"'));
+  assert.match(app, /pray: \["salah-fig", "salah", "salah-3d"\]/); assert.ok(sw.includes('"assets/salah-fig.js", "assets/salah.js"'));
 });
 
 test("How to pray: the figure is a body that stands on the ground and keeps its proportions", () => {

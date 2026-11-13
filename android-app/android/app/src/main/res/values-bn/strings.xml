@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget names in the phone's widget list when the phone is in Bangla -->
+    <string name="wg_prayer_name">নামাজের সময়</string>
+    <string name="wg_prayer_d">পরের নামাজ আর আজকের সময়গুলো</string>
+    <string name="wg_verse_name">আজকের আয়াত</string>
+    <string name="wg_verse_d">অ্যাপ থেকে আজকের আয়াত</string>
+    <string name="wg_empty">এটা দেখাতে Islam Everyday একবার খুলুন।</string>
+</resources>

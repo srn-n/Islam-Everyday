@@ -22,5 +22,33 @@
         <item name="windowSplashScreenAnimationDuration">0</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:windowBackground">@color/ground</item>
+        <!-- Android 11 and older draw their launch picture before the app runs, in the PHONE's light or dark colour;
+             an app cannot change that. So no launch picture is drawn there: the first thing on screen is the app's own
+             first frame, which MainActivity colours from the appearance chosen in the app. (values-v31 keeps it.) -->
+        <item name="android:windowDisablePreview">true</item>
+    </style>
+
+    <!-- Home-screen widget: one cell of the five prayer times -->
+    <style name="WidgetCell">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+    <style name="WidgetCellName">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">#5F6B66</item>
+    </style>
+    <style name="WidgetCellTime">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">#14211D</item>
     </style>
 </resources>

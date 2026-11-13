@@ -56,10 +56,9 @@ test("opening: five seconds on a cold start, tap to skip, in the theme's colours
   assert.match(read("assets/theme-boot.js"), /: \(st\.palette \|\| old\) \? "classic" : "sandstone";/);
 });
 
-test("Today on phones: the five prayers in one row (today's record) and four shortcuts", () => {
-  assert.match(app, /function todayStrip\(s, cur, nx, done\)/); assert.match(app, /case "qtrk":/);
-  assert.match(css, /\.today-strip,\.today-short\{display:none\}/);
-  for (const k of ["ts_head", "ts_done", "ts_short", "ts_names", "cal_s"]) assert.ok(I18N.en[k] && I18N.bn[k], k);
+test("Today is the earlier landing page again: no row of five prayers or shortcuts (removed at the owner's request)", () => {
+  assert.doesNotMatch(app, /todayStrip|qtrk|today-short/); assert.doesNotMatch(css, /today-strip|today-short/);
+  assert.match(app, /\$\{heroScene\(\)\}/); assert.match(app, /\$\{nfCard\(\)\}\n\n  <section class="card a-times">/);
 });
 
 test("tab slides: the old page leaves before the new one arrives, without blending", () => {

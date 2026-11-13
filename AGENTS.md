@@ -179,12 +179,12 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 *Last updated: 12 November 2026.*
 
-- Latest pushed commit: `0c85346` (12 November: AGENTS note for build #11). Working tree: the 13 Nov batch (12 Notion
-  tasks, see the agent log) is written but not yet committed.
-- `npm test`: 201 pass.
-- The Android build in `IslamEverydayApp` is build #11 for `7e9b31e` (12 Nov): checksums OK, the `.aab` signed with the
-  upload key, the bundled web files and all three WAVs identical to the repo. Not yet tested on a phone; nothing
-  uploaded to Play. (Build #10 for `040d7e0` had damaged sounds and was not used.)
+- Latest pushed commit: `5eb7899` (13 November: the 12 Notion tasks, the 7th picture, guide/Today layout fixes).
+  Working tree: only this note (AGENTS.md) changed since.
+- `npm test`: 202 pass.
+- The Android build in `IslamEverydayApp` is build #12 for `5eb7899` (13 Nov): checksums OK, the `.aab` signed with the
+  upload key, every bundled web file identical to the commit, the three WAVs identical, no Soft tap/Breeze files.
+  Not yet tested on a phone; nothing uploaded to Play.
 - New Android permissions come with the notifications plugin's own manifest: `POST_NOTIFICATIONS`,
   `RECEIVE_BOOT_COMPLETED`, `WAKE_LOCK`, `SCHEDULE_EXACT_ALARM`. Play Console: Data safety stays "no data collected";
   the exact-alarm permission may need a declaration (or remove it with `tools:node="remove"` in the app manifest;
@@ -217,11 +217,77 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 ---
 
+- **How to pray is a 3D figure (13 Nov, second batch, uncommitted):** `assets/salah-3d.js` draws a skinned human
+  figure in WebGL from the same `IE_SALAH_FIG.POSE` definitions as the 2D drawing, which stays as the fallback
+  (`PR.no3d`). Figures: `assets/figure/man.bin`, `woman.bin` (built by `tools/prayer-figure/build.py` from the
+  MakeHuman/MPFB2 CC0 base mesh, game-engine rig and weights). Source scene: `tools/prayer-figure/prayer-figure.blend`
+  (made by `export-poses.mjs` + `blender_scene.py`). Not reviewed by a scholar; the notice stays.
+- **Today** is the earlier page again: the row of five prayers and the shortcuts (13 Nov) were removed.
+- **Startup colour:** `AppearancePlugin.java` makes Android's launch screen follow the app's own light/dark choice
+  (Android 12+); `--sys-ground` follows `data-theme`. Not yet checked on a phone.
+
+- **Android widgets (13 Nov, third batch, uncommitted):** "Prayer times" (next prayer + the five times of its day)
+  and "Verse for today". The app sends seven days of data in its language and theme colours (`widgetSync` →
+  `Widgets` plugin → `WidgetData.java`, SharedPreferences `ie_widgets`); `PrayerWidget`/`VerseWidget` only read it,
+  wake at the next prayer or midnight with an ordinary alarm, and refresh every 30 minutes. Nothing leaves the phone.
+- **Widget pictures (13 Nov, evening):** 7 scenes other than the hero's (`WPICS`: waterfall, river, snow, wheat,
+  garden, stars, autumn; `assets/widgets-img/*.webp`, 960 px, Figma AI file "Islam Everyday – widget pictures",
+  `tools/widget-pictures.py`). Settings ▸ Home-screen widgets (Android app only): theme colour, a picture, or
+  "Change automatically" (default: one step on at each prayer time, rule `dn × 5 + prayers begun`, same in
+  `wgPicAt` and `WidgetData.picAt`). The phone crops each picture to the widget, rounds it and adds a dark wash;
+  text turns white with a gold highlight.
+- **Hero during avoided times:** while a window is on, `forbiddenLine` shows a status (`.forb-warn.on`) with a bold
+  heading and the time left (ticks each second); the 10-minute advance note is unchanged.
+- **Scene settings:** the marked card is `sceneToday()` (with Change every day on, labelled "Today").
+
 ## 10. Agent log (newest first)
 
 Add a new entry at the top for every change: date, summary, files, tests, open items.
 
-### 2026-11-13: 12 Notion tasks: opening, Today, pictures, sounds, How to pray, fixes (uncommitted)
+### 2026-11-13 (fourth batch): widget pictures (owner's request; uncommitted)
+- Seven new AI pictures for the widgets (see section 9), Settings section, About credits in both languages (the
+  Bangla About list also gained the missing entry for the Today-card pictures). `.gitattributes`: `*.webp binary`.
+- Checked: Settings section in EN light 390 px and BN dark 320 px; the marked picture matches the rule; widget data
+  carries the choice; `assembleDebug` and `lintDebug` (0 errors) pass. Readability judged on a mock with the same
+  crop and wash (white text stays clear on the brightest pictures). Not seen on a real home screen.
+- Tests: `tests/nov13c.test.mjs` (+2); 214 pass.
+
+### 2026-11-13 (third batch): Notion Up next: widgets, avoided-times status, today's scene (uncommitted)
+- Three Notion tasks (Islam Everyday): Android widgets for prayer times and the Verse for today; the hero shows avoided
+  times clearly (owner chose "make it stand out more": the note was already there); Settings marks today's scene.
+- Widget verse = the card's translation word for word, footnote marks removed (notes are not shown there); a long
+  verse is cut with "…" on the widget, tapping opens the app. Widget colours are the app theme at the last sync, so
+  with "System" appearance they follow the phone only after the app is next opened.
+- `votdFor(y, m, d)` now holds the Thursday/Friday rule used by Today and the widgets. Two older tests updated to the
+  new rules (compact note → status while active; verse lookup through `votdFor`).
+- **Android build checked here for the first time:** Android SDK 36 + Gradle 8.14.3 in the cloud copy, `npx cap sync`,
+  `assembleDebug` succeeds and `lintDebug` has 0 errors (string resources not to be translated are now marked
+  `translatable="false"`, needed once `values-bn/` exists). No emulator (no KVM), so nothing was run on Android.
+- Tests: `tests/nov13c.test.mjs`; 212 pass.
+
+### 2026-11-13 (second batch): 3D How to pray, earlier Today, first-frame colour (uncommitted; owner to push)
+- 3D prayer figure (see section 9). Small amber dots replace the yellow rings; all player controls unchanged.
+  No religious wording, timeline, school definition or source claim was changed.
+- Today: `todayStrip()` and `qtrk` removed with their styles and strings.
+- Startup: Appearance plugin + CSS + `theme-boot.js` (colour-scheme meta). Cause: the launch screen followed the
+  phone's night mode while the app had its own setting. Android 11 and older cannot change the launch screen colour
+  per app; there the first second still follows the phone.
+- Android 14+ holds back exact alarms for new installs, so reminders could be late: Settings ▸ Notifications now
+  shows a note and a button (`nfexact`, `checkExactNotificationSetting`) only when Android reports that. Found by
+  reading the built manifest and platform rules; not reproduced on a phone.
+- Ruku keeps the back level; open hands keep the fingers together. Every step of all five schools was rendered
+  for men and women and looked over as contact sheets.
+- Android 11 and older: the system launch picture is switched off (`windowDisablePreview` in `values/styles.xml`;
+  `values-v31/styles.xml` keeps it for Android 12+), and `MainActivity` applies the app's choice in
+  `attachBaseContext` and colours the window itself, so the first frame is the app's own. Not compiled or run here.
+- Step text read against the 3D movement for every school: ruku fingers stay spread when gripping; takbir hands
+  keep their natural spread; forearms rest on the ground only in `sujudW`; in tawarruk the left foot comes out to
+  the right. Hair, cap and scarf edges are clean lines; on phones the figure sits right of the small picture.
+- Tests: `tests/nov13b.test.mjs`; 208 pass. Checked in headless Chrome (software WebGL) at 320, 360 and 1280 px,
+  EN and BN, light and dark, reduced motion, all five schools for men and women. No phone or emulator was available.
+- To rebuild the figures: clone MPFB2, then `python tools/prayer-figure/build.py <mpfb2>/src/mpfb/data assets/figure`.
+
+### 2026-11-13: 12 Notion tasks: opening, Today, pictures, sounds, How to pray, fixes (`5eb7899`, build #12)
 - From the owner's Notion task list (the 12 Islam Everyday "Up next" items of 12–13 Nov). Owner's answers: pictures made
   with Figma AI; "new landing page" = refreshed Today; the 5 s opening on every cold start, tap to skip.
 - **Opening** (`index.html`, `theme-boot.js`, `app.css` end, `app.js` boot): `html.sp-long` on the first open in a

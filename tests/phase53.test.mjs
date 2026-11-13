@@ -109,7 +109,11 @@ test("prohibited times: no warning at all when the day's times are unreliable", 
 test("prohibited times: compact non-bold line, sources and method recorded, both languages", () => {
   const f = fn("forbiddenLine");
   assert.match(f, /class="forb-warn"/); assert.match(f, /role="note"/); assert.match(f, /data-act="forbinfo"/);
-  assert.doesNotMatch(f, /<b>|<strong>/);
+  // the advance notice stays a compact, non-bold note; since 13 Nov 2026 (owner's request) a window that is on now
+  // gets a clear status with a bold heading and the time left
+  const soon = f.slice(f.indexOf('f.state === "soon"'), f.indexOf("const end ="));
+  assert.match(soon, /role="note"/); assert.doesNotMatch(soon, /<b>|<strong>/);
+  assert.match(f, /forb-warn on[^]*role="status"[^]*fw_now_h[^]*forb-left/);
   const rule = css.slice(css.indexOf(".forb-warn{"), css.indexOf("}", css.indexOf(".forb-warn{")));
   assert.ok(rule.length > 0 && !/font-weight:\s*(6|7|8|bold)/.test(rule), "not bold");
   for (const u of ["https://sunnah.com/muslim:831", "https://sunnah.com/bukhari:586", "binbaz.org.sa/fatwas/18495"]) assert.ok(app.includes(u), u);

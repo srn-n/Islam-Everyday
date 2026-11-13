@@ -9,15 +9,15 @@ const LOC = window.IE_LOCALE, VE = window.IE_VOTD_EN, DV = window.IE_DAYVIZ;
 /* Phone speed (Oct 2026): page data that the Today screen does not need is loaded only when its page opens, so a phone
    downloads about a third of the scripts before the first screen appears. LAZY lists each group's files in load order;
    bindLazy() picks up the globals they define. The service worker still precaches all of them for offline use. */
-const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"], pray: ["salah-fig", "salah"] };
-let NM, NAMES = [], GD, HD, NW, SD, ST, SL = null, SF = null, LG = null, HCOLL = {}, NW_N = 0;
+const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"], pray: ["salah-fig", "salah", "salah-3d"] };
+let NM, NAMES = [], GD, HD, NW, SD, ST, SL = null, SF = null, S3 = null, LG = null, HCOLL = {}, NW_N = 0;
 const lazyDone = new Set(), lazyP = {}, lazyFiles = new Set();
 /* Phones (touch screen) get the on-demand loading; computers with a mouse keep the previous behaviour: everything is
    loaded straight after the first screen, so their pages open with no "Loading…" step. */
 const phone = () => { try { return matchMedia("(pointer: coarse)").matches; } catch (e) { return false; } };
 function bindLazy() {
   NM = window.DINSATHI_NAMES; NAMES = NM ? NM.names : []; GD = window.IE_GUIDE; HD = window.IE_HADITH; NW = window.IE_NAWAWI;
-  SD = window.IE_STUDY; ST = window.IE_STORIES; LG = window.IE_LEGAL || null; SL = window.IE_SALAH && window.IE_SALAH_FIG ? window.IE_SALAH : null; SF = window.IE_SALAH_FIG || null;
+  SD = window.IE_STUDY; ST = window.IE_STORIES; LG = window.IE_LEGAL || null; SL = window.IE_SALAH && window.IE_SALAH_FIG ? window.IE_SALAH : null; SF = window.IE_SALAH_FIG || null; S3 = window.IE_SALAH_3D || null;
   HCOLL = Object.assign({}, NW ? NW.COLLECTIONS : {}, HD ? HD.COLLECTIONS : {});
   NW_N = NW ? NW.HADITH.length : 0;
 }
@@ -51,7 +51,7 @@ const KEY = "dinsathi.web.v1";
    (res/raw/ie_drop, ie_ripple, ie_bubble; previews in assets/sounds). */
 const NF_SND = ["default", "drop", "ripple", "bubble"]; // Nov 2026: "tap" and "breeze" were replaced
 const NF_OLD = ["tap", "breeze"]; // their channels are removed from the phone
-const DEF = { lang: "en", loc: "en-IN", mode: "system", lightTheme: "sandstone", darkTheme: "jade", glass: "balanced", motion: "subtle", scene: "landscape", sceneAuto: false, heroKind: "anim", photo: "mosque", city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
+const DEF = { lang: "en", loc: "en-IN", mode: "system", lightTheme: "sandstone", darkTheme: "jade", glass: "balanced", motion: "subtle", scene: "landscape", sceneAuto: false, heroKind: "anim", photo: "mosque", wgMode: "auto", wgPic: "river", city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
   school: null, vib: "light", snd: true, sndK: "soft", vol: 60, nfSnd: "default", nf: { pray: false, forb: false, thu: false, tahajjud: false, duha: false }, nfAsk: false, pray: null, log: {}, xlog: {}, fplan: {}, gloss: false, last: null, read: [], bm: [], fav: [], tab: "today", hcol: "general", nwread: [],
   zk: { cur: "AUD", basis: "silver", w: "tola", price: "", v: {} } };
 let st = JSON.parse(JSON.stringify(DEF));
@@ -72,6 +72,8 @@ try {
   st.sceneAuto = !!st.sceneAuto;
   if (st.heroKind !== "photo") st.heroKind = "anim";
   if (!PHOTOS.includes(st.photo)) st.photo = "mosque";
+  if (!["plain", "pic", "auto"].includes(st.wgMode)) st.wgMode = "auto";
+  if (!WPICS.includes(st.wgPic)) st.wgPic = "river";
   st.xlog = XT.clean(st.xlog);
   if (!st.fplan || typeof st.fplan !== "object" || Array.isArray(st.fplan)) st.fplan = {};
   if (st.hcol !== "nawawi") st.hcol = "general";
@@ -183,6 +185,19 @@ const SCENES = ["landscape", "sky", "mosque", "dunes", "mountains", "sea", "fore
 /* Nov 2026 (13th): pictures, as an alternative to the drawn scenes (st.heroKind "photo"). Generated for this app with
    Figma's AI image tool; they show no real place. assets/heroes-img/<k>.webp (1200 px) and <k>-s.webp (720 px). */
 const PHOTOS = ["mosque", "dunes", "lake", "paddy", "coast", "pines", "tea"]; // the mosque is Friday's picture when it changes daily
+/* Nov 2026 (13th): pictures behind the Android widgets, other scenes than the hero's (assets/widgets-img/<k>.webp,
+   960 px; made like the hero pictures with Figma's AI image tool, tools/widget-pictures.py). st.wgMode: "plain" (the
+   theme colour), "pic" (st.wgPic) or "auto": a new picture at each prayer time, in this order. */
+const WPICS = ["waterfall", "river", "snow", "wheat", "garden", "stars", "autumn"];
+/* The picture "auto" shows at a moment: one step on at each prayer time, so it is the same in the app and on the
+   phone (WidgetData.picAt uses the same rule: day number × 5 + prayers begun that day). */
+const wgPicAt = (dn, started) => WPICS[((dn * 5 + started) % WPICS.length + WPICS.length) % WPICS.length];
+const wgDayNo = (y, m, d) => Math.floor(Date.UTC(y, m - 1, d) / 864e5);
+function wgNowPic() {
+  if (st.wgMode !== "auto") return st.wgPic;
+  const c = city(), now = Date.now(), p = zoneParts(c.zone, new Date(now)), D = dayTimes(c, p.year, p.month, p.day);
+  return wgPicAt(wgDayNo(p.year, p.month, p.day), timesOk(D) ? PRAYERS.filter(k => D.abs(k) <= now).length : 0);
+}
 (() => {
   const old = st.theme, raw = (() => { try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { return {}; } })();
   if (!MODES.includes(raw.mode) || !MODES.includes(st.mode)) st.mode = old === "light" || old === "dark" ? old : old === "emerald" ? "light" : old === "indigo" ? "dark" : MODES.includes(raw.mode) ? raw.mode : "system";
@@ -200,7 +215,7 @@ const hostTheme = document.documentElement.getAttribute("data-host-theme");
 const darkMq = (() => { try { return matchMedia("(prefers-color-scheme: dark)"); } catch (e) { return { matches: false }; } })();
 const schemeNow = () => st.mode === "system" ? (hostTheme ? hostTheme : (darkMq.matches ? "dark" : "light")) : st.mode;
 const themeNow = () => schemeNow() === "dark" ? st.darkTheme : st.lightTheme;
-let barStyle = "";
+let barStyle = "", natMode = "";
 function applyTheme() {
   const r = document.documentElement, sc = schemeNow(), th = themeNow();
   r.setAttribute("data-theme", sc);
@@ -212,6 +227,9 @@ function applyTheme() {
   r.style.setProperty("--ar-scale", st.ar);
   const m = document.querySelector('meta[name="theme-color"]');
   if (m) m.content = getComputedStyle(r).getPropertyValue("--ground").trim() || "#EEF3F1";
+  const cs = document.querySelector('meta[name="color-scheme"]'); if (cs) cs.content = sc;
+  // Android: the launch screen of the next start follows the app's own choice (Appearance plugin)
+  if (NATIVE && natMode !== st.mode) { natMode = st.mode; natQ("Appearance", "set", { mode: st.mode }); }
   if (NATIVE && barStyle !== sc) { barStyle = sc; natQ("SystemBars", "setStyle", { style: sc === "dark" ? "DARK" : "LIGHT" }); } // status bar icons: light on dark themes
 }
 // Following the system: redraw when the OS or browser switches between light and dark.
@@ -319,7 +337,13 @@ function forbiddenLine(s) {
   const at = ms => clock(hOf(ms, s.d0));
   const txt = f.state === "soon" ? t("fw_soon_" + f.k).replace("{t}", at(f.from)).replace("{e}", at(f.to))
     : t("fw_" + f.k).replace("{e}", at(f.k === "afterfajr" ? f.to + 15 * 6e4 : f.k === "afterasr" ? s.d0.abs("maghrib") : f.to));
-  return `<p class="forb-warn" id="forb-warn" role="note"><span>${esc(txt)}</span> <button type="button" class="linkish" data-act="forbinfo">${t("fw_why")}</button></p>`;
+  const why = `<button type="button" class="linkish" data-act="forbinfo">${t("fw_why")}</button>`;
+  if (f.state === "soon") return `<p class="forb-warn" id="forb-warn" role="note"><span>${esc(txt)}</span> ${why}</p>`;
+  /* Nov 2026 (13th, Notion): while a window is on, the hero says so plainly, with the time left, above the detail. */
+  const end = f.k === "afterfajr" ? f.to + 15 * 6e4 : f.k === "afterasr" ? s.d0.abs("maghrib") : f.to;
+  return `<div class="forb-warn on" id="forb-warn" role="status" data-end="${end}">
+        <p class="fw-h"><span class="fw-dot" aria-hidden="true"></span><b>${t("fw_now_h")}</b><span class="fw-left">${t("fw_left")} <b class="tnum" id="forb-left">${countdown(end - s.now)}</b></span></p>
+        <p class="fw-d"><span>${esc(txt)}</span> ${why}</p></div>`;
 }
 /* Current prayer period and next prayer, from the same schedule the chart uses.
    Periods: Fajr→sunrise, Dhuhr→Asr, Asr→Maghrib, Maghrib→Isha, Isha→next day's Fajr.
@@ -613,7 +637,7 @@ const underSplash = () => { const sp = $("splash"); return !!sp && !sp.classList
 function render(anim, viaVT) {
   // A redraw of the same page (for example the Today page each minute) puts keyboard focus back on the same control.
   const fa = !anim && document.activeElement, fd = fa && $("view").contains(fa) && fa.dataset && fa.dataset.act ? fa.dataset : null;
-  applyTheme(); header(); nav(); side();
+  applyTheme(); header(); nav(); side(); widgetSync();
   const v = $("view"); post = []; heroAnim = !!anim;
   v.className = "view v-" + (R.tab === "more" ? (R.sub || "more") : R.tab);
   let f;
@@ -821,20 +845,6 @@ function nfCard() {
     <div class="nf-acts"><button type="button" class="btn sm" data-act="nfon">${t("nf_on")}</button><button type="button" class="btn ghost sm" data-act="nflater">${t("nf_later")}</button></div></div></section>`;
 }
 let snap = null;
-/* Today, Nov 2026 (13th), phones: under the current prayer, the five prayers of the day in one row (time, now/next,
-   and a tick to record it, the same record as the Prayer tracker), then four shortcuts. Desktop keeps its layout
-   (both are hidden there by CSS). */
-function todayStrip(s, cur, nx, done) {
-  const fri = isFriD(s.d0);
-  const pills = PRAYERS.map(k => { const isC = cur && cur.k === k && cur.D === s.d0, isN = nx.k === k && !nx.tomorrow, on = !!done[k];
-    return `<li class="ts-p${isC ? " cur" : ""}${isN ? " nxt" : ""}${on ? " on" : ""}"><button type="button" data-act="qtrk" data-k="${k}" aria-pressed="${on}" aria-label="${esc(t("markp"))}: ${esc(pName(k, fri))}">
-      <span class="ts-n">${pName(k, fri)}</span><b class="tnum">${clock(s.d0.tm[k])}</b><i class="ts-c" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-9"/></svg></i>
-      ${isC ? `<span class="ts-b">${t("curb")}</span>` : isN ? `<span class="ts-b">${t("next")}</span>` : ""}</button></li>`; }).join("");
-  const sc = [["duas", "duas", t("duas")], ["names", "names", t("ts_names")], ["pray", "prayfig", t("pray")], ["calendar", "calendar", t("cal_s")]];
-  return `<section class="today-strip" aria-label="${esc(t("ts_head"))}"><div class="ts-head"><h3>${t("ts_head")}</h3><span class="note">${t("ts_done").replace("{n}", num(PRAYERS.filter(k => done[k]).length))}</span></div>
-    <ol class="ts-row">${pills}</ol></section>
-  <nav class="today-short" aria-label="${esc(t("ts_short"))}">${sc.map(([sub, icn, l]) => `<button type="button" data-act="go" data-tab="more" data-sub="${sub}"><span class="ic" aria-hidden="true">${ic(icn)}</span><span>${l}</span></button>`).join("")}</nav>`;
-}
 function vToday() {
   const s = snap = snapshot(), tm = s.d0.tm, ex = extras(s), done = st.log[s.key] || {};
   const per = skyPeriod(s), n = PRAYERS.filter(k => done[k]).length, ok = timesOk(s.d0), fri = isFriD(s.d0);
@@ -854,10 +864,7 @@ function vToday() {
   let [y, m, d] = [s.p.year, s.p.month, s.p.day];
   const nowStr = ex.forb.find(w => s.nowH >= w[1] && s.nowH < w[2]);
   const ev = (() => { for (let i = 0; i < 400; i++) { const [a1, b1, c1] = shiftDay(y, m, d, i); const h = hijri(localNoon(a1, b1, c1)); const e = eventsOn(h).filter(x => !x.minor); if (e.length) return { e: e[0], i }; } return null; })();
-  // Face 7: Thursday/Friday may use a reviewed day entry (assets/votd-day.js); otherwise the normal schedule.
-  const wdNow = new Date(Date.UTC(s.p.year, s.p.month - 1, s.p.day)).getUTCDay();
-  const dayV = window.IE_VOTD_DAY ? window.IE_VOTD_DAY.pick(wdNow) : null;
-  const v = votdPick = dayV ? Object.assign({ day: wdNow }, dayV) : VOTD.entryFor(s.p.year, s.p.month, s.p.day);
+  const v = votdPick = votdFor(s.p.year, s.p.month, s.p.day);
   return `
   <section class="sky a-hero" data-p="${per}" data-scene="${sceneToday()}" data-kind="${st.heroKind === "photo" ? "photo" : "anim"}" aria-label="${esc(t("curp"))}">
     ${heroScene()}
@@ -882,7 +889,6 @@ function vToday() {
     </div>
   </section>
 
-  ${todayStrip(s, cur, nx, done)}
   ${nfCard()}
 
   <section class="card a-times">
@@ -987,6 +993,22 @@ function dayViz(s) {
 /* The Hijri day begins at maghrib, so after maghrib the Today page and menus show the next Hijri date. */
 function hijriNow(s) { return hijri(new Date(s.now + (s.now >= s.d0.abs("maghrib") ? 864e5 : 0))); }
 let votdPick = null, votdP = null; // votdP: the verse file arriving (the app's splash waits for it)
+// Face 7: Thursday/Friday may use a reviewed day entry (assets/votd-day.js); otherwise the normal schedule.
+function votdFor(y, m, d) {
+  const wd = new Date(Date.UTC(y, m - 1, d)).getUTCDay(), dayV = window.IE_VOTD_DAY ? window.IE_VOTD_DAY.pick(wd) : null;
+  return dayV ? Object.assign({ day: wd }, dayV) : VOTD.entryFor(y, m, d);
+}
+/* The verse as plain text for places that cannot show the card (the Android widgets): the same translation the card
+   shows (Rowwad in English, the Bangla translation in Bangla), word for word; only the footnote marks are left out,
+   since the notes themselves are not shown there. */
+function votdPlain(e) {
+  const i = e.s, ks = []; for (let k = e.a; k <= e.b; k++) ks.push(k);
+  const RW = window.IE_RWWAD, rw = !bn() && RW && ks.every(k => RW.get(i, k)) ? ks.map(k => RW.get(i, k)[0]) : null, tr = QS[st.lang + ":" + i];
+  if (!rw && !tr) return null;
+  const txt = (rw || ks.map(k => tr.t[k - 1])).map(x => String(x).replace(/\s*\[[\d০-৯]+\]/g, "")).join(" ");
+  const range = e.b > e.a ? `${num(e.a)}–${num(e.b)}` : num(e.a);
+  return { t: txt, r: `${sname(i)} · ${num(i)}:${range}` };
+}
 const COUNTS = QM.meta.map(m => m[3]);
 /* Verse for today: whole ayah (never truncated) in Arabic and the selected translation. */
 function votdBody(e) {
@@ -1110,6 +1132,7 @@ setInterval(() => {
   // The minute redraw waits while the splash is up (it would land on the opening animation); the countdown still ticks.
   if (!$("splash") && (now >= snap.next.at || (ps && now >= ps.next.at) || (cur && now >= cur.end) || zoneParts(snap.c.zone, new Date(now)).minute !== snap.p.minute)) { render(false); return; }
   const c = $("count-next"); if (c && ps) c.textContent = countdown(ps.next.at - now);
+  const fl = $("forb-left"), fw = $("forb-warn"); if (fl && fw) { const e = +fw.dataset.end; if (now >= e) { render(false); return; } fl.textContent = countdown(e - now); }
 }, 1000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden && R.tab === "today") render(false); });
 
@@ -1794,21 +1817,33 @@ function prayStep(t) { const T = PR.times; let i = 0; while (i < T.length - 1 &&
 function prayFrame() {
   const g = $("pray-g"); if (!g || !SL || !SF) { prayStop(); return; }
   const i = prayStep(PR.t), s = PR.steps[i], tm = PR.times[i], still = reduce || st.motion === "off";
-  let p = SF.pose(s.pose), k = 1;
+  let p = SF.pose(s.pose), k = 1, seg = [s.pose, s.pose, 1];   // seg: from which position to which, and how far (for the 3D figure)
   if (i > 0 && PR.t < tm.moved && !still) {
     const from = SF.pose(PR.steps[i - 1].pose), x = (PR.t - tm.start) / (tm.moved - tm.start), via = s.via && SF.pose(s.via);
-    k = x;
+    k = x; seg = via ? (x < 0.5 ? [PR.steps[i - 1].pose, s.via, easeIO(x * 2)] : [s.via, s.pose, easeIO(x * 2 - 1)]) : [PR.steps[i - 1].pose, s.pose, easeIO(x)];
     if (via) p = x < 0.5 ? SF.mix(from, via, easeIO(x * 2)) : SF.mix(via, SF.pose(s.pose), easeIO(x * 2 - 1));
     else p = SF.mix(from, SF.pose(s.pose), easeIO(x));
   }
   const hold = PR.t >= tm.moved || still, ht = (PR.t - tm.moved) / (tm.end - tm.moved);
+  /* Nov 2026 (13th): the 3D figure (assets/salah-3d.js) is drawn from the same positions and the same clock. Until its
+     model has loaded, or where WebGL is missing, the earlier drawn figure is shown instead. */
+  const who = PR.who, cv = $("pray-3d"), svg = $("pray-fig"), ov = $("pray-ov");
+  let d3 = null;
+  if (cv && S3 && !PR.no3d) {
+    if (S3.ready(who)) { try { d3 = S3.draw(cv, SF, { who, a: seg[0], b: seg[1], t: seg[2], turn: hold && s.turn ? s.turn * Math.min(1, ht * 4) : 0, dark: document.documentElement.dataset.theme === "dark", turbah: s.turbah, points: s.points && hold, snap: PR.cut }); } catch (e) { d3 = null; PR.no3d = true; } PR.cut = false; }
+    else if (!PR.load3d) { PR.load3d = who; S3.load(who).then(() => { PR.load3d = null; PR.cut = true; if ($("pray-3d")) prayFrame(); }, () => { PR.load3d = null; PR.no3d = true; }); }
+  }
+  const on3 = !!(d3 && d3.ok);
+  if (cv) cv.hidden = !on3; if (svg) svg.style.visibility = on3 ? "hidden" : "";
+  if (ov) ov.innerHTML = on3 && d3.pts ? `<svg viewBox="0 0 ${cv.clientWidth} ${cv.clientHeight}" aria-hidden="true">${d3.pts.map((q, n) => `<circle class="pv-dot" style="--k:${n}" cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="3"/>`).join("")}</svg>` : "";
+  if (!on3) {
   // The camera frames the figure: closer for sitting and prostration, wider for standing; it glides with the movement.
   // Nov 2026: three-quarter front view (SF.draw), man or woman (PR.who).
   const svg = $("pray-fig"); if (svg) { const box = SF.bbox3(p), H = Math.max(140, Math.min(210, box[3] - box[1] + 30)), W = H * 356 / 200, cx = (box[0] + box[2]) / 2;
     svg.setAttribute("viewBox", `${(cx - W / 2).toFixed(1)} ${(box[3] + 6 - H).toFixed(1)} ${W.toFixed(1)} ${H.toFixed(1)}`); }
-  const who = PR.who;
   g.innerHTML = SF.draw(p, { who, points: s.points && hold, turbah: s.turbah, finger: hold && /^finger/.test(s.inset || ""), turnArrow: hold && s.turn ? Math.sign(s.turn) : 0 });
   if (s.turn && hold) { const q = Object.assign({}, SF.pose(s.pose), { turn: s.turn * Math.min(1, ht * 4) }); g.innerHTML = SF.draw(q, { who, turbah: s.turbah, turnArrow: Math.sign(s.turn) }); }
+  }
   // Close-up (front view of the hands, or the feet from behind): a card over the picture's top-left corner.
   const ins = $("pray-inset");
   if (ins) { const kind = hold ? s.inset : null;
@@ -1844,7 +1879,7 @@ function prayPlay(on) {
   PR.playing = on; prayButtons(); prayStop();
   if (on) { PR.last = performance.now(); PR.raf = requestAnimationFrame(prayLoop); } else prayFrame();
 }
-function praySeek(t) { PR.t = Math.max(0, Math.min(PR.total, t)); prayFrame(); prayButtons(); }
+function praySeek(t) { PR.t = Math.max(0, Math.min(PR.total, t)); PR.cut = true; prayFrame(); prayButtons(); }
 function prayFull(on) { const v = $("pr-video"); if (!v) return; v.classList.toggle("pv-full", on); document.documentElement.classList.toggle("pv-lock", on); const b = $("pray-fs"); if (b) { b.innerHTML = ic(on ? "shrink" : "expand"); b.setAttribute("aria-label", t(on ? "pr_exitfs" : "pr_fs")); } }
 document.addEventListener("visibilitychange", () => { if (document.hidden && PR.playing) prayPlay(false); });
 function vPray() {
@@ -1857,6 +1892,7 @@ function vPray() {
   <section class="pr-video" id="pr-video" aria-label="${esc(t("pray") + ": " + L(SL.NAMES[sc]))}">
     <div class="pv-pic" data-who="${PR.who}">
       <svg id="pray-fig" viewBox="70 0 356 200" role="img" aria-labelledby="pray-t"><g id="pray-g"></g></svg>
+      <canvas id="pray-3d" class="pv-3d" aria-hidden="true" hidden></canvas><div id="pray-ov" class="pv-ov" aria-hidden="true"></div>
       <div class="pv-inset si" id="pray-inset"></div>
       <span class="pv-badge" aria-hidden="true">${esc(L(SL.NAMES[sc]))}</span><span class="pv-qibla" aria-hidden="true">${t("pr_qibla")} ↘</span>
       <button type="button" class="pv-big" id="pray-big" data-act="prplay" aria-label="${esc(t("pr_play"))}">${ic("play")}</button>
@@ -2073,17 +2109,29 @@ const SC_PREV = {
   fields: '<path d="M0 42 Q40 39 80 41 V60 H0Z" class="f1"/><rect y="44" width="80" height="16" class="wat"/><path d="M0 48 Q40 46 80 48 M0 53 Q40 51 80 53" class="bund"/><path d="M62 52 v-14 M62 38 l-6 3 M62 38 l6 3 M62 38 l-4 -3 M62 38 l4 -3 M72 52 v-11 M72 41 l-5 3 M72 41 l5 3" class="palmp"/>',
   canyon: '<path d="M38 60 L40 30 H58 L60 60Z M62 60 L64 38 H76 L78 60Z" class="f1"/><path d="M44 60 L46 40 H66 L68 60Z" class="f2"/><path d="M0 56 Q40 52 80 55 V60 H0Z" class="f3"/>'
 };
+/* Settings ▸ Home-screen widgets (Android app only): the theme colour, or one of the widget pictures, or a new one at
+   each prayer time. The card marked is the picture on the widgets now. */
+function widgetCards() {
+  const pic = st.wgMode !== "plain", cur = wgNowPic(), mark = st.wgMode === "auto" ? t("wg_now") : t("th_chosen");
+  const kind = `<div class="seg sc-kind" role="group" aria-label="${esc(t("wg_set"))}">${[["plain", t("wg_plain")], ["pic", t("sc_photo")]].map(([k, l]) => `<button type="button" data-act="wgkind" data-k="${k}" aria-pressed="${(pic ? "pic" : "plain") === k}">${l}</button>`).join("")}</div>`;
+  if (!pic) return kind;
+  const auto = `<div class="sc-auto"><div><span>${t("wg_auto")}</span><small class="muted">${t("wg_auto_d")}</small></div><button type="button" class="switch" role="switch" data-act="wgauto" aria-checked="${st.wgMode === "auto"}" aria-label="${esc(t("wg_auto"))}"></button></div>`;
+  return kind + auto + `<div class="sc-grid" role="group" aria-label="${esc(t("wg_set"))}">${WPICS.map(k => `<button type="button" class="sc-card ph" data-act="wgpic" data-k="${k}" aria-pressed="${cur === k}">
+    <img class="sc-img" src="assets/widgets-img/${k}.webp" alt="" loading="lazy" decoding="async" width="160" height="90">
+    <span class="th-name">${t("wp_" + k)}</span><span class="th-state">${cur === k ? CHECK + mark : ""}</span></button>`).join("")}</div><p class="note sc-ai">${t("wg_ai")}</p>`;
+}
 function sceneCards() {
-  const ph = st.heroKind === "photo";
+  // the card marked is the picture on the hero now: with "Change every day" on, that is today's, not the last one tapped
+  const ph = st.heroKind === "photo", cur = sceneToday(), mark = st.sceneAuto ? t("sc_today") : t("th_chosen");
   const kind = `<div class="seg sc-kind" role="group" aria-label="${esc(t("sc_kind"))}">${["anim", "photo"].map(k => `<button type="button" data-act="herokind" data-k="${k}" aria-pressed="${(ph ? "photo" : "anim") === k}">${t("sc_" + k)}</button>`).join("")}</div>`;
-  const photos = `<div class="sc-grid" role="group" aria-label="${esc(t("sc_photo"))}">${PHOTOS.map(k => `<button type="button" class="sc-card ph" data-act="setphoto" data-k="${k}" aria-pressed="${st.photo === k}">
+  const photos = `<div class="sc-grid" role="group" aria-label="${esc(t("sc_photo"))}">${PHOTOS.map(k => `<button type="button" class="sc-card ph" data-act="setphoto" data-k="${k}" aria-pressed="${cur === k}">
     <img class="sc-img" src="assets/heroes-img/${k}-s.webp" alt="" loading="lazy" decoding="async" width="160" height="90">
-    <span class="th-name">${t("ph_" + k)}</span><span class="th-state">${st.photo === k ? CHECK + t("th_chosen") : ""}</span></button>`).join("")}</div><p class="note sc-ai">${t("ph_note")}</p>`;
+    <span class="th-name">${t("ph_" + k)}</span><span class="th-state">${cur === k ? CHECK + mark : ""}</span></button>`).join("")}</div><p class="note sc-ai">${t("ph_note")}</p>`;
   const auto = `<div class="sc-auto"><div><span>${t("sc_auto")}</span><small class="muted">${t("sc_auto_d")}</small></div><button type="button" class="switch" role="switch" data-act="sceneauto" aria-checked="${!!st.sceneAuto}" aria-label="${esc(t("sc_auto"))}"></button></div>`;
   if (ph) return kind + auto + photos;
-  return kind + auto + `<div class="sc-grid" role="group" aria-label="${esc(t("scene"))}">${SCENES.map(k => `<button type="button" class="sc-card" data-act="setscene" data-k="${k}" aria-pressed="${st.scene === k}">
+  return kind + auto + `<div class="sc-grid" role="group" aria-label="${esc(t("scene"))}">${SCENES.map(k => `<button type="button" class="sc-card" data-act="setscene" data-k="${k}" aria-pressed="${cur === k}">
     <svg class="sc-prev" viewBox="0 0 80 60" aria-hidden="true" focusable="false"><rect width="80" height="60" class="skyb"/>${SC_PREV[k]}</svg>
-    <span class="th-name">${t("sc_" + k)}</span><span class="th-state">${st.scene === k ? CHECK + t("th_chosen") : ""}</span></button>`).join("")}</div>`;
+    <span class="th-name">${t("sc_" + k)}</span><span class="th-state">${cur === k ? CHECK + mark : ""}</span></button>`).join("")}</div>`;
 }
 function vSettings() {
   const segb = (act, cur, opts) => `<div class="seg">${opts.map(([k, l]) => `<button type="button" data-act="${act}" data-k="${k}" aria-pressed="${String(cur) === String(k)}">${l}</button>`).join("")}</div>`;
@@ -2093,6 +2141,7 @@ function vSettings() {
     <li><span class="lb">${t("appearance")}<small>${t("appearance_h")}</small></span><div style="width:100%">${segb("setmode", st.mode, MODES.map(k => [k, t("md_" + k)]))}</div></li>
     <li class="set-block"><span class="lb">${t("theme")}<small>${t("theme_h")}</small></span>${themeCards()}</li>
     <li class="set-block"><span class="lb">${t("scene")}<small>${t("scene_h")}</small></span>${sceneCards()}</li>
+    ${NATIVE ? `<li class="set-block" id="set-wg"><span class="lb">${t("wg_set")}<small>${t("wg_set_h")}</small></span>${widgetCards()}</li>` : ""}
     <li><span class="lb">${t("glass")}<small>${t("glass_h")}</small></span><div style="width:100%">${segb("setglass", st.glass, GLASS.map(k => [k, t("gl_" + k)]))}</div></li>
     <li><span class="lb">${t("motion")}<small>${t("motion_h")}</small></span><div style="width:100%">${segb("setmotion", st.motion, MOTION.map(k => [k, t("mo_" + k) + (k === moRec() ? `<span class="rec">${t("mo_rec")}</span>` : "")]))}${andVer() ? `<small class="mo-rec">${t("mo_rec_h").replace("{v}", num(andVer())).replace("{m}", t("mo_" + moRec()))}</small>` : ""}</div></li>
     <li><span class="lb">${t("location")}<small>${esc(cname(city()))}</small></span><button type="button" class="btn ghost" data-act="loc">${t("change")}</button></li>
@@ -2112,6 +2161,7 @@ function vSettings() {
     ${["tahajjud", "duha"].map(k => `<li><span class="lb">${t("nf_" + k)}<small>${t("nf_" + k + "_h")}</small></span><button type="button" class="switch" role="switch" data-act="nf" data-k="${k}" aria-checked="${!!st.nf[k]}" aria-label="${esc(t("nf_" + k))}"${nfCan() ? "" : " disabled"}></button></li>`).join("")}
     ${NATIVE ? `<li class="set-block"><span class="lb">${t("nf_snd")}<small>${t("nf_snd_h")}</small></span><div class="amb-kinds" role="group" aria-label="${esc(t("nf_snd"))}">${NF_SND.map(k => `<button type="button" class="chip" data-act="nfsnd" data-k="${k}" aria-pressed="${st.nfSnd === k}">${t("ns_" + k)}</button>`).join("")}</div></li>` : ""}
     <li><p class="note">${nfCan() ? (NATIVE ? t("nf_app").replace("{n}", num(NF_DAYS)) : t("nf_web")) : t("nf_unsup")}</p></li>
+    ${NATIVE && nfExact === "denied" && nfAny() ? `<li class="set-block" id="nf-exact"><p class="note" role="note">${t("nf_exact")}</p><button type="button" class="btn ghost" data-act="nfexact">${t("nf_exact_b")}</button></li>` : ""}
   </ul>
   <p class="eyebrow">${t("ptimes")}</p>
   <ul class="card set">
@@ -2145,6 +2195,8 @@ function vAbout() {
     ["নিষিদ্ধ সময়ের সতর্কতা", "সহিহ মুসলিম ৮৩১, সহিহ বুখারি ৫৮৬ এবং শাইখ ইবনে বাযের ফতোয়া ১৮৪৯৫ (binbaz.org.sa) অনুযায়ী; সূর্যোদয়, মধ্যাহ্ন ও সূর্যাস্তের সময় এই অ্যাপ আপনার অবস্থান থেকে হিসাব করে। মিনিটের সীমাগুলো আনুমানিক।"],
     ["আজকের আয়াত", "১৮০ দিনের একটি নির্দিষ্ট তালিকা (১ জানুয়ারি ২০২৬ থেকে গণনা), প্রতিটি আয়াত আগের আয়াত ও আল-মুখতাসার তাফসিরের সঙ্গে মিলিয়ে বাছাই করা; প্রয়োজনে প্রেক্ষাপট টীকা দেওয়া আছে। কোনো যোগ্য আলেম এখনো যাচাই করেননি।"],
     ["নামাজ শিক্ষা", "sunnah.com-এ যাচাই করা হাদিস এবং হানাফি ও শাফিই ফতোয়া উত্তর (IslamQA.org), ইসলামওয়েব ও ইসলামকিউএ থেকে সংক্ষেপিত। এটি ফতোয়া নয়, এবং এখনো কোনো যোগ্য আলেম যাচাই করেননি।"],
+    ["আজকের কার্ডের ছবি", "সাতটা ছবি (সেটিংস → নামাজের ছবি → ছবি) এই অ্যাপের জন্য নভেম্বর ২০২৬-এ Figma-র এআই ছবি-তৈরির টুল দিয়ে বানানো। এগুলো কোনো আসল জায়গার ছবি নয়।"],
+    ["উইজেটের ছবি", "Android হোম স্ক্রিন উইজেটের পেছনের সাতটা ছবি (সেটিংস → হোম স্ক্রিন উইজেট) এই অ্যাপের জন্য নভেম্বর ২০২৬-এ Figma-র এআই ছবি-তৈরির টুল দিয়ে বানানো। এগুলো কোনো আসল জায়গার ছবি নয়।"],
     ["লোগো", "মিহরাব-আকৃতির খোলা দরজায় উদীয়মান সূর্য—এই অ্যাপের জন্য আঁকা মৌলিক ভেক্টর ছবি (brand/ ফোল্ডার)।"],
     ["ফন্ট", "হিন্দ শিলিগুড়ি, শেহেরাজাদ নিউ ও তিরো বাংলা, SIL Open Font License 1.1, এই অ্যাপের সঙ্গেই সংযুক্ত।"]
   ] : [
@@ -2164,6 +2216,7 @@ function vAbout() {
     ["Verse for today", "A fixed 180-day schedule (counted from 1 January 2026). Each passage was read with the verses before it and the Al-Mukhtasar tafsir, and a context note is shown where the passage needs one. Not yet reviewed by a qualified scholar."],
     ["Prayer guide", "Summarised from hadith checked on sunnah.com and from Hanafi and Shafi'i fatwa answers (IslamQA.org), IslamWeb and IslamQA.info. It is not a fatwa and has not yet been independently reviewed by a qualified scholar."],
     ["Pictures for the Today card", "The seven pictures (Settings → Picture behind the prayer → Pictures) were generated for this app with Figma's AI image tool in November 2026. They are not photographs of real places."],
+    ["Pictures for the widgets", "The seven pictures behind the Android home-screen widgets (Settings → Home-screen widgets) were generated for this app with Figma's AI image tool in November 2026. They are not photographs of real places."],
     ["Logo", "A mihrab-shaped open doorway framing a rising sun: original vector artwork drawn for this app (brand/ folder)."],
     ["Fonts", "Hind Siliguri, Scheherazade New and Tiro Bangla, SIL Open Font License 1.1, bundled with the app."]
   ];
@@ -2369,6 +2422,37 @@ function nfPlan(days) {
   return out.filter(x => x.at > now + 5000).sort((a, b) => a.at - b.at);
 }
 let nfT = 0, webPlan = [];
+/* Android home-screen widgets (Nov 2026, Notion): "Prayer times" and "Verse for today". The app gives them seven days
+   of times and verses in its own language and theme colours (Widgets plugin → WidgetData.java); the widgets only read
+   that, so they stay right for a week offline. Sent only when something changed. */
+let wgT = 0, wgSig = "";
+const widgetSync = () => { if (!NATIVE) return; clearTimeout(wgT); wgT = setTimeout(widgetRun, 1200); };
+const wgHex = v => { const e = document.createElement("i"); e.style.color = v; document.body.appendChild(e); const c = getComputedStyle(e).color; e.remove();
+  const m = c.match(/[\d.]+/g); if (!m || m.length < 3) return null; const a = m.length > 3 ? Math.round(+m[3] * 255) : 255;
+  return "#" + [a, +m[0], +m[1], +m[2]].map(x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, "0")).join("").toUpperCase(); };
+async function widgetData() {
+  const c = city(), p = zoneParts(c.zone, new Date()), cs = getComputedStyle(document.documentElement), cv = k => wgHex(cs.getPropertyValue(k).trim() || "inherit");
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const [y, m, d] = shiftDay(p.year, p.month, p.day, i), D = dayTimes(c, y, m, d), N = dayTimes(c, ...shiftDay(y, m, d, 1));
+    if (!timesOk(D)) continue;
+    const e = votdFor(y, m, d); let v = null;
+    try { await qEnsure(e.s); v = votdPlain(e); } catch (x) {}
+    days.push({ from: D.base, to: N.base, dn: wgDayNo(y, m, d), p: PRAYERS.map(k => [pName(k, isFriD(D)), clock(D.tm[k]), D.abs(k)]), v });
+  }
+  return { v: 1, lang: st.lang, place: cname(c), lab: { next: t("next"), tomorrow: t("tomorrow"), votd: t("votd") },
+    col: { bg: cv("--surface"), ink: cv("--ink"), muted: cv("--muted"), accent: cv("--accent") },
+    bg: { mode: st.wgMode, pic: st.wgPic, list: WPICS }, days };
+}
+async function widgetRun() {
+  try { const d = JSON.stringify(await widgetData()); if (d === wgSig) return; wgSig = d; await nat("Widgets", "update", { data: d }); } catch (e) {}
+}
+/* Android 14 and later do not let a newly installed app ring at an exact minute until the person allows "Alarms &
+   reminders" for it; without that, Android delivers reminders when it suits the battery, often minutes late. The app
+   asks Android where it stands after each scheduling and, only when it is held back, offers the switch in Settings. */
+let nfExact = "";
+const nfExactSet = r => { const v = (r && r.exact_alarm) || ""; if (v === nfExact) return; nfExact = v; if (R.tab === "more" && R.sub === "settings") render(); };
+const nfExactAsk = () => { if (NATIVE) nat("LocalNotifications", "checkExactNotificationSetting").then(nfExactSet, () => {}); };
 const nfSync = () => { clearTimeout(nfT); nfT = setTimeout(nfRun, 500); };
 function nfRun() {
   if (!NATIVE) { webPlan = nfAny() && nfGranted() ? nfPlan(2) : []; return; }
@@ -2376,7 +2460,7 @@ function nfRun() {
     .then(() => { if (!nfAny()) return 0;
       nfChannels();
       const s = st.nfSnd, list = nfPlan(NF_DAYS).map(x => ({ id: x.id, title: x.title, body: x.body, largeBody: x.body, channelId: nfCh(x.ch, s), smallIcon: "ic_stat_door", iconColor: "#0E6B5C", sound: s === "default" ? undefined : "ie_" + s + ".wav", schedule: { at: new Date(x.at).toISOString(), allowWhileIdle: true } }));
-      return list.length ? nat("LocalNotifications", "schedule", { notifications: list }) : 0; }).catch(() => {});
+      return list.length ? nat("LocalNotifications", "schedule", { notifications: list }) : 0; }).catch(() => {}).then(nfExactAsk);
 }
 /* Android fixes a channel's sound when the channel is first made, so each sound has its own channels: "pray" keeps the
    phone's sound, "pray_drop" plays the app's water drop, and so on. A channel with the app's sound plays only that file
@@ -2464,6 +2548,7 @@ function act(a, d, b) {
     case "setvib": if (VIBS.includes(d.k)) { st.vib = d.k; save(); b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); buzz(18); } break;
     case "snd": st.snd = !st.snd; save(); flipSw(b, st.snd); sndApply(); if (SND) SND.tap(); break;
     case "sndk": if (SND && SND.TOUCH.includes(d.k)) { st.sndK = d.k; save(); sndApply(); b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); SND.preview(d.k); } break;
+    case "nfexact": nat("LocalNotifications", "changeExactNotificationSetting").then(r => { nfExactSet(r); nfSync(); }, () => {}); break;
     case "nfsnd": if (NF_SND.includes(d.k)) { st.nfSnd = d.k; save(); b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); nfPreview(d.k); nfSync(); } break;
     case "nf": nfSet(d.k, !st.nf[d.k], b); break;
     case "nfon": nfSet("all", true); break;
@@ -2488,6 +2573,9 @@ function act(a, d, b) {
       st.photo = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
     case "herokind": if (d.k === "anim" || d.k === "photo") { st.heroKind = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
     case "gdet": if (GDET[d.k]) openSheet(GDET[d.k], b, "pop"); break;
+    case "wgkind": if (d.k === "plain" || d.k === "pic") { st.wgMode = d.k === "plain" ? "plain" : "auto"; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
+    case "wgauto": { const on = st.wgMode !== "auto"; if (!on) st.wgPic = wgNowPic(); st.wgMode = on ? "auto" : "pic"; save(); flipSw(b, on, () => { const y = scrollY; render(false); scrollTo(0, y); }); break; }
+    case "wgpic": if (WPICS.includes(d.k)) { st.wgPic = d.k; st.wgMode = "pic"; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
     case "sceneauto": st.sceneAuto = !st.sceneAuto; save(); flipSw(b, st.sceneAuto, () => { const y = scrollY; render(false); scrollTo(0, y); }); break;
     case "setasr": st.asr = +d.k; save(); render(false); nfSync(); break;
     case "hadj": st.hadj = Math.max(-2, Math.min(2, st.hadj + +d.d)); save(); render(false); nfSync(); break;
@@ -2510,12 +2598,6 @@ function act(a, d, b) {
       break;
     }
     case "tday": { if (!snap) break; const cur = trackKey(snap); tSel = d.k === "today" ? null : XT.shift(cur, d.k === "prev" ? -1 : 1); if (tSel && XT.clamp(tSel, XT.shift(snap.key, -(KEEP_DAYS - 1)), snap.key) === snap.key) tSel = null; const y = scrollY; render(false); scrollTo(0, y); break; }
-    case "qtrk": { // Today's row of five: always today, whatever date the tracker below is showing
-      if (!snap) break; if (snapshot().key !== snap.key) { render(false); break; }
-      const r = XT.togglePrayer(st.log, snap.key, d.k); st.log = r.log; pruneLog(snap); save();
-      const rc = b.getBoundingClientRect(), y = scrollY; render(false); scrollTo(0, y);
-      if (r.done) { fx(15); const o = st.log[snap.key]; if (PRAYERS.every(p => o[p])) { burst(rc.left + rc.width / 2, rc.top + rc.height / 2); toast(t("alldone")); buzz([30, 50, 30]); } }
-      break; }
     case "tsel": { if (!snap) break; tSel = d.k === snap.key ? null : d.k; const y = scrollY; render(false); scrollTo(0, y); break; }
     case "xw": {
       if (!snap) break;
@@ -2657,7 +2739,7 @@ if (SND) { const un = () => { SND.unlock(); SND.resume(); }; addEventListener("p
   document.addEventListener("visibilitychange", () => { if (document.hidden) SND.pause(); else SND.resume(); }); }
 if (NATIVE) { const rg = m => { ringer = (m && m.mode) || "normal"; if (SND) SND.setMuted(ringer !== "normal"); const el = $("snd-prof"); if (el) el.textContent = sndProfile(); };
   const ask = () => nat("Ringer", "getMode").then(rg, () => {}); ask();
-  try { window.Capacitor.addListener("Ringer", "ringerChange", rg); window.Capacitor.addListener("App", "resume", () => { ask(); nfSync(); }); } catch (e) {} }
+  try { window.Capacitor.addListener("Ringer", "ringerChange", rg); window.Capacitor.addListener("App", "resume", () => { ask(); nfSync(); widgetSync(); }); } catch (e) {} }
 nfSync();
 (() => { const sp = $("splash"), h = document.documentElement;
   let first = true; try { first = !sessionStorage.getItem("ie.splash"); sessionStorage.setItem("ie.splash", "1"); } catch (e) {}

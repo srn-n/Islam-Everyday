@@ -906,6 +906,18 @@ button.c{font:inherit;color:inherit;cursor:pointer;transition:transform .15s var
 .sky .cd-off{font-size:.82rem;opacity:.85}
 .sky .forb-warn{margin-top:10px;max-width:460px;font-size:.84rem;line-height:1.45;font-weight:400;padding:7px 11px;border-radius:12px;background:rgba(5,18,26,.38);border:1px solid rgba(255,255,255,.22);text-shadow:none}
 .sky .forb-warn .linkish{color:inherit;opacity:.95;margin-left:2px}
+/* a window is on now: a clear status with the time left, then the detail */
+.sky .forb-warn.on{padding:9px 12px 10px;background:rgba(40,22,4,.5);border-color:rgba(255,196,110,.62);box-shadow:inset 3px 0 0 #F2B65A}
+.sky .forb-warn.on p{margin:0}
+.sky .fw-h{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:.95rem}
+.sky .fw-h b{font-weight:600}
+.sky .fw-dot{width:8px;height:8px;border-radius:50%;background:#F2B65A;flex:none;animation:fw-pulse 2.4s ease-in-out infinite}
+.sky .fw-left{margin-left:auto;font-size:.82rem;opacity:.9;white-space:nowrap}
+.sky .fw-left b{font-size:.92rem}
+.sky .fw-d{margin-top:4px!important;opacity:.92}
+@keyframes fw-pulse{0%,100%{box-shadow:0 0 0 0 rgba(242,182,90,.55)}50%{box-shadow:0 0 0 5px rgba(242,182,90,0)}}
+@media (prefers-reduced-motion:reduce){.sky .fw-dot{animation:none}}
+html[data-motion="off"] .sky .fw-dot{animation:none}
 .fw-sheet{display:grid;gap:10px;margin-top:10px;line-height:1.6}
 .fw-src{display:grid;gap:6px;font-size:.9rem}
 .fw-src a{color:var(--accent)}
@@ -1369,6 +1381,8 @@ html.native .splash{animation:sp-sysbg .5s ease both,sp-failsafe .4s ease 12s fo
 html.native.sp-hold .splash{animation-play-state:paused!important}
 :root{--sys-ground:#EEF3F1}
 @media (prefers-color-scheme:dark){:root{--sys-ground:#08120F}}
+/* the app's own light or dark choice wins over the phone's, as it does for Android's launch screen (Appearance plugin) */
+html[data-theme="light"]{--sys-ground:#EEF3F1}html[data-theme="dark"]{--sys-ground:#08120F}
 @keyframes sp-sysbg{from{background-color:var(--sys-ground)}}
 /* Leaving the app from Today: the page sinks a little and fades into the ground colour while the doorway draws itself
    closed; Android then takes the app to the background. Coming back plays it in reverse. */
@@ -1712,28 +1726,13 @@ html.sp-long .splash.out .sp-door{animation:sp-through2 .5s cubic-bezier(.4,0,.2
 @keyframes sp-grow{to{transform:scale(1.22)}}
 @keyframes sp-through2{from{transform:scale(1.22)}to{transform:scale(1.8);opacity:0}}
 :root[data-motion="off"] html.sp-long .sp-door,html.sp-long[data-motion="off"] .sp-door{animation:none}
-/* Today, Nov 2026 (13th), phones: the day's five prayers in one row, and four shortcuts. Hidden on wide screens. */
-.today-strip,.today-short{display:none}
-@media (max-width:1023.98px){
-  .today-strip{display:block;margin:-4px 0 14px}
-  .ts-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 8px}
-  .ts-head h3{margin:0;font-size:1rem}
-  .ts-row{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
-  .ts-p button{position:relative;width:100%;min-height:92px;display:grid;justify-items:center;align-content:center;gap:4px;padding:10px 2px 8px;border-radius:16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer;box-shadow:var(--shadow-sm,none);transition:background-color .2s,border-color .2s,transform .2s var(--ease)}
-  .ts-n{font-size:.78rem;font-weight:600;line-height:1.15;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-  .ts-p b{font-size:.78rem;font-weight:600;color:var(--muted)}
-  .ts-c{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;transition:background-color .2s,border-color .2s}
-  .ts-c svg{width:14px;height:14px;fill:none;stroke:var(--on-accent);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:scale(.6);transition:opacity .2s,transform .3s cubic-bezier(.3,1.5,.5,1)}
-  .ts-p.on .ts-c{background:var(--accent);border-color:var(--accent)}
-  .ts-p.on .ts-c svg{opacity:1;transform:none}
-  .ts-p.cur button{border:2px solid var(--accent);padding:9px 1px 7px;background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
-  .ts-p.nxt button{border-color:color-mix(in srgb,var(--gold) 60%,var(--line))}
-  .ts-b{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:.62rem;font-weight:700;letter-spacing:.03em;padding:1px 7px;border-radius:99px;background:var(--accent);color:var(--on-accent);white-space:nowrap}
-  .ts-p.nxt .ts-b{background:var(--gold-soft);color:var(--gold)}
-  .ts-p button:active{transform:scale(.95)}
-  .today-short{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 16px}
-  .today-short button{display:grid;justify-items:center;gap:6px;padding:12px 4px;border-radius:16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:.76rem;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
-  .today-short .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--accent-2);color:var(--accent)}
-  .today-short .ic svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  .today-short button:active{transform:scale(.95)}
-}
+/* Nov 2026 (13th): the 3D prayer figure. The canvas lies over the drawn figure's box (same size); the contact points
+   of sujud are small dots, so they never cover the body. */
+.pv-3d,.pv-ov{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.pv-3d[hidden]{display:none}
+.pv-ov svg{width:100%;height:100%;display:block}
+.pv-dot{fill:#f2b53a;stroke:#fff;stroke-width:1.2;opacity:.95;animation:pv-dot 1.8s ease-in-out infinite;animation-delay:calc(var(--k)*110ms)}
+@keyframes pv-dot{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.pv-dot{animation:none}}
+:root[data-motion="off"] .pv-dot{animation:none}
+.pr-video.pv-full .pv-pic{width:min(100%,calc((100vh - 13rem) * 356 / 200));margin-inline:auto}

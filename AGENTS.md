@@ -274,6 +274,36 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 Add a new entry at the top for every change: date, summary, files, tests, open items.
 
+### 2026-11-15 (second): no blink on opening, opening starts at once, clean exit (uncommitted; owner to push)
+- Owner: "after opening the app it blinks for a nanosecond, every time", and "the page is stuck at first, then the
+  sun pops up; it feels laggy". Measured in Chromium at phone speed (4x CPU, a stand-in for Capacitor), screen
+  recorded frame by frame:
+  - Blink: 0.7 s after the door opened, `go()` removed the splash and the page's `door` class together; that swapped
+    the page's running rise animation (rise-door → rise-b), which restarted it from invisible: the whole page vanished
+    for a frame and faded in again (frame brightness 129 → 235 → 143). Fix: only the splash is removed; the class is
+    cleared by the next render.
+  - Stuck start: the splash is painted at about 0.1–0.2 s, but stayed frozen (sp-hold) until app.js had run and drawn
+    Today (0.6–1.3 s here). Fix: `assets/splash-go.js`, loaded right after the splash markup, hides Android's launch
+    screen and starts the opening two frames after it is painted; its opacity/transform animations play on while
+    app.js runs. app.js falls back as before and counts the four seconds from `window.__spT0`.
+  - "Sun pops up": the splash and the page cross-faded, so the doorway's sun and the name showed through over the
+    hero picture and verse. Fix: the doorway and words fade first (0.2 s), the ground lifts from 0.16 s, the page
+    rises from 0.14 s under it (app.css: `.splash.out .sp-in`, `.splash` transition, `rise-door` delay).
+- Also: Bangla About credit for the Today pictures said seven (now twelve: seven Figma, five Picsart). The .md files
+  stay in the repository after all (owner); the test guard `local()` in tests/helpers.mjs is harmless and kept.
+- AI mentions checked (owner): no tool or company is named except the picture credits (Figma, Picsart); the app says
+  plainly where text was drafted "with an AI assistant" (Qur'an study notes and stories, 99 Names stories) and that
+  the pictures are AI-made, not real places. Left as they are (honest labels).
+- Checked: 213 tests; browser phase53 63/63, phase54 14/14, offline 11/11; recordings: opening starts at 0.2 s, no
+  bright frame on exit, no doorway over the hero.
+
+### 2026-11-15: build #15 in IslamEverydayApp
+- "Android bundle" #15 for `455dfa7` succeeded (2 min 47 s). Checked: SHA256SUMS match; AAB upload certificate Simply
+  Made Studio `24:92:23:50:…:2C:F1`; all 549 bundled web files equal `git show HEAD:` (sw.js and Capacitor files
+  skipped); the five new hero pictures, `patchKids` and Rowwad hero verses are in; manifest has PrayerWidget,
+  VerseWidget, VerseWidgetLarge; the AAB has the 10 launch doorways, 9 `Launch.*` themes and the widget previews.
+  APK, AAB and SHA256SUMS copied to IslamEverydayApp. Not yet tested on a phone.
+
 ### 2026-11-14 (fifth): launch colour matches the theme; no blink when coming back (uncommitted; owner to push)
 - Owner: the app opened on a near-white screen, then shifted to the theme colour; and it blinked once or twice when
   coming back from recent apps. Causes: Android's launch screen and window were always Classic/Jade

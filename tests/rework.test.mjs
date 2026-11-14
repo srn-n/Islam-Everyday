@@ -115,7 +115,11 @@ test("tab bar is kept and updated, so its pill slides; segmented controls have a
 });
 
 test("opening: the app hands over at the first painted frame; the page waits drawn and settles as the door opens", () => {
-  assert.match(app, /requestAnimationFrame\(\(\) => requestAnimationFrame\(release\)\);\n  setTimeout\(release, 1200\);/);
+  // 15 Nov 2026: assets/splash-go.js hands over two frames after the splash is painted, before app.js; app.js falls back.
+  assert.match(read("assets/splash-go.js"), /requestAnimationFrame\(function \(\) \{ requestAnimationFrame\(go\); \}\)/);
+  assert.match(app, /if \(window\.__spT0\) release\(\); else \{ requestAnimationFrame\(\(\) => requestAnimationFrame\(release\)\); setTimeout\(release, 1200\); \}/);
+  const html = read("index.html"); assert.ok(html.indexOf('id="splash"') < html.indexOf("assets/splash-go.js") && html.indexOf("assets/splash-go.js") < html.indexOf("assets/quran-meta.js"), "right after the splash, before the larger scripts");
+  assert.match(app, /if \(sp\) arm\(window\.__spT0\)/, "four seconds counted from the hand-over");
   assert.match(app, /const held = anim && !viaVT && underSplash\(\);/);
   assert.match(css, /\.view\.door\.enter>\*\{animation:rise-door/);
   assert.doesNotMatch(css, /\.view\.hold>\*\{opacity:0\}/, "the page is never hidden behind the splash (that forced a full repaint as the door opened)");

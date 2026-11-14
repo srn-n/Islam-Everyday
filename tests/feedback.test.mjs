@@ -2,10 +2,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
-import { read, loadBrowser } from "./helpers.mjs";
+import { read, loadBrowser, local } from "./helpers.mjs";
 
 const app = read("assets/app.js");
-const shipped = () => ["README.md", "index.html", "manifest.webmanifest", ...readdirSync(new URL("../assets", import.meta.url)).filter(f => f.endsWith(".js")).map(f => "assets/" + f)];
+const shipped = () => [...local(["README.md"]), "index.html", "manifest.webmanifest", ...readdirSync(new URL("../assets", import.meta.url)).filter(f => f.endsWith(".js")).map(f => "assets/" + f)];
 
 test("no email address is written out anywhere in the app or README", () => {
   for (const f of shipped()) {

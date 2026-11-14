@@ -2,12 +2,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
-import { read, loadBrowser, exists } from "./helpers.mjs";
+import { read, loadBrowser, exists, local } from "./helpers.mjs";
 
 const app = read("assets/app.js"), css = read("assets/app.css"), html = read("index.html");
 
 test("no credit under a personal name; Simply Made Studio is credited", () => {
-  const files = ["index.html", "README.md", "manifest.webmanifest", ...readdirSync(new URL("../assets", import.meta.url)).filter(f => f.endsWith(".js")).map(f => "assets/" + f)];
+  const files = ["index.html", ...local(["README.md"]), "manifest.webmanifest", ...readdirSync(new URL("../assets", import.meta.url)).filter(f => f.endsWith(".js")).map(f => "assets/" + f)];
   for (const f of files) assert.doesNotMatch(read(f), /Samiur|সামিউর/, f);
   assert.match(app, /© \$\{num\(2026\)\} Simply Made Studio/);
   const LG = loadBrowser("assets/legal.js").IE_LEGAL;

@@ -1426,7 +1426,7 @@ html.closing nav.tabs{transform:translateY(12px)}
 /* ================= Nov 2026 (2): opening, tab bar, segmented controls ================= */
 /* Behind the (opaque) splash the page is held: drawn, but still. As the door opens it settles into place by movement
    only. It stays fully drawn throughout, so nothing has to be painted from scratch at that moment and nothing blinks. */
-.view.door.enter>*{animation:rise-door .62s var(--bounce) both;animation-delay:calc(var(--i,0)*30ms)}
+.view.door.enter>*{animation:rise-door .62s var(--bounce) both;animation-delay:calc(140ms + var(--i,0)*30ms)}
 @keyframes rise-door{from{transform:translateY(26px) scale(.98)}to{transform:none}}
 /* Tab bar: the pill is its own element so it can stretch on the way (app.js nav()). */
 nav.tabs .ind::before{content:none}
@@ -1519,7 +1519,7 @@ nav.tabs button span{transition:color .25s,transform .35s var(--bounce)}
    internals, no letter-spacing or background movement), so the graphics chip plays it smoothly even while the app is
    still starting underneath. The doorway sits exactly where Android's launch screen draws it (res/drawable/
    splash_door.xml: the same arch, 120dp wide, centred), so the hand-over is invisible. Colours come from the theme. */
-.splash{cursor:pointer;position:fixed;inset:0;z-index:200;background:var(--ground);overflow:hidden;transition:opacity .45s cubic-bezier(.4,0,.2,1) .05s,visibility 0s linear .55s;animation:sp-failsafe .4s ease 12s forwards}
+.splash{cursor:pointer;position:fixed;inset:0;z-index:200;background:var(--ground);overflow:hidden;transition:opacity .38s cubic-bezier(.4,0,.2,1) .16s,visibility 0s linear .56s;animation:sp-failsafe .4s ease 12s forwards}
 .sp-in{position:absolute;inset:0;transition:transform .5s cubic-bezier(.4,0,.2,1)}
 .sp-logo{position:absolute;left:50%;top:50%;width:120px;height:130.5px;margin:-65.25px 0 0 -60px}
 .sp-door{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
@@ -1548,7 +1548,10 @@ html[data-lang="bn"] :is(.sp-tag,.sp-skip) [lang="bn"]{display:inline}
 html[data-lang="bn"] .sp-promise [lang="bn"]{display:inline-flex}
 /* Opening the door: everything grows a little and fades as the page rises behind it */
 .splash.out{opacity:0;visibility:hidden;pointer-events:none}
-.splash.out .sp-in{transform:scale(1.06)}
+/* 15 Nov 2026: in three steps that never overlap: the doorway and words fade first (0.2 s), then the plain ground
+   lifts (from 0.16 s), then the page rises (from 0.14 s, under the ground). They used to fade out together, so the
+   doorway's sun and the name showed through over the picture and the verse for a moment, like a glitch. */
+.splash.out .sp-in{opacity:0;transform:scale(1.06);transition:opacity .2s ease,transform .45s cubic-bezier(.4,0,.2,1)}
 @keyframes sp-o{to{opacity:1}}
 @keyframes sp-up{to{opacity:1;transform:none}}
 @keyframes sp-rise{to{transform:none}}

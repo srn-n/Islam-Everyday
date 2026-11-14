@@ -10,6 +10,9 @@ export const p = (...a) => join(ROOT, ...a);
 export const read = f => readFileSync(p(f), "utf8");
 export const json = f => JSON.parse(read(f));
 export const exists = f => existsSync(p(f));
+// Nov 2026 (owner): .md files are kept on the owner's computer only, not in the repository (.gitignore). Checks on them
+// run where they exist and are skipped in GitHub's build.
+export const local = files => files.filter(f => !f.endsWith(".md") || existsSync(p(f)));
 export const pad = n => String(n).padStart(3, "0");
 export const { skeleton } = createRequire(import.meta.url)(p("tools", "arabic-skeleton.cjs"));
 

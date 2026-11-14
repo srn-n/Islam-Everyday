@@ -56,3 +56,11 @@ test("Today redraws in place: coming back to the app or the minute tick changes 
   assert.match(app, /filter\(n => !\(n\.nodeType === 1 && n\.classList\.contains\("seg-th"\)\)\)/, "segment thumbs added by script are kept");
   assert.match(app, /v\.dataset\.pg = ""; todayTpl = null;/, "the loading state resets it");
 });
+
+test("open: no blink as the splash leaves; content fades before the ground; the page rises after", () => {
+  assert.match(app, /setTimeout\(\(\) => \{ sp\.remove\(\); \}, 700\);/);
+  assert.doesNotMatch(app, /sp\.remove\(\); v\.classList\.remove\("door"\)/, "removing door mid-rise restarted it from invisible (the blink)");
+  assert.match(css, /\.splash\.out \.sp-in\{opacity:0;transform:scale\(1\.06\);transition:opacity \.2s ease/);
+  assert.match(css, /transition:opacity \.38s cubic-bezier\(\.4,0,\.2,1\) \.16s,visibility 0s linear \.56s/);
+  assert.match(css, /\.view\.door\.enter>\*\{animation:rise-door \.62s var\(--bounce\) both;animation-delay:calc\(140ms \+ var\(--i,0\)\*30ms\)\}/);
+});

@@ -2113,7 +2113,7 @@ function vAbout() {
     ["নিষিদ্ধ সময়ের সতর্কতা", "সহিহ মুসলিম ৮৩১, সহিহ বুখারি ৫৮৬ এবং শাইখ ইবনে বাযের ফতোয়া ১৮৪৯৫ (binbaz.org.sa) অনুযায়ী; সূর্যোদয়, মধ্যাহ্ন ও সূর্যাস্তের সময় এই অ্যাপ আপনার অবস্থান থেকে হিসাব করে। মিনিটের সীমাগুলো আনুমানিক।"],
     ["আজকের আয়াত", "১৮০ দিনের একটি নির্দিষ্ট তালিকা (১ জানুয়ারি ২০২৬ থেকে গণনা), প্রতিটি আয়াত আগের আয়াত ও আল-মুখতাসার তাফসিরের সঙ্গে মিলিয়ে বাছাই করা; প্রয়োজনে প্রেক্ষাপট টীকা দেওয়া আছে। কোনো যোগ্য আলেম এখনো যাচাই করেননি।"],
     ["নামাজ শিক্ষা", "sunnah.com-এ যাচাই করা হাদিস এবং হানাফি ও শাফিই ফতোয়া উত্তর (IslamQA.org), ইসলামওয়েব ও ইসলামকিউএ থেকে সংক্ষেপিত। এটি ফতোয়া নয়, এবং এখনো কোনো যোগ্য আলেম যাচাই করেননি।"],
-    ["আজকের কার্ডের ছবি", "সাতটা ছবি (সেটিংস → নামাজের ছবি → ছবি) এই অ্যাপের জন্য নভেম্বর ২০২৬-এ Figma-র এআই ছবি-তৈরির টুল দিয়ে বানানো। এগুলো কোনো আসল জায়গার ছবি নয়।"],
+    ["আজকের কার্ডের ছবি", "বারোটা ছবি (সেটিংস → নামাজের ছবি → ছবি) এই অ্যাপের জন্য নভেম্বর ২০২৬-এ বানানো: সাতটা Figma-র এআই ছবি-তৈরির টুল দিয়ে, পাঁচটা Picsart-এর AI Playground দিয়ে। এগুলো কোনো আসল জায়গার ছবি নয়।"],
     ["উইজেটের ছবি", "Android হোম স্ক্রিন উইজেটের পেছনের সাতটা ছবি (সেটিংস → হোম স্ক্রিন উইজেট) এই অ্যাপের জন্য নভেম্বর ২০২৬-এ Picsart-এর এআই ছবি-তৈরির টুল দিয়ে বানানো। এগুলো কোনো আসল জায়গার ছবি নয়।"],
     ["লোগো", "মিহরাব-আকৃতির খোলা দরজায় উদীয়মান সূর্য—এই অ্যাপের জন্য আঁকা মৌলিক ভেক্টর ছবি (brand/ ফোল্ডার)।"],
     ["ফন্ট", "হিন্দ শিলিগুড়ি, শেহেরাজাদ নিউ ও তিরো বাংলা, SIL Open Font License 1.1, এই অ্যাপের সঙ্গেই সংযুক্ত।"]
@@ -2667,7 +2667,10 @@ nfSync();
     const v = $("view"), rise = v.classList.contains("hold");
     if (rise) { [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); v.classList.add("door"); }
     sp.classList.add("out"); if (rise) { v.classList.remove("hold"); v.classList.add("enter"); }
-    setTimeout(() => { sp.remove(); v.classList.remove("door"); }, 700);
+    // Only the splash goes. 15 Nov 2026: removing "door" here as well switched the page's rise animation (rise-door →
+    // rise-b) while it was still playing, so it restarted from invisible: the page blinked out and faded in again on
+    // every open. The class is cleared by the next render (v.className), long after the rise has finished.
+    setTimeout(() => { sp.remove(); }, 700);
     if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), rise ? 260 : 0); } };
   // How long the opening lasts once it is on screen. Nov 2026 (14th): the first open in a session (a cold start in the
   // app) plays the four-second opening; with reduced motion it shows the still picture for a moment instead. A tap or a
@@ -2679,9 +2682,11 @@ nfSync();
   // In the app the splash waits, still, under Android's launch screen (theme-boot.js adds sp-hold), which shows the same
   // doorway in the same place. It is handed over as soon as the first screen has been painted (two frames), no longer
   // after the fonts and the verse too: the doorway animates while they finish, and the door waits for them instead.
-  let rel = false; const release = () => { if (rel) return; rel = true; natQ("SplashScreen", "hide", { fadeOutDuration: 150 }); h.classList.remove("sp-hold"); if (sp) arm(performance.now()); };
-  requestAnimationFrame(() => requestAnimationFrame(release));
-  setTimeout(release, 1200); })();
+  // 15 Nov 2026: assets/splash-go.js normally does this before app.js runs (window.__spT0 = when); this is the fallback.
+  let rel = false; const release = () => { if (rel) return; rel = true;
+    if (!window.__spT0) { window.__spT0 = performance.now(); natQ("SplashScreen", "hide", { fadeOutDuration: 150 }); h.classList.remove("sp-hold"); }
+    if (sp) arm(window.__spT0); };
+  if (window.__spT0) release(); else { requestAnimationFrame(() => requestAnimationFrame(release)); setTimeout(release, 1200); } })();
 /* Android app: the Back button and leaving the app. Back closes an open sheet, then steps back through pages, then returns
    to Today; on Today the app closes into its door (a short fade into the doorway) and Android takes it to the background.
    Coming back reverses that fade. Presses while it is closing are ignored. */

@@ -2,6 +2,13 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## No blink when the app opens (15 November 2026)
+
+### Fixed
+- **Blink after opening:** the page no longer disappears for a moment and fades in again just after the opening ends.
+- **Opening:** it starts moving right away instead of waiting on a still doorway, and it hands over cleanly: the doorway and name fade first, then the page appears, so the sun no longer shows over the picture.
+- **About (Bangla):** the credit for the Today pictures now says twelve pictures.
+
 ## Smoother opening and coming back (14 November 2026, night)
 
 ### Fixed

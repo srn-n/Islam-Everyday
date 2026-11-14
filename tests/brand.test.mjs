@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { read, json, exists, p, loadBrowser } from "./helpers.mjs";
+import { read, json, exists, p, loadBrowser, local } from "./helpers.mjs";
 
 const pngSize = f => { const b = readFileSync(p(f)); assert.equal(b.toString("ascii", 1, 4), "PNG", `${f} is a PNG`); return [b.readUInt32BE(16), b.readUInt32BE(20)]; };
 
@@ -30,5 +30,5 @@ test("manifest, HTML and service worker icons exist with the declared sizes", ()
 });
 
 test("no unfinished markers ship", () => {
-  for (const f of ["index.html", "assets/app.js", "assets/app.css", "assets/data.js", "assets/names.js", "assets/guide.js", "sw.js", "README.md"]) assert.doesNotMatch(read(f), /\b(TODO|FIXME|XXX|lorem ipsum)\b/i, f);
+  for (const f of ["index.html", "assets/app.js", "assets/app.css", "assets/data.js", "assets/names.js", "assets/guide.js", "sw.js", ...local(["README.md"])]) assert.doesNotMatch(read(f), /\b(TODO|FIXME|XXX|lorem ipsum)\b/i, f);
 });

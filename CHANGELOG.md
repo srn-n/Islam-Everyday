@@ -2,6 +2,15 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## A new opening, Prayer guide icon, How to pray removed (14 November 2026)
+
+### Changed
+- **Opening:** a new four-second opening. The sky fills the doorway, the sun rises, a soft glow and two slow ripples spread, then the name, the studio and the line appear. It is built to stay smooth while the app starts underneath. A tap skips it; with reduced motion it shows the still picture for a moment.
+- **Prayer guide** has a new icon: a prayer mat.
+
+### Removed
+- **How to pray**, with its player, figures and files.
+
 ## Home-screen widgets, clearer avoided times, today's scene (13 November 2026, evening)
 
 ### Added

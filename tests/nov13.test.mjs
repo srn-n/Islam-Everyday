@@ -48,14 +48,6 @@ test("pictures behind the prayer: seven, small files, an honest note, the same d
   assert.match(css, /\.sky\[data-p="night"\] \.sky-tint\{/);
 });
 
-test("opening: five seconds on a cold start, tap to skip, in the theme's colours; new installs start on Sandstone Teal", () => {
-  assert.match(html, /<path class="sp-moon"/); assert.match(html, /<span class="sp-bar" aria-hidden="true"><i><\/i><\/span><span class="sp-skip">/);
-  assert.match(css, /html\.sp-long \.sp-bar i\{[^}]*animation:sp-bar 5s linear forwards\}/);
-  assert.match(app, /const MIN = first \? 5000 : 0;/);
-  assert.match(app, /lightTheme: "sandstone"/);
-  assert.match(read("assets/theme-boot.js"), /: \(st\.palette \|\| old\) \? "classic" : "sandstone";/);
-});
-
 test("Today is the earlier landing page again: no row of five prayers or shortcuts (removed at the owner's request)", () => {
   assert.doesNotMatch(app, /todayStrip|qtrk|today-short/); assert.doesNotMatch(css, /today-strip|today-short/);
   assert.match(app, /\$\{heroScene\(\)\}/); assert.match(app, /\$\{nfCard\(\)\}\n\n  <section class="card a-times">/);
@@ -63,13 +55,6 @@ test("Today is the earlier landing page again: no row of five prayers or shortcu
 
 test("tab slides: the old page leaves before the new one arrives, without blending", () => {
   assert.match(css, /html\[data-vt\]::view-transition-old\(root\),html\[data-vt\]::view-transition-new\(root\)\{mix-blend-mode:normal\}/);
-});
-
-test("How to pray: wide screens put the steps beside the video; sujud shows the head between the hands", () => {
-  assert.match(css, /\.v-pray\{display:grid;grid-template-columns:minmax\(0,1\.55fr\) minmax\(280px,1fr\)/);
-  const F = loadBrowser("assets/salah-fig.js").IE_SALAH_FIG;
-  const svg = F.draw(F.pose("sujud"), {}); assert.ok(svg.lastIndexOf("sl-cap") > svg.lastIndexOf("sl-shirt"), "head drawn last in sujud");
-  const w = F.draw(F.pose("stand"), { who: "woman" }); const after = w.slice(w.indexOf("sl-scarf")); assert.doesNotMatch(after, /sl-shirt/, "the scarf lies over the dress and sleeves");
 });
 
 test("Prayer guide on wide screens: two independent columns, sources across the bottom; phone order kept", () => {

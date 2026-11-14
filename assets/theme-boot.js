@@ -35,6 +35,4 @@
   r.setAttribute("data-lang", st.lang === "bn" ? "bn" : "en");
   // Android app (Nov 2026): app-only styles, and the splash holds its first frame until Android's launch screen fades (app.js).
   try { if (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) r.className += " native sp-hold"; } catch (e) {}
-  // Nov 2026 (13th): the first open in a session (a cold start in the app) plays the full five-second opening.
-  try { if (!sessionStorage.getItem("ie.splash")) r.className += " sp-long"; } catch (e) {}
 })();

@@ -9,20 +9,20 @@ const LOC = window.IE_LOCALE, VE = window.IE_VOTD_EN, DV = window.IE_DAYVIZ;
 /* Phone speed (Oct 2026): page data that the Today screen does not need is loaded only when its page opens, so a phone
    downloads about a third of the scripts before the first screen appears. LAZY lists each group's files in load order;
    bindLazy() picks up the globals they define. The service worker still precaches all of them for offline use. */
-const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"], pray: ["salah-fig", "salah", "salah-3d"] };
-let NM, NAMES = [], GD, HD, NW, SD, ST, SL = null, SF = null, S3 = null, LG = null, HCOLL = {}, NW_N = 0;
+const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"] };
+let NM, NAMES = [], GD, HD, NW, SD, ST, LG = null, HCOLL = {}, NW_N = 0;
 const lazyDone = new Set(), lazyP = {}, lazyFiles = new Set();
 /* Phones (touch screen) get the on-demand loading; computers with a mouse keep the previous behaviour: everything is
    loaded straight after the first screen, so their pages open with no "Loading…" step. */
 const phone = () => { try { return matchMedia("(pointer: coarse)").matches; } catch (e) { return false; } };
 function bindLazy() {
   NM = window.DINSATHI_NAMES; NAMES = NM ? NM.names : []; GD = window.IE_GUIDE; HD = window.IE_HADITH; NW = window.IE_NAWAWI;
-  SD = window.IE_STUDY; ST = window.IE_STORIES; LG = window.IE_LEGAL || null; SL = window.IE_SALAH && window.IE_SALAH_FIG ? window.IE_SALAH : null; SF = window.IE_SALAH_FIG || null; S3 = window.IE_SALAH_3D || null;
+  SD = window.IE_STUDY; ST = window.IE_STORIES; LG = window.IE_LEGAL || null;
   HCOLL = Object.assign({}, NW ? NW.COLLECTIONS : {}, HD ? HD.COLLECTIONS : {});
   NW_N = NW ? NW.HADITH.length : 0;
 }
 bindLazy();
-for (const g in LAZY) if ({ names: NM && window.IE_NAME_STORIES, guide: NM && GD, hadith: HD && NW, study: SD, stories: ST, legal: LG, pray: SL }[g]) lazyDone.add(g); // already on the page
+for (const g in LAZY) if ({ names: NM && window.IE_NAME_STORIES, guide: NM && GD, hadith: HD && NW, study: SD, stories: ST, legal: LG }[g]) lazyDone.add(g); // already on the page
 function need(g) {
   if (!g || lazyDone.has(g)) return Promise.resolve();
   if (!lazyP[g]) lazyP[g] = LAZY[g].reduce((p, n) => p.then(() => lazyFiles.has(n) ? 0 : new Promise((ok, no) => {
@@ -33,7 +33,7 @@ function need(g) {
 }
 /* Which group a route or a shared link needs (null: nothing extra). */
 const routeGroup = r => r.tab === "quran" ? (r.sub === "stories" ? "stories" : (r.sub === "all" || r.surah) ? null : "study")
-  : r.tab === "hadith" ? "hadith" : r.tab === "more" ? ({ names: "names", guide: "guide", about: "legal", terms: "legal", privacy: "legal", pray: "pray" }[r.sub] || null) : null;
+  : r.tab === "hadith" ? "hadith" : r.tab === "more" ? ({ names: "names", guide: "guide", about: "legal", terms: "legal", privacy: "legal" }[r.sub] || null) : null;
 const hashGroup = h => /^story\//.test(h) ? "stories" : /^name\//.test(h) ? "names" : /^(hadith|nawawi)\//.test(h) ? "hadith" : null;
 const PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"], ROWS = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
 const TABS = ["today", "quran", "hadith", "more"]; // Nov 2026: Hadith is a tab; Duas moved into More
@@ -153,9 +153,9 @@ const P = {
   expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
   shrink: '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',
   bell: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
-  prayfig: '<circle cx="12" cy="5" r="2.2"/><path d="M12 7.5v7M12 14.5l-3 5.5M12 14.5l3 5.5M8.5 10.5h7"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
-  guide: '<path d="M5 20V10a7 7 0 0 1 14 0v10M3 20h18M12 13v7M9.5 16h5"/>',
+  // Prayer guide (Nov 2026, 14th): a prayer mat with a pointed arch and a fringe (the old arch read like a headstone)
+  guide: '<rect x="5" y="3" width="14" height="15.5" rx="1.6"/><path d="M9 12.5V10.2c0-1.9 1.5-3.2 3-4.4 1.5 1.2 3 2.5 3 4.4v2.3M8.5 15h7M7.5 18.5v2.5M10.5 18.5v2.5M13.5 18.5v2.5M16.5 18.5v2.5"/>',
   hadith: '<path d="M7 3.5h10a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 11.5h6M9 15h3.5"/>',
   share: '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/>',
   image: '<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 16l-5-5-8.5 8.5"/>',
@@ -496,7 +496,7 @@ function vExtra(s) {
 /* ---------------- routing ---------------- */
 let R = { tab: TABS.includes(st.tab) ? st.tab : "today", sub: null, surah: 0, ayah: 0 };
 /* Face 7: zakat removed from the UI (route, nav, More, About). st.zk and assets/zakat.js are kept untouched; old #more/zakat links fall back to More. */
-const SUBS = ["duas", "names", "guide", "pray", "calendar", "dev", "settings", "about", "terms", "privacy", "feedback"];
+const SUBS = ["duas", "names", "guide", "calendar", "dev", "settings", "about", "terms", "privacy", "feedback"];
 /* Links from before Nov 2026: #duas now lives under More, #more/hadith is the Hadith tab. */
 const oldHash = h => h === "duas" ? "more/duas" : h === "more/hadith" ? "hadith" : h;
 const hashSub = h => SUBS.includes(h) ? h : (h.startsWith("more/") && SUBS.includes(h.slice(5)) ? h.slice(5) : null);
@@ -646,7 +646,7 @@ function render(anim, viaVT) {
   else if (R.tab === "quran" && R.sub === "stories") f = R.story ? vStory : vStories; // Face 7.1 Qur'an Stories
   else if (R.tab === "quran") f = R.sub === "all" || R.surah ? (desk() ? vQuranDesk : (R.surah ? vReader : vQuran)) : (desk() ? vStudyDesk : (R.study ? vStudyDetail : vStudy));
   else if (R.tab === "hadith") f = vHadith;
-  else f = { duas: vDuas, dev: vDev, guide: vGuide, pray: vPray, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy"), feedback: vFeedback }[R.sub] || vMore;
+  else f = { duas: vDuas, dev: vDev, guide: vGuide, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy"), feedback: vFeedback }[R.sub] || vMore;
   const g = routeGroup(R);
   if (g && !lazyDone.has(g)) { // page data not loaded yet: show a short loading state, then draw the page
     v.innerHTML = `<div class="lazy-wait" role="status"><svg class="mini-door" viewBox="96 76 320 348" aria-hidden="true"><defs><clipPath id="md-clip"><path d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392Z"/></clipPath></defs><g clip-path="url(#md-clip)"><circle class="md-sun" cx="256" cy="392" r="84"/></g><path class="md-arch" d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392M118 393H394"/></svg>${esc(t("pgloading"))}</div>`;
@@ -1505,7 +1505,7 @@ function nwGo(n) {
 function vMore() {
   const s = snap || snapshot(), hj = hijriNow(s);
   // Nov 2026 order: Duas, 99 Names, Prayer guide, Calendar, Developer message, then the rest as before.
-  const items = [["duas", "duas", t("duas_s")], ["names", "names", t("names_s")], ["guide", "guide", t("guide_s")], ["calendar", "calendar", hText(hj)], ["dev", "msg", t("dev_s")], ["pray", "prayfig", t("pray_s")], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["feedback", "mail", t("feedback_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
+  const items = [["duas", "duas", t("duas_s")], ["names", "names", t("names_s")], ["guide", "guide", t("guide_s")], ["calendar", "calendar", hText(hj)], ["dev", "msg", t("dev_s")], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["feedback", "mail", t("feedback_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
   return `<div class="page-head"><h2>${t("more")}</h2></div>${installCard()}
   <ul class="card menu">${items.map(([k, icn, sub]) => `<li><button type="button" data-act="go" data-tab="more" data-sub="${k}"><span class="ic">${ic(icn)}</span><span class="grow"><b>${t(k === "names" ? "names99" : k)}</b><small>${esc(sub)}</small></span>${ic("chev", "chev")}</button></li>`).join("")}</ul>`;
 }
@@ -1779,7 +1779,6 @@ function vGuide() {
   <section class="card pad g-intro"><p>${t("g_intro")}</p>
     <div class="g-school"><p class="note" id="g-sch-l">${t("g_school")}</p><div class="seg" role="group" aria-labelledby="g-sch-l">${[["hanafi", t("hanafi_s")], ["shafii", t("shafii_s")]].map(([k, l]) => `<button type="button" data-act="school" data-k="${k}" aria-pressed="${sc === k}">${l}</button>`).join("")}</div></div>
     <p class="note">${t("g_schoolh")}</p></section>
-  <button type="button" class="card row pr-link" data-act="go" data-tab="more" data-sub="pray"><span class="ic" aria-hidden="true">${ic("play")}</span><span class="grow"><b>${t("pray")}</b><span class="note">${t("pr_link")}</span></span>${ic("chev", "chev")}</button>
   <div class="g-col g-col-a">
   <section class="card pad g-sumc">
     <h3 class="sec-title" id="g-sum">${t("g_summary")} · ${t(sc === "hanafi" ? "hanafi_s" : "shafii_s")}</h3>
@@ -1797,120 +1796,6 @@ function vGuide() {
     <p style="margin-top:10px">${esc(L(GD.notes.scope))}</p></section></div>
   <section class="card pad g-srcc"><h3 class="sec-title">${t("sources")}</h3>${gSources(GD.prayers.flatMap(p => p.src).concat(GD.terms.flatMap(x => x.src), GD.notes.maliki.src))}
     <p class="note" style="margin-top:10px">${esc(L(GD.notes.review))}</p></section>`;
-}
-
-/* ---------------- HOW TO PRAY (Nov 2026, second version) ----------------
-   Plays like a short video: one clock runs through the whole two-rak'ah prayer (SL.timeline); each step moves the
-   figure (assets/salah-fig.js) into its position and holds it while the subtitle is read. A scrub bar with a mark per
-   step, play/pause, previous/next, speed and full screen. Close-ups show the hands from the front; in sujud the seven
-   parts light up. Reduced motion or Motion: off: the positions change without movement. */
-const PR = { t: 0, playing: false, raf: 0, last: 0, speed: 1, steps: [], times: [], total: 0, i: -1, sc: "", lang: "" };
-const praySchool = () => SL.SCHOOLS.includes(st.pray) ? st.pray : (school() === "shafii" ? "shafii" : "hanafi");
-const mmss = ms => { const s = Math.max(0, Math.round(ms / 1000)); return num(Math.floor(s / 60) + ":" + pad2(s % 60)); };
-const easeIO = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-function praySetup() {
-  const sc = praySchool();
-  const who = st.prWho === "woman" ? "woman" : "man";
-  if (PR.sc !== sc || PR.lang !== st.lang || PR.who !== who) { const keep = PR.sc === sc && PR.who === who ? PR.t : 0; PR.sc = sc; PR.who = who; PR.lang = st.lang; PR.steps = SL.steps(sc, who); PR.times = SL.timeline(PR.steps, st.lang); PR.total = PR.times[PR.times.length - 1].end; PR.t = Math.min(keep, PR.total); PR.i = -1; }
-}
-function prayStep(t) { const T = PR.times; let i = 0; while (i < T.length - 1 && t >= T[i].end) i++; return i; }
-function prayFrame() {
-  const g = $("pray-g"); if (!g || !SL || !SF) { prayStop(); return; }
-  const i = prayStep(PR.t), s = PR.steps[i], tm = PR.times[i], still = reduce || st.motion === "off";
-  let p = SF.pose(s.pose), k = 1, seg = [s.pose, s.pose, 1];   // seg: from which position to which, and how far (for the 3D figure)
-  if (i > 0 && PR.t < tm.moved && !still) {
-    const from = SF.pose(PR.steps[i - 1].pose), x = (PR.t - tm.start) / (tm.moved - tm.start), via = s.via && SF.pose(s.via);
-    k = x; seg = via ? (x < 0.5 ? [PR.steps[i - 1].pose, s.via, easeIO(x * 2)] : [s.via, s.pose, easeIO(x * 2 - 1)]) : [PR.steps[i - 1].pose, s.pose, easeIO(x)];
-    if (via) p = x < 0.5 ? SF.mix(from, via, easeIO(x * 2)) : SF.mix(via, SF.pose(s.pose), easeIO(x * 2 - 1));
-    else p = SF.mix(from, SF.pose(s.pose), easeIO(x));
-  }
-  const hold = PR.t >= tm.moved || still, ht = (PR.t - tm.moved) / (tm.end - tm.moved);
-  /* Nov 2026 (13th): the 3D figure (assets/salah-3d.js) is drawn from the same positions and the same clock. Until its
-     model has loaded, or where WebGL is missing, the earlier drawn figure is shown instead. */
-  const who = PR.who, cv = $("pray-3d"), svg = $("pray-fig"), ov = $("pray-ov");
-  let d3 = null;
-  if (cv && S3 && !PR.no3d) {
-    if (S3.ready(who)) { try { d3 = S3.draw(cv, SF, { who, a: seg[0], b: seg[1], t: seg[2], turn: hold && s.turn ? s.turn * Math.min(1, ht * 4) : 0, dark: document.documentElement.dataset.theme === "dark", turbah: s.turbah, points: s.points && hold, snap: PR.cut }); } catch (e) { d3 = null; PR.no3d = true; } PR.cut = false; }
-    else if (!PR.load3d) { PR.load3d = who; S3.load(who).then(() => { PR.load3d = null; PR.cut = true; if ($("pray-3d")) prayFrame(); }, () => { PR.load3d = null; PR.no3d = true; }); }
-  }
-  const on3 = !!(d3 && d3.ok);
-  if (cv) cv.hidden = !on3; if (svg) svg.style.visibility = on3 ? "hidden" : "";
-  if (ov) ov.innerHTML = on3 && d3.pts ? `<svg viewBox="0 0 ${cv.clientWidth} ${cv.clientHeight}" aria-hidden="true">${d3.pts.map((q, n) => `<circle class="pv-dot" style="--k:${n}" cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="3"/>`).join("")}</svg>` : "";
-  if (!on3) {
-  // The camera frames the figure: closer for sitting and prostration, wider for standing; it glides with the movement.
-  // Nov 2026: three-quarter front view (SF.draw), man or woman (PR.who).
-  const svg = $("pray-fig"); if (svg) { const box = SF.bbox3(p), H = Math.max(140, Math.min(210, box[3] - box[1] + 30)), W = H * 356 / 200, cx = (box[0] + box[2]) / 2;
-    svg.setAttribute("viewBox", `${(cx - W / 2).toFixed(1)} ${(box[3] + 6 - H).toFixed(1)} ${W.toFixed(1)} ${H.toFixed(1)}`); }
-  g.innerHTML = SF.draw(p, { who, points: s.points && hold, turbah: s.turbah, finger: hold && /^finger/.test(s.inset || ""), turnArrow: hold && s.turn ? Math.sign(s.turn) : 0 });
-  if (s.turn && hold) { const q = Object.assign({}, SF.pose(s.pose), { turn: s.turn * Math.min(1, ht * 4) }); g.innerHTML = SF.draw(q, { who, turbah: s.turbah, turnArrow: Math.sign(s.turn) }); }
-  }
-  // Close-up (front view of the hands, or the feet from behind): a card over the picture's top-left corner.
-  const ins = $("pray-inset");
-  if (ins) { const kind = hold ? s.inset : null;
-    if (ins.dataset.k !== (kind || "") || (kind && /^finger/.test(kind))) { ins.dataset.k = kind || "";
-      if (kind) ins.innerHTML = `<svg viewBox="0 0 110 118" aria-hidden="true">${SF.inset(kind, Math.max(0, ht), PR.who)}</svg><p>${esc(L(SL.INSET[kind]))}</p>`;
-      ins.classList.toggle("on", !!kind); } }
-  if (PR.i !== i) { PR.i = i; prayCaption(); }
-  const bar = $("pray-seek"); if (bar && !bar.dataset.drag) { bar.value = Math.round(PR.t); bar.style.setProperty("--p", (PR.t / PR.total * 100).toFixed(2) + "%"); }
-  const tl = $("pray-time"); if (tl) tl.textContent = mmss(PR.t) + " / " + mmss(PR.total);
-}
-function prayCaption() {
-  const s = PR.steps[PR.i], set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
-  set("pray-k", t("pr_step").replace("{k}", num(PR.i + 1)).replace("{n}", num(PR.steps.length)) + " · " + t("pr_rk").replace("{n}", num(s.rk)));
-  set("pray-t", L(s.t)); const d = $("pray-d"); if (d) d.innerHTML = escS(L(s.d));
-  const say = $("pray-say"); if (say) { say.hidden = !s.say; say.innerHTML = s.say ? `<span lang="ar-Latn">“${esc(s.say)}”</span>` : ""; }
-  document.querySelectorAll(".pr-list button").forEach((b, i) => { if (i === PR.i) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current"); });
-}
-function prayButtons() {
-  const pb = $("pray-play"); if (pb) { const end = PR.t >= PR.total; pb.innerHTML = ic(PR.playing ? "pause" : end ? "replay" : "play"); pb.setAttribute("aria-label", t(PR.playing ? "pr_pause" : end ? "pr_again" : "pr_play")); }
-  const big = $("pray-big"); if (big) big.hidden = PR.playing || (PR.t > 0 && PR.t < PR.total); // only before the start and at the end, like a video
-  const v = $("pr-video"); if (v) v.classList.toggle("playing", PR.playing);
-}
-function prayStop() { cancelAnimationFrame(PR.raf); PR.raf = 0; }
-function prayLoop(now) {
-  if (!$("pray-g")) { PR.playing = false; prayStop(); return; }
-  const dt = Math.min(100, now - (PR.last || now)); PR.last = now;
-  if (PR.playing) { PR.t = Math.min(PR.total, PR.t + dt * PR.speed); if (PR.t >= PR.total) { PR.playing = false; prayButtons(); } }
-  prayFrame();
-  if (PR.playing) PR.raf = requestAnimationFrame(prayLoop); else PR.raf = 0;
-}
-function prayPlay(on) {
-  if (on && PR.t >= PR.total) PR.t = 0;
-  PR.playing = on; prayButtons(); prayStop();
-  if (on) { PR.last = performance.now(); PR.raf = requestAnimationFrame(prayLoop); } else prayFrame();
-}
-function praySeek(t) { PR.t = Math.max(0, Math.min(PR.total, t)); PR.cut = true; prayFrame(); prayButtons(); }
-function prayFull(on) { const v = $("pr-video"); if (!v) return; v.classList.toggle("pv-full", on); document.documentElement.classList.toggle("pv-lock", on); const b = $("pray-fs"); if (b) { b.innerHTML = ic(on ? "shrink" : "expand"); b.setAttribute("aria-label", t(on ? "pr_exitfs" : "pr_fs")); } }
-document.addEventListener("visibilitychange", () => { if (document.hidden && PR.playing) prayPlay(false); });
-function vPray() {
-  praySetup(); const sc = PR.sc; prayStop(); PR.playing = false; PR.i = -1;
-  post.push(() => { prayFrame(); prayButtons(); });
-  return `<div class="page-head">${back()}<h2>${t("pray")}</h2></div>
-  <section class="card pad pr-intro"><p>${t("pr_intro")}</p>
-    <div class="pr-schools" role="group" aria-label="${esc(t("pr_school"))}">${SL.SCHOOLS.map(k => `<button type="button" class="chip" data-act="prschool" data-k="${k}" aria-pressed="${k === sc}">${esc(L(SL.NAMES[k]))}</button>`).join("")}</div>
-    <div class="pr-who seg" role="group" aria-label="${esc(t("pr_who"))}">${SL.WHO.map(k => `<button type="button" data-act="prwho" data-k="${k}" aria-pressed="${k === PR.who}">${t("pr_" + k)}</button>`).join("")}</div></section>
-  <section class="pr-video" id="pr-video" aria-label="${esc(t("pray") + ": " + L(SL.NAMES[sc]))}">
-    <div class="pv-pic" data-who="${PR.who}">
-      <svg id="pray-fig" viewBox="70 0 356 200" role="img" aria-labelledby="pray-t"><g id="pray-g"></g></svg>
-      <canvas id="pray-3d" class="pv-3d" aria-hidden="true" hidden></canvas><div id="pray-ov" class="pv-ov" aria-hidden="true"></div>
-      <div class="pv-inset si" id="pray-inset"></div>
-      <span class="pv-badge" aria-hidden="true">${esc(L(SL.NAMES[sc]))}</span><span class="pv-qibla" aria-hidden="true">${t("pr_qibla")} ↘</span>
-      <button type="button" class="pv-big" id="pray-big" data-act="prplay" aria-label="${esc(t("pr_play"))}">${ic("play")}</button>
-    </div>
-    <div class="pv-ctl">
-      <button type="button" class="pv-btn" data-act="prplay" id="pray-play"></button>
-      <button type="button" class="pv-btn" data-act="prstep" data-d="-1" aria-label="${esc(t("pr_prev"))}">${ic("prev")}</button>
-      <button type="button" class="pv-btn" data-act="prstep" data-d="1" aria-label="${esc(t("pr_next"))}">${ic("next")}</button>
-      <div class="pv-track"><span class="pv-marks" aria-hidden="true">${PR.times.map(x => `<i style="left:${(x.start / PR.total * 100).toFixed(2)}%"></i>`).join("")}</span><input type="range" id="pray-seek" min="0" max="${PR.total}" step="100" value="${Math.round(PR.t)}" aria-label="${esc(t("pr_seek"))}"></div>
-      <span class="pv-time" id="pray-time"></span>
-      <button type="button" class="pv-btn pv-speed" data-act="prspeed" aria-label="${esc(t("pr_speed"))}">${num(PR.speed)}×</button>
-      <button type="button" class="pv-btn" data-act="prfs" id="pray-fs" aria-label="${esc(t("pr_fs"))}">${ic("expand")}</button>
-    </div>
-    <div class="pv-sub" aria-live="polite"><p class="pv-k" id="pray-k"></p><p class="pv-say" id="pray-say" hidden></p><p class="pv-text"><b id="pray-t"></b> <span id="pray-d"></span></p></div>
-  </section>
-  <section class="card pad pr-notes-c"><h3 class="sec-title">${t("pr_notes")} · ${esc(L(SL.NAMES[sc]))}</h3><ul class="pr-notes">${SL.notes(sc, PR.who).map(x => `<li>${escS(L(x))}</li>`).join("")}</ul></section>
-  <section class="card pad pr-steps-c"><h3 class="sec-title">${t("pr_steps")}</h3><ol class="pr-list">${PR.steps.map((s, i) => `<li><button type="button" data-act="prgo" data-i="${i}"><span class="n">${num(i + 1)}</span><span class="grow">${esc(L(s.t))}</span><span class="note">${mmss(PR.times[i].start)}</span></button></li>`).join("")}</ol></section>
-  <section class="card pad pr-src-c"><p class="note st-draft" role="note">${t("pr_review")}</p><p class="note" style="margin-top:10px"><b>${t("pr_src")}:</b> ${SL.SOURCES[sc].map(esc).join("; ")}.</p></section>`;
 }
 
 let calM = null, calSel = null;
@@ -2426,7 +2311,7 @@ let nfT = 0, webPlan = [];
    of times and verses in its own language and theme colours (Widgets plugin → WidgetData.java); the widgets only read
    that, so they stay right for a week offline. Sent only when something changed. */
 let wgT = 0, wgSig = "";
-const widgetSync = () => { if (!NATIVE) return; clearTimeout(wgT); wgT = setTimeout(widgetRun, 1200); };
+const widgetSync = () => { if (!NATIVE) return; clearTimeout(wgT); wgT = setTimeout(afterSplash(widgetRun), 1200); };
 const wgHex = v => { const e = document.createElement("i"); e.style.color = v; document.body.appendChild(e); const c = getComputedStyle(e).color; e.remove();
   const m = c.match(/[\d.]+/g); if (!m || m.length < 3) return null; const a = m.length > 3 ? Math.round(+m[3] * 255) : 255;
   return "#" + [a, +m[0], +m[1], +m[2]].map(x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, "0")).join("").toUpperCase(); };
@@ -2453,7 +2338,9 @@ async function widgetRun() {
 let nfExact = "";
 const nfExactSet = r => { const v = (r && r.exact_alarm) || ""; if (v === nfExact) return; nfExact = v; if (R.tab === "more" && R.sub === "settings") render(); };
 const nfExactAsk = () => { if (NATIVE) nat("LocalNotifications", "checkExactNotificationSetting").then(nfExactSet, () => {}); };
-const nfSync = () => { clearTimeout(nfT); nfT = setTimeout(nfRun, 500); };
+/* Work that can wait (reminders, widget data) waits while the opening plays, so it cannot make it stutter. */
+const afterSplash = fn => () => { if ($("splash")) { setTimeout(afterSplash(fn), 400); return; } fn(); };
+const nfSync = () => { clearTimeout(nfT); nfT = setTimeout(afterSplash(nfRun), 500); };
 function nfRun() {
   if (!NATIVE) { webPlan = nfAny() && nfGranted() ? nfPlan(2) : []; return; }
   nat("LocalNotifications", "getPending").then(r => { const ns = ((r && r.notifications) || []).map(x => ({ id: x.id })); return ns.length ? nat("LocalNotifications", "cancel", { notifications: ns }) : 0; }).catch(() => {})
@@ -2554,13 +2441,6 @@ function act(a, d, b) {
     case "nfon": nfSet("all", true); break;
     case "nflater": st.nfAsk = true; save(); { const c = b.closest(".nf-card"); if (c) c.remove(); } break;
     case "heroinfo": openSheet(`<h3>${t("hq_title")}</h3><div class="fw-sheet"><p>${t("hq_b1")}</p><p>${t("hq_b2")}</p><p class="note">${t("hq_b3")}</p></div>`, b); break;
-    case "prplay": if (SL) prayPlay(!PR.playing); break;
-    case "prstep": if (SL) { const i = Math.max(0, Math.min(PR.steps.length - 1, prayStep(PR.t) + +d.d)); praySeek(PR.times[i].moved - (PR.playing ? 0 : 1)); if (!PR.playing) praySeek(PR.times[i].moved); } break;
-    case "prgo": if (SL) { praySeek(PR.times[+d.i].start); const el = $("pr-video"); if (el && el.getBoundingClientRect().top < 60) el.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }); if (!PR.playing) prayPlay(true); } break;
-    case "prspeed": { const S = [1, 0.75, 0.5, 1.25], i = (S.indexOf(PR.speed) + 1) % S.length; PR.speed = S[i]; b.textContent = num(PR.speed) + "×"; break; }
-    case "prfs": prayFull(!$("pr-video").classList.contains("pv-full")); break;
-    case "prwho": if (SL && SL.WHO.includes(d.k)) { st.prWho = d.k; save(); prayPlay(false); PR.sc = ""; const y = scrollY; render(false); scrollTo(0, y); } break;
-    case "prschool": if (SL && SL.SCHOOLS.includes(d.k)) { st.pray = d.k; save(); prayPlay(false); PR.sc = ""; const y = scrollY; render(false); scrollTo(0, y); } break;
     case "setscene": if (SCENES.includes(d.k)) {
       // Nov 2026: with "Change every day" on, a scene is not picked silently: ask to turn the daily change off first.
       if (st.sceneAuto) { openSheet(`<h3>${t("sc_auto_on")}</h3><p class="muted">${t("sc_auto_q").replace("{s}", esc(t("sc_" + d.k)))}</p>
@@ -2669,7 +2549,7 @@ function act(a, d, b) {
 }
 $("scrim").addEventListener("click", closeSheet);
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") { if (document.querySelector(".pv-full")) { prayFull(false); return; } closeSheet(); return; }
+  if (e.key === "Escape") { closeSheet(); return; }
   if (e.key === "Tab") { trapSheet(e); return; }
   const tg = e.target, typing = tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA" || tg.tagName === "SELECT" || tg.isContentEditable);
   if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -2705,7 +2585,6 @@ document.addEventListener("input", e => {
   else if (el.id === "n-search") { nQuery = el.value; $("names-list").innerHTML = namesList(); }
   else if (el.id === "c-search") { $("city-list").innerHTML = locSheet(el.value); }
   else if (el.id === "vol") { st.vol = +el.value; save(); if (SND) SND.setVolume(st.vol); }
-  else if (el.id === "pray-seek") { el.style.setProperty("--p", (+el.value / PR.total * 100).toFixed(2) + "%"); praySeek(+el.value); }
   else if (el.id === "ar-size") { st.ar = +el.value; save(); document.documentElement.style.setProperty("--ar-scale", st.ar); }
   else if (el.id === "fp-note") { const k = el.dataset.k, v = el.value.slice(0, 140), o = Object.assign({}, st.fplan[k]); if (v) o.n = v; else delete o.n; if (o.f || o.n) st.fplan[k] = o; else delete st.fplan[k]; save(); const cf = $("cp-fasts"); if (cf) cf.innerHTML = calFasts(snap || snapshot()); }
   else if (el.dataset.zk) { st.zk.v[el.dataset.zk] = el.value; save(); $("zk-result").innerHTML = zakatCalc(); }
@@ -2753,10 +2632,10 @@ nfSync();
     sp.classList.add("out"); if (rise) { v.classList.remove("hold"); v.classList.add("enter"); }
     setTimeout(() => { sp.remove(); v.classList.remove("door"); }, 700);
     if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), rise ? 260 : 0); } };
-  // How long the opening lasts once it is on screen. Nov 2026 (13th): the first open in a session (a cold start in the
-  // app) plays the full five-second opening (html.sp-long, set by theme-boot.js); a tap or a key skips it at any time.
-  // Later opens in the same session do not wait.
-  const MIN = first ? 5000 : 0;
+  // How long the opening lasts once it is on screen. Nov 2026 (14th): the first open in a session (a cold start in the
+  // app) plays the four-second opening; with reduced motion it shows the still picture for a moment instead. A tap or a
+  // key skips it at any time. Later opens in the same session do not wait.
+  const MIN = !first ? 0 : reduce || st.motion === "off" ? 1200 : 4000;
   const arm = t0 => { settled.then(() => setTimeout(go, Math.max(0, MIN - (performance.now() - t0)))); setTimeout(go, MIN + 1200); };
   if (sp) { sp.addEventListener("pointerdown", go); addEventListener("keydown", go, { once: true }); }
   if (!NATIVE) { if (sp) arm(0); return; }
@@ -2766,7 +2645,6 @@ nfSync();
   let rel = false; const release = () => { if (rel) return; rel = true; natQ("SplashScreen", "hide", { fadeOutDuration: 150 }); h.classList.remove("sp-hold"); if (sp) arm(performance.now()); };
   requestAnimationFrame(() => requestAnimationFrame(release));
   setTimeout(release, 1200); })();
-setTimeout(() => document.documentElement.classList.remove("sp-long"), 6500);
 /* Android app: the Back button and leaving the app. Back closes an open sheet, then steps back through pages, then returns
    to Today; on Today the app closes into its door (a short fade into the doorway) and Android takes it to the background.
    Coming back reverses that fade. Presses while it is closing are ignored. */
@@ -2785,7 +2663,6 @@ if (NATIVE) (() => {
       if (closing) return;
       if (document.body.classList.contains("printing")) return;
       if ($("splash")) { shut(); return; }
-      if (document.querySelector(".pv-full")) { prayFull(false); return; }
       if ($("sheet").classList.contains("on")) { closeSheet(); return; }
       if (depth > 0) { try { history.back(); return; } catch (e) {} }
       if (!isRoot(R)) { go(R.story ? { tab: "quran", sub: "stories" } : { tab: R.tab }, false); try { history.replaceState(R, ""); } catch (e) {} return; }

@@ -415,8 +415,6 @@ assets/theme-boot.js       Applies appearance, theme, glass and motion before fi
 assets/glossary.js         Word help for older English words (shown outside the translation)
 assets/heroes.js           Verses and hadiths for the Today, Hadith and Qur'an heroes and the reminders (generated: tools/heroes/)
 assets/sound.js            Touch sounds and five background sounds, generated on the device (no audio files)
-assets/salah.js            How to pray: steps, subtitles, timing and notes for five schools (draft, unreviewed)
-assets/salah-fig.js        How to pray: the figure (poses, inverse kinematics for the hands, close-ups)
 data/quran/                Per-surah Arabic, English, Bangla and Bangla short tafsir (bnt), editions.json, coverage.json, en-corrections.json
 docs/translation-audit.md  English translation audit: edition decision, evidence, corrections, review items
 docs/scholar-review.md     Review pack for a qualified scholar: hadith, 180 passages, flagged verses, checklist

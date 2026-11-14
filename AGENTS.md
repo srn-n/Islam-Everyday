@@ -90,7 +90,7 @@ A static single-page app: `index.html` loads plain scripts (no modules, no frame
 `theme-boot.js` (in `<head>`, applies theme before first paint), then `quran-meta.js`, `data.js`, `votd.js`,
 `votd-en.js`, `votd-day.js`, `en-rwwad.js`, `locale.js`, `dayviz.js`, `zakat.js`, `bnfix.js`, `xtrack.js`,
 `glossary.js`, `heroes.js`, `sound.js`, `app.js`. Large libraries (`hadith.js`, `nawawi.js`, `stories.js`, `study-notes.js`, `name-stories.js`,
-`legal.js`, `names.js`, `guide.js`, `study.js`, `salah.js`) are loaded on demand through `LAZY` / `need(group)` at the top of
+`legal.js`, `names.js`, `guide.js`, `study.js`) are loaded on demand through `LAZY` / `need(group)` at the top of
 `app.js`. Qur'an text is fetched per surah from
 `data/quran/{ar,en,bn,bnt}/NNN.json`.
 
@@ -102,9 +102,12 @@ Key ideas in `assets/app.js`:
 - **Settings and storage:** `st`, saved in `localStorage` under `dinsathi.web.v1`. Nothing leaves the device.
 - **Platform switches:** `desk()` = desktop layout (wide screen); `phone()` = `(pointer: coarse)`;
   `NATIVE` = running inside the Android app (Capacitor). CSS mirrors these with media queries and `html.native`.
-- **Opening splash:** the doorway animation (`#splash`). In the app it waits (class `sp-hold`) under Android's launch
-  screen until the first screen is painted and fonts plus the Verse for today are ready, then `release()` hides the
-  native splash and starts the animation (Capacitor `SplashScreen.hide`, 3 s failsafe in `capacitor.config.json`).
+- **Opening splash** (`#splash`, rebuilt 14 Nov 2026): 4 s on the first open in a session (`MIN`), a tap skips it,
+  later opens do not wait; reduced motion / Motion off: the still picture for 1.2 s. The doorway is a still SVG; the
+  sky, sun, glow, ripples and words are HTML layers animated with opacity and transform only (compositor, smooth while
+  the app starts underneath); a test enforces that. In the app it waits (class `sp-hold`) under Android's launch screen
+  until the first screen is painted, then `release()` hides the native splash and starts it (`SplashScreen.hide`).
+  Reminders and widget data wait until it is gone (`afterSplash`).
 - **Prayer times** are computed on the device (MWL, Karachi, ISNA, Egypt, Umm al-Qura; Shafi'i/Hanafi Asr) in the
   chosen city's time zone. No prayer-time API.
 - **Service worker** (`sw.js`, website only; the app has none): network-first for app code, cache-first for Qur'an
@@ -193,11 +196,9 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 **Next tasks, in order**
 
-0. Owner: commit and push the 13 Nov batch; get the new build. On the phone check: the five-second opening (cold start;
-   a tap skips it; colours follow the chosen theme), the new Today row of five prayers and shortcuts, the Ripple and
-   Soft bubble notification sounds (Android deletes the old Soft tap/Breeze channels), the Soft bubble touch sound,
-   Settings → Pictures (and the time-of-day tint), the Today ↔ More slide, An-Nawawi on a phone, How to pray (men and
-   women), switches animating.
+0. Owner: commit and push the 14 Nov batch; get the new build. On the phone check: the new four-second opening (cold
+   start; smooth; a tap skips it; no dark first second), the home-screen widgets (both kinds, pictures, Change
+   automatically), the avoided-times status on Today, the Prayer guide icon, Settings → Home-screen widgets.
 0b. Developer message (More) is a blank page on purpose: the owner will send the text.
 1. Test the `.apk` on a real Android phone: opening animation smoothness, Duas/Hadith opening speed, Back button and
    back gesture (Android 14–16), closing/reopening animation, rapid tab taps, light/dark theme and status bar,
@@ -217,11 +218,11 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 ---
 
-- **How to pray is a 3D figure (13 Nov, second batch, uncommitted):** `assets/salah-3d.js` draws a skinned human
-  figure in WebGL from the same `IE_SALAH_FIG.POSE` definitions as the 2D drawing, which stays as the fallback
-  (`PR.no3d`). Figures: `assets/figure/man.bin`, `woman.bin` (built by `tools/prayer-figure/build.py` from the
-  MakeHuman/MPFB2 CC0 base mesh, game-engine rig and weights). Source scene: `tools/prayer-figure/prayer-figure.blend`
-  (made by `export-poses.mjs` + `blender_scene.py`). Not reviewed by a scholar; the notice stays.
+- **How to pray was removed (14 Nov, owner's decision):** the page, its menu entry, the link on Prayer guide, its
+  files (`salah.js`, `salah-fig.js`, `salah-3d.js`, `assets/figure/`, `tools/prayer-figure/`), styles, text keys and
+  tests. Do not bring it back without the owner asking. Older entries below describe it as history only.
+- **Opening (14 Nov):** one 4 s style (see section 3); no `sp-long`. Background work waits for it (`afterSplash`).
+- **Prayer guide icon:** a prayer mat (`P.guide`); the old arch read like a headstone.
 - **Today** is the earlier page again: the row of five prayers and the shortcuts (13 Nov) were removed.
 - **Startup colour:** `AppearancePlugin.java` makes Android's launch screen follow the app's own light/dark choice
   (Android 12+); `--sys-ground` follows `data-theme`. Not yet checked on a phone.
@@ -243,6 +244,30 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 ## 10. Agent log (newest first)
 
 Add a new entry at the top for every change: date, summary, files, tests, open items.
+
+### 2026-11-14 (second): How to pray removed, new 4 s opening, Prayer guide icon (uncommitted; owner to push)
+- **How to pray removed** at the owner's request ("the video is just a mess"): route, `vPray` and the player code,
+  More menu entry, Prayer guide link, click/keyboard/Back handlers, lazy group, 50 text keys (en+bn), CSS, sw.js
+  precache entries, README lines, files `assets/salah.js`, `salah-fig.js`, `salah-3d.js`, `assets/figure/`,
+  `tools/prayer-figure/` (with the .blend). Tests for it removed; a test checks it stays gone. `#more/pray` lands on
+  More. The Figma file "Islam Everyday – widget pictures" is unrelated and kept.
+- **Opening rebuilt** (`index.html`, `app.css` "Opening (Nov 2026, 14th)", `app.js` boot, `theme-boot.js`): the old
+  one animated SVG internals, letter-spacing and a moving background gradient (main-thread work on Android WebView,
+  so it stuttered whenever the app was busy) across four CSS blocks with long/short/native variants. Now one block,
+  4 s: sky fills the doorway, the sun rises, a glow and two ripples, the name word by word, studio, line, promises; a
+  bar fills over 4 s. Only opacity/transform; `afterSplash` holds reminders and widget data until it has gone.
+  Same first frame as Android's launch screen (doorway outline, centred 120 px).
+- **Prayer guide icon:** prayer mat with a pointed arch and fringe.
+- Checked: frames at 0.2–4.6 s in EN light and BN dark at 390 px (app showing by 4.6 s, no errors); More menu and
+  Prayer guide page; `#more/pray`. Not checked on a phone (smoothness there is the real test).
+- Tests: studio.test.mjs rewritten for the new opening (+ How to pray gone, guide icon); rework/nov12/nov13/nov13b
+  How to pray and old-opening tests removed; 207 pass.
+
+### 2026-11-14: build #13 in IslamEverydayApp
+- "Android bundle" #13 for `9c0bfbd` succeeded. Checked: SHA256SUMS match; AAB upload certificate is Simply Made
+  Studio `24:92:23:50:…:2C:F1`; all 73 bundled web files equal `git show HEAD:` (figures and widget pictures
+  included; `sw.js` is skipped by design); PrayerWidget and VerseWidget are in the manifest. APK and AAB copied to
+  IslamEverydayApp. The three Notion tasks (widgets, avoided-times status, today's scene) moved to Done.
 
 ### 2026-11-13 (fourth batch): widget pictures (owner's request; uncommitted)
 - Seven new AI pictures for the widgets (see section 9), Settings section, About credits in both languages (the

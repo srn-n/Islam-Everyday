@@ -48,21 +48,6 @@ test("places: every country in Asia is listed, grouped by country, with unique i
   for (const k of Object.values(COUNTRIES)) { assert.ok(REGIONS.some(r => r[0] === k.r)); assert.ok(X.METHODS[k.m]); }
 });
 
-test("How to pray: three-quarter view, men and women", () => {
-  const SL = loadBrowser("assets/salah.js").IE_SALAH, F = loadBrowser("assets/salah-fig.js").IE_SALAH_FIG;
-  const w = F.draw(F.pose("sujudW"), { who: "woman", points: true }), m = F.draw(F.pose("sujud"), { points: true });
-  assert.match(w, /sl-scarf/); assert.doesNotMatch(w, /sl-pants|sl-cap/); assert.match(m, /sl-cap/); assert.match(m, /sl-pants/);
-  assert.equal((w.match(/class="sl-pt"/g) || []).length, 7);
-  const hw = SL.steps("hanafi", "woman");
-  assert.equal(hw.find(s => s.id === "qiyam").pose, "chest"); assert.equal(hw.find(s => s.id === "takbir").pose, "shoulder");
-  assert.equal(hw.find(s => s.id === "sujud").pose, "sujudW"); assert.equal(hw.find(s => s.id === "last").pose, "sitWf");
-  assert.equal(SL.steps("shafii", "woman").find(s => s.id === "sujud").pose, "sujudC");
-  assert.deepEqual(SL.steps("hanafi", "man").map(s => s.pose), SL.steps("hanafi").map(s => s.pose));
-  for (const k of SL.SCHOOLS) for (const s of SL.steps(k, "woman")) { assert.ok(F.POSE[s.pose], s.pose); assert.ok(/[ঀ-৿]/.test(s.d.bn)); }
-  assert.ok(F.inset("chest", 0.5, "woman").includes("si-scarf"));
-  assert.ok(SL.notes("maliki", "woman").length === SL.NOTES.maliki.length + 1);
-});
-
 test("motion: Slide and Fade, with a suggestion from the Android version", () => {
   assert.match(app, /const moRec = \(\) => \{ const v = andVer\(\); return v == null \? null : v >= 12 \? "subtle" : "fade"; \}/);
   assert.equal(I18N.en.mo_subtle, "Slide"); assert.equal(I18N.en.mo_fade, "Fade");

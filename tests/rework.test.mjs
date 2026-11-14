@@ -16,12 +16,21 @@ test("hero lines: at least 8 for each prayer and for Jumu'ah, at least 15 for th
   assert.equal(HR.HADITH_HERO.k, "h");
 });
 
-test("hero Qur'an text is the app's own data, unchanged, in Arabic, English and Bangla", () => {
+test("hero Qur'an text is published text, unchanged: Arabic and Bangla from the app's data, English from Rowwad", () => {
+  // 14 Nov 2026 (owner's request: simple English): the English is the Rowwad Translation Center's plain modern
+  // English (assets/en-rwwad.js, QuranEnc), copied unchanged; Pickthall stays in the Qur'an reader.
+  const RW = loadBrowser("assets/en-rwwad.js").IE_RWWAD;
   for (const x of [...Object.values(HR.PRAYER).flat(), ...HR.QURAN]) {
     if (x.k !== "q") continue;
-    for (const l of ["ar", "en", "bn"]) { const v = verses(l, x.s); x[l].forEach((t, i) => assert.equal(t, v[x.a - 1 + i], `${l} ${x.s}:${x.a + i}`)); }
+    for (const l of ["ar", "bn"]) { const v = verses(l, x.s); x[l].forEach((t, i) => assert.equal(t, v[x.a - 1 + i], `${l} ${x.s}:${x.a + i}`)); }
+    assert.equal(x.enSrc, "rw");
+    x.en.forEach((t, i) => assert.equal(t, RW.get(x.s, x.a + i)[0], `en ${x.s}:${x.a + i}`));
     assert.equal(x.en.length, x.b - x.a + 1);
   }
+  // the hero and reminders leave out only Rowwad's footnote numbers (no notes are shown there), never words
+  assert.match(app, /const heroTr = x => st\.lang === "en" && x\.enSrc === "rw" \? x\.en\.map\(v => v\.replace\(\/\\s\*\\\[\\d\+\\\]\/g, ""\)\)/);
+  assert.match(app, /const heroPlain = x => x\.k === "q" \? "“" \+ heroTr\(x\)/);
+  assert.equal(RW.META.version, "1.0.21");
 });
 
 test("hero hadiths carry a reference in both languages, a sunnah.com link and both texts; the weak forty-hadith narration is not used", () => {

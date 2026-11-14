@@ -132,6 +132,52 @@ final class WidgetData {
         return true;
     }
 
+    /** Bangla digits when the app is in Bangla. */
+    static String num(JSONObject d, long n) {
+        String s = String.valueOf(n);
+        if (d == null || !"bn".equals(d.optString("lang"))) return s;
+        StringBuilder b = new StringBuilder();
+        for (char ch : s.toCharArray()) b.append(ch >= '0' && ch <= '9' ? (char) ('০' + (ch - '0')) : ch);
+        return b.toString();
+    }
+
+    /** "in 2 h 15 min" / "in 15 min" (whole minutes, rounded up, so it never says 0 before the prayer begins). */
+    static String timeLeft(JSONObject d, long ms) {
+        long mins = Math.max(1, (ms + 59999) / 60000), h = mins / 60, m = mins % 60;
+        return h > 0 ? lab(d, "inH").replace("{h}", num(d, h)).replace("{m}", num(d, m)) : lab(d, "inM").replace("{m}", num(d, m));
+    }
+
+    /**
+     * The avoided time (the three sun-based ones, as on Today) to show now: its line, whether it is on now, and the
+     * next moment this changes. Returns null when none is on or about to begin.
+     */
+    static Object[] forbidden(JSONObject d, long now) {
+        JSONObject day = dayAt(d, now);
+        JSONArray f = day == null ? null : day.optJSONArray("f");
+        if (f == null) return null;
+        long soon = d.optLong("soon", 10) * 60000;
+        for (int i = 0; i < f.length(); i++) {
+            JSONArray w = f.optJSONArray(i); if (w == null) continue;
+            long a = w.optLong(0), b = w.optLong(1);
+            if (now >= a && now < b) return new Object[] { w.optString(2), true, b };
+            if (now < a && a - now <= soon) return new Object[] { w.optString(3), false, a };
+        }
+        return null;
+    }
+
+    /** The next time an avoided-time line appears (its advance notice), for the widget's wake-up. */
+    static long nextForbiddenNotice(JSONObject d, long now) {
+        JSONObject day = dayAt(d, now);
+        JSONArray f = day == null ? null : day.optJSONArray("f");
+        long soon = d == null ? 600000 : d.optLong("soon", 10) * 60000, best = 0;
+        if (f != null) for (int i = 0; i < f.length(); i++) {
+            JSONArray w = f.optJSONArray(i); if (w == null) continue;
+            long t = w.optLong(0) - soon;
+            if (t > now && (best == 0 || t < best)) best = t;
+        }
+        return best;
+    }
+
     static int col(JSONObject d, String k, int def) {
         try {
             return Color.parseColor(d.getJSONObject("col").getString(k));
@@ -164,6 +210,7 @@ final class WidgetData {
     static void refreshAll(Context c) {
         refresh(c, PrayerWidget.class);
         refresh(c, VerseWidget.class);
+        refresh(c, VerseWidgetLarge.class);
     }
 
     static void refresh(Context c, Class<?> cls) {
@@ -178,14 +225,23 @@ final class WidgetData {
      * Wakes this kind of widget at the next change (a prayer starting, or midnight). An ordinary (not exact) alarm:
      * Android may deliver it a little late, and it needs no permission. The widgets also refresh every 30 minutes.
      */
-    static void scheduleNext(Context c, Class<?> cls, int code, long at) {
+    static void scheduleNext(Context c, Class<?> cls, int code, long at) { scheduleNext(c, cls, code, at, false); }
+
+    /**
+     * exact: the prayer widget counts the minutes to the next prayer, so it asks for its next minute exactly, when the
+     * app may set exact alarms (it already asks for that for reminders). It is a non-waking alarm: while the phone
+     * sleeps nothing runs, and the widget catches up as soon as the screen is on. Otherwise Android times it.
+     */
+    static void scheduleNext(Context c, Class<?> cls, int code, long at, boolean exact) {
         try {
             AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
             Intent i = new Intent(c, cls).setAction(ACTION_TICK);
             PendingIntent pi = PendingIntent.getBroadcast(c, code, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
             if (am == null) return;
             if (at <= 0) { am.cancel(pi); return; }
-            am.set(AlarmManager.RTC, at + 1000, pi);
+            boolean ok = exact && (android.os.Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms());
+            if (ok) am.setExact(AlarmManager.RTC, at + 500, pi);
+            else am.set(AlarmManager.RTC, at + 1000, pi);
         } catch (Exception ignored) {}
     }
 }

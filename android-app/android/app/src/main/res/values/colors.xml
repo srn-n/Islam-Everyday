@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The app's ground colour (light theme): the launch screen and window behind the page, so opening never flashes white. -->
-    <color name="ground">#EEF3F1</color>
+    <!-- The launch screen's default ground and doorway colours (light): Sandstone Teal, the theme a new install starts
+         on (Nov 2026). Used before the app has saved a theme, and on Android 12 / 12L, which cannot pick a launch theme
+         per start. Android 13+ and Android 11 and older use the exact colours of the theme chosen in the app
+         (AppearancePlugin; tools/launch-themes.mjs). -->
+    <color name="ground">#F3EADB</color>
+    <color name="launch_accent">#0F5C66</color>
     <color name="colorPrimary">#0E6B5C</color>
     <color name="colorPrimaryDark">#0A4A40</color>
     <color name="colorAccent">#0E6B5C</color>

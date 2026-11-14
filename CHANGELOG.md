@@ -2,6 +2,31 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Smoother opening and coming back (14 November 2026, night)
+
+### Fixed
+- **Opening colour:** the app now opens on your theme's own colour, with no white screen first and no colour change (Android 13 and later, and Android 11 and older). Android 12 opens on Sandstone or Jade.
+- **Coming back to the app:** Today no longer blinks when you return from recent apps; only what changed is updated.
+
+## Simple English verses, time left on the widget, five new pictures (14 November 2026, evening)
+
+### Added
+- **Five new pictures for the Today card:** a red-rock river canyon, a mountain meadow, a mangrove river at dawn, a hillside village and a forest waterfall, made with Picsart's AI image generator.
+
+### Changed
+- **Verses in simple English:** the verse at the top of Today and of the Qur'an page, the prayer and Thursday reminders and the widgets now use the same plain modern English as the Verse for today (Rowwad Translation Center, QuranEnc.com), word for word. The Qur'an reader still uses Pickthall.
+- **Rowwad translation** updated to QuranEnc's newest version (1.0.21).
+- **Prayer times widget:** shows the time left to the next prayer instead of its clock time, and shows when voluntary prayer is avoided (after sunrise, before Dhuhr, before Maghrib).
+
+## Widget previews, new widget pictures, a large verse widget (14 November 2026, afternoon)
+
+### Added
+- **Verse for today (large):** a 4×4 widget with bigger text, so long verses show in full more often.
+
+### Changed
+- **Widget list:** each widget now shows a real preview instead of a blank card.
+- **Widget pictures:** seven new scenes (lavender fields, bamboo forest, glacier lake, olive grove, northern lights, green valley, spring blossom), made with Picsart's AI image generator.
+
 ## A new opening, Prayer guide icon, How to pray removed (14 November 2026)
 
 ### Changed

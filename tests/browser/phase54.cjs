@@ -1,4 +1,5 @@
 // Phase 5.4 release checks in a browser (not part of `npm test`): daylight-saving changes, high latitudes, Bangla
+// 14 Nov 2026: the avoided-times checks expect the status heading added on 13 Nov ("Voluntary prayer is avoided now").
 // numerals, right-to-left Arabic, keyboard reach and focus visibility, reduced motion across pages.
 // Needs Playwright and a running server:  npm start   then   node tests/browser/phase54.cjs [http://localhost:8080/]
 const { chromium, devices } = require("playwright");
@@ -36,7 +37,7 @@ const card = p => p.evaluate(() => ({ cur: document.querySelector("#cur-name")?.
   await ctx.close();
   ({ p, ctx } = await open(b, { time: `2026-10-04T${srOct4}:00+11:00`, state: S }));
   await p.clock.runFor(120000);
-  ok("DST start day: the sunrise note appears at that day's sunrise", /^Sunrise: voluntary prayer is avoided/.test((await card(p)).forb), (await card(p)).forb);
+  ok("DST start day: the sunrise note appears at that day's sunrise", /^Voluntary prayer is avoided now[\s\S]*\bSunrise: voluntary prayer is avoided/.test((await card(p)).forb), (await card(p)).forb);
   await ctx.close();
   ({ p, ctx } = await open(b, { time: "2026-04-05T12:00:00+10:00", state: S }));
   const fajrApr5 = hm((await times(p)).Fajr); await ctx.close();
@@ -56,7 +57,7 @@ const card = p => p.evaluate(() => ({ cur: document.querySelector("#cur-name")?.
   const [H, M] = dh.split(":").map(Number), z = new Date(Date.UTC(2026, 3, 20, H - 1, M - 6));
   ({ p, ctx } = await open(b, { time: z.toISOString(), zone: "Europe/London", state: { lang: "en", city: "lon" } }));
   c = await card(p);
-  ok("London, April (times reliable): countdown and zenith note work", !c.off && /begins in/.test(c.lbl) && /^Sun at its zenith/.test(c.forb), JSON.stringify(c));
+  ok("London, April (times reliable): countdown and zenith note work", !c.off && /begins in/.test(c.lbl) && /^Voluntary prayer is avoided now[\s\S]*\bSun at its zenith/.test(c.forb), JSON.stringify(c));
   await ctx.close();
   ({ p, ctx } = await open(b, { time: "2026-12-15T12:00:00+01:00", zone: "Europe/Oslo", state: { lang: "en", city: "gps", gps: { id: "gps", lat: 69.65, lng: 18.96, zone: "Europe/Oslo", en: "My location", bn: "আমার অবস্থান", g: "gps" } } }));
   c = await card(p);

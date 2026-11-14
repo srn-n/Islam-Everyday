@@ -1331,10 +1331,11 @@ html[data-vt][data-motion="fade"]::view-transition-new(root){animation:vt-fi .34
 /* Android app only (html.native, set by theme-boot.js). */
 html.native{-webkit-tap-highlight-color:transparent}
 html.native :is(button,a,.opt,nav.tabs){-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-:root{--sys-ground:#EEF3F1}
+/* The colour Android drew before the page. theme-boot.js sets it inline in the app (14 Nov 2026): this theme's own ground
+   on Android 13+ and 11 and older, the default Sandstone / Jade on Android 12. These are only the fallbacks. */
+:root{--sys-ground:#F3EADB}
 @media (prefers-color-scheme:dark){:root{--sys-ground:#08120F}}
-/* the app's own light or dark choice wins over the phone's, as it does for Android's launch screen (Appearance plugin) */
-html[data-theme="light"]{--sys-ground:#EEF3F1}html[data-theme="dark"]{--sys-ground:#08120F}
+html[data-theme="light"]{--sys-ground:#F3EADB}html[data-theme="dark"]{--sys-ground:#08120F}
 /* Leaving the app from Today: the page sinks a little and fades into the ground colour while the doorway draws itself
    closed; Android then takes the app to the background. Coming back plays it in reverse. */
 .bye{position:fixed;inset:0;z-index:300;display:grid;place-items:center;background:var(--ground);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .24s cubic-bezier(.4,0,.2,1),visibility 0s linear .24s}

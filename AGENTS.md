@@ -180,7 +180,7 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
 
 ## 9. Current state (update this with every change)
 
-*Last updated: 12 November 2026.*
+*Last updated: 14 November 2026.*
 
 - Latest pushed commit: `5eb7899` (13 November: the 12 Notion tasks, the 7th picture, guide/Today layout fixes).
   Working tree: only this note (AGENTS.md) changed since.
@@ -231,19 +231,96 @@ Android behaviour has so far been tested only with a stubbed Capacitor in a brow
   and "Verse for today". The app sends seven days of data in its language and theme colours (`widgetSync` →
   `Widgets` plugin → `WidgetData.java`, SharedPreferences `ie_widgets`); `PrayerWidget`/`VerseWidget` only read it,
   wake at the next prayer or midnight with an ordinary alarm, and refresh every 30 minutes. Nothing leaves the phone.
-- **Widget pictures (13 Nov, evening):** 7 scenes other than the hero's (`WPICS`: waterfall, river, snow, wheat,
-  garden, stars, autumn; `assets/widgets-img/*.webp`, 960 px, Figma AI file "Islam Everyday – widget pictures",
-  `tools/widget-pictures.py`). Settings ▸ Home-screen widgets (Android app only): theme colour, a picture, or
+- **Widget pictures (13 Nov; replaced 14 Nov):** 7 scenes other than the hero's (`WPICS`: lavender, bamboo, glacier,
+  olive, aurora, valley, blossom; `assets/widgets-img/*.webp`, 960 px, generated with Picsart's AI Playground in the
+  owner's account, `tools/widget-pictures.py`). Widget list previews: `res/drawable-nodpi/wg_prev_*.webp` from
+  `tools/widget-previews.mjs` (`previewImage`; a `previewLayout` showed blank cards). Third widget: Verse for today
+  large (4x4, `VerseWidgetLarge` extends `VerseWidget`, `widget_verse_large.xml`). Settings ▸ Home-screen widgets (Android app only): theme colour, a picture, or
   "Change automatically" (default: one step on at each prayer time, rule `dn × 5 + prayers begun`, same in
   `wgPicAt` and `WidgetData.picAt`). The phone crops each picture to the widget, rounds it and adds a dark wash;
   text turns white with a gold highlight.
 - **Hero during avoided times:** while a window is on, `forbiddenLine` shows a status (`.forb-warn.on`) with a bold
   heading and the time left (ticks each second); the 10-minute advance note is unchanged.
 - **Scene settings:** the marked card is `sceneToday()` (with Change every day on, labelled "Today").
+- **Prayer widget (14 Nov, fourth):** under the place it shows the time left to the next prayer ("in 2 h 15 min",
+  minutes rounded up, no seconds) instead of the clock time; during the three sun-based avoided windows (sunrise
+  +15 min, 10 min before Dhuhr, 15 min before Maghrib, from `widgetData().days[].f`) it shows "Voluntary prayer
+  avoided until …" in amber (and "… from …" in the `FORB_SOON` minutes before). It wakes each minute with a
+  non-waking exact alarm when Android allows it (`WidgetData.scheduleNext(..., exact)`). After-Fajr and after-Asr
+  windows are not on the widget (they depend on the tracker).
+- **Launch colour (14 Nov, fifth):** the app opens on its theme's own ground with no colour shift. Android 13+:
+  `AppearancePlugin.applySplash` sets the next start's launch theme to the light/dark pair's `Launch.<Light>.<Dark>`
+  (9 styles in `res/values-v31/launch_themes.xml`, colours `lg_*`/`la_*` switching with night mode, doorways
+  `splash_door_<l>_<d>.xml`, all generated from app.css by `node tools/launch-themes.mjs`; referenced as `R.style`
+  constants so the build keeps them). Android 11 and older: the first frame is the window, painted in
+  `AppearancePlugin.ground()`. Android 12 / 12L can only switch light/dark: default Sandstone / Jade
+  (`values*/colors.xml`), and the opening eases from it (`--sys-ground`, set inline by theme-boot.js; elsewhere it is
+  `var(--ground)` so nothing moves). JS sends `{mode, light, dark}` whenever one of them changes.
+- **No blink when coming back (14 Nov, fifth):** quiet redraws of Today (`render(false)`: coming back to the app,
+  the minute tick, a reminder ticked) go through `patchKids`, which compares the previous and new markup (templates)
+  and changes only what differs; the hero picture, sky and arc stay. Other pages still redraw whole. Night mode is set
+  again only when it changes (`getDefaultNightMode() != want`, prefs `nm`).
+- **Simple English for verses outside the reader (14 Nov, owner's request):** the Today hero, the Qur'an page hero,
+  prayer and Thursday reminders, the widgets, the Verse for today and Ayat al-Kursi all use the Rowwad Translation
+  Center's plain modern English (QuranEnc), copied unchanged (`assets/en-rwwad.js`, now v1.0.21: 293 verses, from
+  `tools/import-rwwad-subset.py <sqlite> 1.0.21`, then `node tools/heroes/build.mjs`). The hero and reminders hide
+  only its footnote numbers (`heroTr`); the Verse for today shows them with the notes. The Qur'an reader keeps
+  Pickthall (1930). No translation text was written or edited by us (rule 7).
+- **Hero pictures (14 Nov, fourth):** 12 (`PHOTOS`): the seven Figma ones plus canyon, meadow, mangrove, village and
+  falls made on Picsart (owner's account, AI Playground, GPT Image 2.5 Sunburst, 2K 16:9). `tools/hero-pictures.py`
+  lowers WebP quality per file until it is under 105 KB. Adding pictures shifts which one shows on a given day.
 
 ## 10. Agent log (newest first)
 
 Add a new entry at the top for every change: date, summary, files, tests, open items.
+
+### 2026-11-14 (fifth): launch colour matches the theme; no blink when coming back (uncommitted; owner to push)
+- Owner: the app opened on a near-white screen, then shifted to the theme colour; and it blinked once or twice when
+  coming back from recent apps. Causes: Android's launch screen and window were always Classic/Jade
+  (`#EEF3F1`/`#08120F`) while a new install's theme is Sandstone (`#F3EADB`), and the page faded from one to the other;
+  coming back redrew the whole Today page (`visibilitychange` → `render(false)`, often a second time on the minute
+  tick), recreating the picture and the sky.
+- Fix: per-theme launch screens (Android 13+), theme-coloured first frame (11 and older), Sandstone/Jade default
+  (Android 12); in-place redraw of Today. Files: `AppearancePlugin.java`, `MainActivity.java`, `res/values*/colors.xml`,
+  `res/values*/launch_colors.xml`, `res/values-v31/launch_themes.xml`, `res/drawable/splash_door*.xml`,
+  `tools/launch-themes.mjs`, `assets/theme-boot.js`, `assets/app.js` (`patchKids`, `Appearance.set` payload, segThumbs),
+  `assets/app.css` (`--sys-ground` fallbacks), tests `launch.test.mjs`, `nov13b.test.mjs`.
+- Browser suites updated for earlier renames/text (Plum → Teal, Emerald → Sky, the avoided-times heading) and a slow
+  scroll: phase53 63/63, phase54 14/14, offline 11/11, phase52 51/52 (the one left: a Bangla calendar wording check,
+  not touched by this change; to look at).
+- Checked: 212 tests pass; `assembleDebug` + `lintDebug` 0 errors; in a browser Today kept its nodes over three
+  "come back" redraws (15 small text changes). Not seen on a phone: check cold start in each theme, Android 12 if one
+  is at hand, and coming back from recents.
+
+### 2026-11-14 (fourth): widget time left and avoided times, simple English verses, five hero pictures (uncommitted; owner to push)
+- Prayer widget: time left instead of the clock time under the place; the three sun-based avoided windows shown in
+  amber while on and in the minutes before (`PrayerWidget.java`, `WidgetData.java` `timeLeft`/`forbidden`/
+  `nextForbiddenNotice`/exact `scheduleNext`, `widget_prayer.xml`; JS `widgetData()` sends `f`, `soon`, `inH`, `inM`;
+  keys `wg_in_h`, `wg_in_m`, `fw_w_now`, `fw_w_soon`; preview image redrawn).
+- "Use simple English for the verse in the hero, prayer notifications and the verse there": the Verse for today
+  already used Rowwad; the heroes and reminders used Pickthall. Now all of them use Rowwad, copied unchanged.
+  QuranEnc had issued v1.0.21 (footnotes renumbered across the whole translation; 2:45 reworded), so
+  `en-rwwad.js` and the Ayat al-Kursi card were updated to it as its terms require. Files: `tools/import-rwwad-subset.py`,
+  `tools/heroes/build.mjs`, `assets/en-rwwad.js`, `assets/heroes.js`, `assets/app.js` (`heroTr`, About credit),
+  `assets/data.js` (`hq_b2` en+bn, Ayat al-Kursi), `tests/rework.test.mjs`.
+- Five hero pictures from Picsart (`assets/heroes-img/{canyon,meadow,mangrove,village,falls}{,-s}.webp`, labels
+  `ph_*` en+bn, About credit, `tools/hero-pictures.py`, tests `nov13`, `nov13c`).
+- Checked: 209 tests pass; `assembleDebug` + `lintDebug` 0 errors; pictures and hero text looked at. Not seen on a phone.
+
+### 2026-11-14 (third): widget previews, Picsart pictures, large Verse for today (uncommitted; owner to push)
+- The phone's widget list showed blank white cards: `previewLayout` pointed at the real layouts, whose text the app
+  fills in later. Now each widget has a `previewImage` drawn like the real widget (picture, wash, white text; the
+  verses copied word for word from the app's widget data): `tools/widget-previews.mjs` → `drawable-nodpi/*.webp`.
+- Widget pictures replaced with seven made on Picsart (owner's Pro account, AI Playground, GPT Image 2.5 Sunburst,
+  2K 16:9) through the built-in browser; the Picsart connector itself cannot generate images. Names, settings
+  labels (en+bn), About credits, default (`lavender`) updated; old stored choices fall back to `lavender`.
+- New widget "Verse for today (large)", 4x4, bigger text (13–24 sp autosize), own alarm (code 3).
+- Checked: `assembleDebug` + `lintDebug` 0 errors; previews looked at; 208 tests pass. Not seen on a phone.
+
+### 2026-11-14: build #14 in IslamEverydayApp
+- "Android bundle" #14 for `70b7eb4` succeeded. Checked: SHA256SUMS match; AAB upload certificate Simply Made Studio
+  `24:92:23:50:…:2C:F1`; all 68 bundled web files equal `git show HEAD:`; no How to pray files in the app; the new
+  opening is in; both widgets in the manifest. APK and AAB copied to IslamEverydayApp.
 
 ### 2026-11-14 (second): How to pray removed, new 4 s opening, Prayer guide icon (uncommitted; owner to push)
 - **How to pray removed** at the owner's request ("the video is just a mess"): route, `vPray` and the player code,

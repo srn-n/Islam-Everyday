@@ -34,5 +34,13 @@
   // Nov 2026: the splash shows its one line of text in the chosen language before app.js runs.
   r.setAttribute("data-lang", st.lang === "bn" ? "bn" : "en");
   // Android app (Nov 2026): app-only styles, and the splash holds its first frame until Android's launch screen fades (app.js).
-  try { if (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) r.className += " native sp-hold"; } catch (e) {}
+  try { if (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) {
+    r.className += " native sp-hold";
+    // 14 Nov 2026: what Android drew before the page. Android 13+ (the theme pair's own launch screen) and Android 11 and
+    // older (the window, in the theme's ground) already show this theme's colour, so the opening starts on it and
+    // nothing shifts. Android 12 / 12L can only show the default Sandstone or Jade (res/values/colors.xml): the opening
+    // eases from that colour (app.css, sp-sysbg).
+    var a12 = /Android 12[;) L]/.test(navigator.userAgent || "");
+    r.style.setProperty("--sys-ground", a12 ? (dark ? "#08120F" : "#F3EADB") : "var(--ground)");
+  } } catch (e) {}
 })();

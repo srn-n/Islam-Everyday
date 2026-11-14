@@ -31,12 +31,21 @@ public class PrayerWidget extends AppWidgetProvider {
             }
         }
         String pic = WidgetData.picAt(d, now);
-        for (int id : ids) m.updateAppWidget(id, build(c, m, id, d, day, nx, now, pic));
-        long next = day == null ? 0 : day.optJSONArray("p").optJSONArray(nx).optLong(2);
-        WidgetData.scheduleNext(c, PrayerWidget.class, 1, next);
+        Object[] fb = WidgetData.forbidden(d, now);
+        for (int id : ids) m.updateAppWidget(id, build(c, m, id, d, day, nx, now, pic, fb));
+        // wake at the next change: the next whole minute of the time left, a prayer beginning, or an avoided time
+        long next = 0;
+        if (day != null) {
+            long at = day.optJSONArray("p").optJSONArray(nx).optLong(2), left = at - now;
+            next = at - ((left - 1) / 60000) * 60000;
+            if (fb != null) next = Math.min(next, (long) fb[2]);
+            long notice = WidgetData.nextForbiddenNotice(d, now);
+            if (notice > 0) next = Math.min(next, notice);
+        }
+        WidgetData.scheduleNext(c, PrayerWidget.class, 1, next, true);
     }
 
-    private static RemoteViews build(Context c, AppWidgetManager m, int id, JSONObject d, JSONObject day, int nx, long now, String pic) {
+    private static RemoteViews build(Context c, AppWidgetManager m, int id, JSONObject d, JSONObject day, int nx, long now, String pic, Object[] fb) {
         RemoteViews v = new RemoteViews(c.getPackageName(), R.layout.widget_prayer);
         v.setOnClickPendingIntent(R.id.wg_root, WidgetData.open(c));
         if (day == null) {
@@ -52,11 +61,22 @@ public class PrayerWidget extends AppWidgetProvider {
         v.setViewVisibility(R.id.wg_empty, View.GONE);
         JSONArray p = day.optJSONArray("p"), next = p.optJSONArray(nx);
         boolean today = now >= day.optLong("from") && now < day.optLong("to");
-        v.setTextViewText(R.id.wg_label, WidgetData.lab(d, "next") + (today ? "" : " · " + WidgetData.lab(d, "tomorrow")));
         v.setTextViewText(R.id.wg_place, d.optString("place", ""));
         v.setTextViewText(R.id.wg_next_name, next.optString(0));
-        v.setTextViewText(R.id.wg_next_time, next.optString(1));
-        v.setTextColor(R.id.wg_label, muted); v.setTextColor(R.id.wg_place, muted);
+        // Nov 2026 (14th): the time left to the next prayer (whole minutes); its clock time is in the row below
+        v.setTextViewText(R.id.wg_next_time, WidgetData.timeLeft(d, next.optLong(2) - now));
+        v.setTextColor(R.id.wg_place, muted);
+        if (fb != null) {
+            // an avoided time is on (or begins within ten minutes): the top line says so, in amber
+            int amber = onPic ? 0xFFFFC46E : 0xFFB06A0E;
+            v.setTextViewText(R.id.wg_label, (boolean) fb[1] ? WidgetData.bold((String) fb[0]) : (String) fb[0]);
+            v.setTextColor(R.id.wg_label, amber);
+            v.setViewVisibility(R.id.wg_place, View.GONE);
+        } else {
+            v.setTextViewText(R.id.wg_label, WidgetData.lab(d, "next") + (today ? "" : " · " + WidgetData.lab(d, "tomorrow")));
+            v.setTextColor(R.id.wg_label, muted);
+            v.setViewVisibility(R.id.wg_place, View.VISIBLE);
+        }
         v.setTextColor(R.id.wg_next_name, ink); v.setTextColor(R.id.wg_next_time, acc);
         for (int k = 0; k < NAME.length; k++) {
             JSONArray r = p.optJSONArray(k); String n = r == null ? "" : r.optString(0), t = r == null ? "" : r.optString(1);

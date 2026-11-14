@@ -51,7 +51,7 @@ const KEY = "dinsathi.web.v1";
    (res/raw/ie_drop, ie_ripple, ie_bubble; previews in assets/sounds). */
 const NF_SND = ["default", "drop", "ripple", "bubble"]; // Nov 2026: "tap" and "breeze" were replaced
 const NF_OLD = ["tap", "breeze"]; // their channels are removed from the phone
-const DEF = { lang: "en", loc: "en-IN", mode: "system", lightTheme: "sandstone", darkTheme: "jade", glass: "balanced", motion: "subtle", scene: "landscape", sceneAuto: false, heroKind: "anim", photo: "mosque", wgMode: "auto", wgPic: "river", city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
+const DEF = { lang: "en", loc: "en-IN", mode: "system", lightTheme: "sandstone", darkTheme: "jade", glass: "balanced", motion: "subtle", scene: "landscape", sceneAuto: false, heroKind: "anim", photo: "mosque", wgMode: "auto", wgPic: "lavender", city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
   school: null, vib: "light", snd: true, sndK: "soft", vol: 60, nfSnd: "default", nf: { pray: false, forb: false, thu: false, tahajjud: false, duha: false }, nfAsk: false, pray: null, log: {}, xlog: {}, fplan: {}, gloss: false, last: null, read: [], bm: [], fav: [], tab: "today", hcol: "general", nwread: [],
   zk: { cur: "AUD", basis: "silver", w: "tola", price: "", v: {} } };
 let st = JSON.parse(JSON.stringify(DEF));
@@ -73,7 +73,7 @@ try {
   if (st.heroKind !== "photo") st.heroKind = "anim";
   if (!PHOTOS.includes(st.photo)) st.photo = "mosque";
   if (!["plain", "pic", "auto"].includes(st.wgMode)) st.wgMode = "auto";
-  if (!WPICS.includes(st.wgPic)) st.wgPic = "river";
+  if (!WPICS.includes(st.wgPic)) st.wgPic = "lavender";
   st.xlog = XT.clean(st.xlog);
   if (!st.fplan || typeof st.fplan !== "object" || Array.isArray(st.fplan)) st.fplan = {};
   if (st.hcol !== "nawawi") st.hcol = "general";
@@ -183,12 +183,12 @@ const MODES = ["system", "light", "dark"], LIGHT_TH = ["classic", "sky", "sandst
 const GLASS = ["subtle", "balanced", "high", "solid"], MOTION = ["off", "subtle", "fade"];
 const SCENES = ["landscape", "sky", "mosque", "dunes", "mountains", "sea", "forest", "fields", "canyon"];
 /* Nov 2026 (13th): pictures, as an alternative to the drawn scenes (st.heroKind "photo"). Generated for this app with
-   Figma's AI image tool; they show no real place. assets/heroes-img/<k>.webp (1200 px) and <k>-s.webp (720 px). */
-const PHOTOS = ["mosque", "dunes", "lake", "paddy", "coast", "pines", "tea"]; // the mosque is Friday's picture when it changes daily
-/* Nov 2026 (13th): pictures behind the Android widgets, other scenes than the hero's (assets/widgets-img/<k>.webp,
-   960 px; made like the hero pictures with Figma's AI image tool, tools/widget-pictures.py). st.wgMode: "plain" (the
+   Figma's AI image tool (the first seven) and Picsart's AI Playground (the last five, 14 Nov 2026); they show no real place. assets/heroes-img/<k>.webp (1200 px) and <k>-s.webp (720 px). */
+const PHOTOS = ["mosque", "dunes", "lake", "paddy", "coast", "pines", "tea", "canyon", "meadow", "mangrove", "village", "falls"]; // the mosque is Friday's picture when it changes daily
+/* Nov 2026 (13th; pictures replaced 14th): pictures behind the Android widgets, other scenes than the hero's
+   (assets/widgets-img/<k>.webp, 960 px; generated with Picsart's AI image generator, tools/widget-pictures.py). st.wgMode: "plain" (the
    theme colour), "pic" (st.wgPic) or "auto": a new picture at each prayer time, in this order. */
-const WPICS = ["waterfall", "river", "snow", "wheat", "garden", "stars", "autumn"];
+const WPICS = ["lavender", "bamboo", "glacier", "olive", "aurora", "valley", "blossom"];
 /* The picture "auto" shows at a moment: one step on at each prayer time, so it is the same in the app and on the
    phone (WidgetData.picAt uses the same rule: day number × 5 + prayers begun that day). */
 const wgPicAt = (dn, started) => WPICS[((dn * 5 + started) % WPICS.length + WPICS.length) % WPICS.length];
@@ -228,8 +228,10 @@ function applyTheme() {
   const m = document.querySelector('meta[name="theme-color"]');
   if (m) m.content = getComputedStyle(r).getPropertyValue("--ground").trim() || "#EEF3F1";
   const cs = document.querySelector('meta[name="color-scheme"]'); if (cs) cs.content = sc;
-  // Android: the launch screen of the next start follows the app's own choice (Appearance plugin)
-  if (NATIVE && natMode !== st.mode) { natMode = st.mode; natQ("Appearance", "set", { mode: st.mode }); }
+  // Android: the launch screen of the next start follows the app's own choice (Appearance plugin): the mode and, since
+  // 14 Nov 2026, the light and dark theme, so the app opens on exactly this ground colour with no shift.
+  const nk = st.mode + "|" + st.lightTheme + "|" + st.darkTheme;
+  if (NATIVE && natMode !== nk) { natMode = nk; natQ("Appearance", "set", { mode: st.mode, light: st.lightTheme, dark: st.darkTheme }); }
   if (NATIVE && barStyle !== sc) { barStyle = sc; natQ("SystemBars", "setStyle", { style: sc === "dark" ? "DARK" : "LIGHT" }); } // status bar icons: light on dark themes
 }
 // Following the system: redraw when the OS or browser switches between light and dark.
@@ -616,7 +618,8 @@ function segThumbs() {
   document.querySelectorAll(".seg").forEach(sg => {
     const b = sg.querySelector(':scope>button[aria-pressed="true"]'); let th = sg.querySelector(":scope>.seg-th");
     if (!b) { if (th) th.remove(); sg.classList.remove("has-th"); return; }
-    if (!th) { th = document.createElement("i"); th.className = "seg-th"; th.setAttribute("aria-hidden", "true"); sg.prepend(th); sg.classList.add("has-th"); }
+    if (!th) { th = document.createElement("i"); th.className = "seg-th"; th.setAttribute("aria-hidden", "true"); sg.prepend(th); }
+    sg.classList.add("has-th"); // (again after an in-place redraw that changed the segment's own class)
     const k = segKey(sg), x = b.offsetLeft, y = b.offsetTop, w = b.offsetWidth, h = b.offsetHeight, prev = SEGP.get(k);
     th.style.width = w + "px"; th.style.height = h + "px"; th.style.transform = `translate(${x}px,${y}px)`;
     if (prev && performance.now() - prev.t < 1500 && (prev.x !== x || prev.y !== y) && moving() && th.animate) {
@@ -634,6 +637,28 @@ function popChosen(a, k) {
 }
 let post = [], heroAnim = false;
 const underSplash = () => { const sp = $("splash"); return !!sp && !sp.classList.contains("out") && (NATIVE || phone()) && !reduce && st.motion !== "off"; };
+/* In-place redraw (14 Nov 2026). `prev` is the markup the page was last drawn from and `next` the new markup (both
+   detached templates); `live` is what is on screen. Only parts whose markup changed are touched, and only the
+   attributes that changed in the markup: what scripts set later (the sun's place on the arc, the ring, the segment
+   thumbs, the "read more" fit) stays as it is, and an unchanged picture is never reloaded. If the page on screen does not
+   have the shape `prev` describes, that part is simply drawn again. */
+let todayTpl = null;
+function patchKids(live, prev, next) {
+  const L = [...live.childNodes].filter(n => !(n.nodeType === 1 && n.classList.contains("seg-th"))), P = [...prev.childNodes], N = [...next.childNodes];
+  if (L.length !== P.length) { live.replaceChildren(...N.map(n => n.cloneNode(true))); if (live.classList && live.classList.contains("has-th")) live.classList.remove("has-th"); return; }
+  const k = Math.max(P.length, N.length);
+  for (let i = 0; i < k; i++) {
+    const l = L[i], p = P[i], n = N[i];
+    if (!n) { l.remove(); continue; }
+    if (!p) { live.appendChild(n.cloneNode(true)); continue; }
+    if (p.isEqualNode(n)) continue;
+    if (p.nodeType === 3 && n.nodeType === 3 && l.nodeType === 3) { l.data = n.data; continue; }
+    if (p.nodeType !== 1 || n.nodeType !== 1 || l.nodeType !== 1 || p.nodeName !== n.nodeName || l.nodeName !== n.nodeName) { l.replaceWith(n.cloneNode(true)); continue; }
+    for (const a of p.attributes) if (!n.hasAttribute(a.name)) l.removeAttribute(a.name);
+    for (const a of n.attributes) if (p.getAttribute(a.name) !== a.value) l.setAttribute(a.name, a.value);
+    patchKids(l, p, n);
+  }
+}
 function render(anim, viaVT) {
   // A redraw of the same page (for example the Today page each minute) puts keyboard focus back on the same control.
   const fa = !anim && document.activeElement, fd = fa && $("view").contains(fa) && fa.dataset && fa.dataset.act ? fa.dataset : null;
@@ -649,12 +674,17 @@ function render(anim, viaVT) {
   else f = { duas: vDuas, dev: vDev, guide: vGuide, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy"), feedback: vFeedback }[R.sub] || vMore;
   const g = routeGroup(R);
   if (g && !lazyDone.has(g)) { // page data not loaded yet: show a short loading state, then draw the page
+    v.dataset.pg = ""; todayTpl = null;
     v.innerHTML = `<div class="lazy-wait" role="status"><svg class="mini-door" viewBox="96 76 320 348" aria-hidden="true"><defs><clipPath id="md-clip"><path d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392Z"/></clipPath></defs><g clip-path="url(#md-clip)"><circle class="md-sun" cx="256" cy="392" r="84"/></g><path class="md-arch" d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392M118 393H394"/></svg>${esc(t("pgloading"))}</div>`;
     need(g).then(() => { if (routeGroup(R) === g) render(anim); },
       () => { if (routeGroup(R) === g) v.innerHTML = `<div class="lazy-wait" role="alert"><p>${esc(t("pgfail"))}</p><button type="button" class="btn soft" data-act="lazyretry">${esc(t("retry"))}</button></div>`; });
     return;
   }
-  v.innerHTML = f() + siteFoot();
+  // 14 Nov 2026: a quiet redraw of Today (coming back to the app, each minute, a reminder done) changes only what is
+  // different; rebuilding the whole page made the picture and the sky blink once or twice when the app came back.
+  const html = f() + siteFoot(), tpl = document.createElement("template"); tpl.innerHTML = html;
+  if (!anim && R.tab === "today" && todayTpl && v.dataset.pg === "today") { patchKids(v, todayTpl.content, tpl.content); todayTpl = tpl; }
+  else { v.innerHTML = html; todayTpl = R.tab === "today" ? tpl : null; v.dataset.pg = R.tab === "today" ? "today" : ""; }
   // Nov 2026: behind the splash (phones and the app) the page waits, hidden and still, and rises only as the door opens.
   // It used to play its rise unseen, then show fully as the splash faded, blink out and rise again.
   const held = anim && !viaVT && underSplash();
@@ -821,9 +851,12 @@ const HR = window.IE_HEROES || null;
 const dayNoD = D => Math.floor((D.base + D.tz * 36e5 + 432e5) / 864e5);
 const heroFor = (k, D) => HR ? HR.forPrayer(k === "dhuhr" && isFriD(D) ? "jumuah" : k, dayNoD(D)) : null;
 const heroRef = x => x.k === "q" ? `${sname(x.s)} ${num(x.s)}:${num(x.a)}${x.b > x.a ? "–" + num(x.b) : ""}` : (x.ref[st.lang] || x.ref.en);
-const heroPlain = x => x.k === "q" ? "“" + x[st.lang].join(" ") + "”" : x[st.lang];
+// 14 Nov 2026: hero verses in English are Rowwad's plain modern English (enSrc "rw"); its footnote markers are left
+// out here (the notes are not shown with the hero), as on the widget. Bangla keeps its markers.
+const heroTr = x => st.lang === "en" && x.enSrc === "rw" ? x.en.map(v => v.replace(/\s*\[\d+\]/g, "")) : x[st.lang];
+const heroPlain = x => x.k === "q" ? "“" + heroTr(x).join(" ") + "”" : x[st.lang];
 const heroNote = x => heroPlain(x) + " — " + heroRef(x);
-const heroHtml = x => x.k === "q" ? "“" + x[st.lang].map(v => esc(v).replace(/\s*\[([০-৯\d]+)\]/g, '<sup class="fnm">$1</sup>')).join(" ") + "”" : escS(x[st.lang]);
+const heroHtml = x => x.k === "q" ? "“" + heroTr(x).map(v => esc(v).replace(/\s*\[([০-৯\d]+)\]/g, '<sup class="fnm">$1</sup>')).join(" ") + "”" : escS(x[st.lang]);
 const heroRefEl = x => x.k === "q" ? `<button type="button" class="linkish" data-act="surah" data-s="${x.s}" data-a="${x.a}">${esc(heroRef(x))}</button>`
   : `<a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(heroRef(x))}</a>`;
 function skyQuote(cur, nx) {
@@ -2081,14 +2114,14 @@ function vAbout() {
     ["আজকের আয়াত", "১৮০ দিনের একটি নির্দিষ্ট তালিকা (১ জানুয়ারি ২০২৬ থেকে গণনা), প্রতিটি আয়াত আগের আয়াত ও আল-মুখতাসার তাফসিরের সঙ্গে মিলিয়ে বাছাই করা; প্রয়োজনে প্রেক্ষাপট টীকা দেওয়া আছে। কোনো যোগ্য আলেম এখনো যাচাই করেননি।"],
     ["নামাজ শিক্ষা", "sunnah.com-এ যাচাই করা হাদিস এবং হানাফি ও শাফিই ফতোয়া উত্তর (IslamQA.org), ইসলামওয়েব ও ইসলামকিউএ থেকে সংক্ষেপিত। এটি ফতোয়া নয়, এবং এখনো কোনো যোগ্য আলেম যাচাই করেননি।"],
     ["আজকের কার্ডের ছবি", "সাতটা ছবি (সেটিংস → নামাজের ছবি → ছবি) এই অ্যাপের জন্য নভেম্বর ২০২৬-এ Figma-র এআই ছবি-তৈরির টুল দিয়ে বানানো। এগুলো কোনো আসল জায়গার ছবি নয়।"],
-    ["উইজেটের ছবি", "Android হোম স্ক্রিন উইজেটের পেছনের সাতটা ছবি (সেটিংস → হোম স্ক্রিন উইজেট) এই অ্যাপের জন্য নভেম্বর ২০২৬-এ Figma-র এআই ছবি-তৈরির টুল দিয়ে বানানো। এগুলো কোনো আসল জায়গার ছবি নয়।"],
+    ["উইজেটের ছবি", "Android হোম স্ক্রিন উইজেটের পেছনের সাতটা ছবি (সেটিংস → হোম স্ক্রিন উইজেট) এই অ্যাপের জন্য নভেম্বর ২০২৬-এ Picsart-এর এআই ছবি-তৈরির টুল দিয়ে বানানো। এগুলো কোনো আসল জায়গার ছবি নয়।"],
     ["লোগো", "মিহরাব-আকৃতির খোলা দরজায় উদীয়মান সূর্য—এই অ্যাপের জন্য আঁকা মৌলিক ভেক্টর ছবি (brand/ ফোল্ডার)।"],
     ["ফন্ট", "হিন্দ শিলিগুড়ি, শেহেরাজাদ নিউ ও তিরো বাংলা, SIL Open Font License 1.1, এই অ্যাপের সঙ্গেই সংযুক্ত।"]
   ] : [
     ["Arabic text", "Uthmani script from the Noble Qur'an Encyclopedia (quranenc.com), via the quran-json package (CC BY-SA 4.0)."],
     ["Bangla translation", "Dr. Abu Bakr Muhammad Zakaria, version 1.1.1 (22 May 2021), published by QuranEnc.com. Translation and footnotes are included unchanged. QuranEnc's terms: no change to the content; credit the publisher and source; state the version; update to the latest version; no inappropriate advertising."],
     ["English translation", "Marmaduke Pickthall, The Meaning of the Glorious Koran, 1930 first edition, public domain. Digital base text from Tanzil (tanzil.net) via fawazahmed0/quran-api; 393 verses are restored to the 1930 wording, checked against three copies of the first edition (data/quran/en-corrections.json, docs/translation-audit.md). Modern spellings and the digital text's punctuation are kept. Older words can be explained with Settings → Explain older English words; the explanations are not part of the translation."],
-    ["English translation (Verse for today, Ayat al-Kursi)", "Rowwad Translation Center (with the Rabwah Dawah Association, the Islamic Content Service Association in Languages and IslamHouse.com), English Translation, version 1.0.20, published by QuranEnc.com (quranenc.com/en/browse/english_rwwad). Plain modern English, used for the Verse for today and Ayat al-Kursi; text and translators' notes shown unchanged under QuranEnc's terms. The Qur'an reader uses Pickthall."],
+    ["English translation (Verse for today, verses on Today, reminders, Ayat al-Kursi)", "Rowwad Translation Center (with the Rabwah Dawah Association, the Islamic Content Service Association in Languages and IslamHouse.com), English Translation, version 1.0.21, published by QuranEnc.com (quranenc.com/en/browse/english_rwwad). Plain modern English, used for the Verse for today, the verses at the top of Today and the Qur'an page, prayer reminders, widgets and Ayat al-Kursi; text and translators' notes shown unchanged under QuranEnc's terms. The Qur'an reader uses Pickthall."],
     ["Qur'an study and Qur'an Stories", "Draft notes and retellings written for this app with an AI assistant, tied to the verses they come from; Meccan/Medinan from Tanzil Quran Metadata 1.0 (CC BY 3.0); story narrations from Sahih al-Bukhari and Sahih Muslim, checked on sunnah.com. The complete retelling at the top of each story only joins its referenced parts. Not yet reviewed by a qualified scholar."],
     ["99 Names — stories", "One everyday story for each name, written for this app with an AI assistant as a teaching example. Each follows the sourced explanation of its name and is labelled as an illustration, not a source or a ruling. Not yet reviewed by a qualified scholar."],
     ["More duas (Face 7.2)", "Twelve short duas added with their Arabic and references checked on sunnah.com (gradings shown for collections outside the two Sahihs). Meanings and transliterations were written for this app."],
@@ -2100,8 +2133,8 @@ function vAbout() {
     ["Prohibited-time notes", "Based on Sahih Muslim 831, Sahih al-Bukhari 586 and Shaykh Ibn Baz's fatwa 18495 (binbaz.org.sa); sunrise, solar noon and sunset are calculated by the app for your location. The minute margins are approximations."],
     ["Verse for today", "A fixed 180-day schedule (counted from 1 January 2026). Each passage was read with the verses before it and the Al-Mukhtasar tafsir, and a context note is shown where the passage needs one. Not yet reviewed by a qualified scholar."],
     ["Prayer guide", "Summarised from hadith checked on sunnah.com and from Hanafi and Shafi'i fatwa answers (IslamQA.org), IslamWeb and IslamQA.info. It is not a fatwa and has not yet been independently reviewed by a qualified scholar."],
-    ["Pictures for the Today card", "The seven pictures (Settings → Picture behind the prayer → Pictures) were generated for this app with Figma's AI image tool in November 2026. They are not photographs of real places."],
-    ["Pictures for the widgets", "The seven pictures behind the Android home-screen widgets (Settings → Home-screen widgets) were generated for this app with Figma's AI image tool in November 2026. They are not photographs of real places."],
+    ["Pictures for the Today card", "The twelve pictures (Settings → Picture behind the prayer → Pictures) were generated for this app in November 2026: seven with Figma's AI image tool and five with Picsart's AI Playground. They are not photographs of real places."],
+    ["Pictures for the widgets", "The seven pictures behind the Android home-screen widgets (Settings → Home-screen widgets) were generated for this app with Picsart's AI image generator in November 2026. They are not photographs of real places."],
     ["Logo", "A mihrab-shaped open doorway framing a rising sun: original vector artwork drawn for this app (brand/ folder)."],
     ["Fonts", "Hind Siliguri, Scheherazade New and Tiro Bangla, SIL Open Font License 1.1, bundled with the app."]
   ];
@@ -2323,9 +2356,13 @@ async function widgetData() {
     if (!timesOk(D)) continue;
     const e = votdFor(y, m, d); let v = null;
     try { await qEnsure(e.s); v = votdPlain(e); } catch (x) {}
-    days.push({ from: D.base, to: N.base, dn: wgDayNo(y, m, d), p: PRAYERS.map(k => [pName(k, isFriD(D)), clock(D.tm[k]), D.abs(k)]), v });
+    // the three sun-based avoided times (as on Today): [from, to, line while on, line in the minutes before]
+    const at = ms => clock(hOf(ms, D)), A = k => D.abs(k), mi = 6e4;
+    const f = [[A("sunrise"), A("sunrise") + 15 * mi], [A("dhuhr") - 10 * mi, A("dhuhr")], [A("maghrib") - 15 * mi, A("maghrib")]]
+      .map(([a, b]) => [a, b, t("fw_w_now").replace("{e}", at(b)), t("fw_w_soon").replace("{t}", at(a))]);
+    days.push({ from: D.base, to: N.base, dn: wgDayNo(y, m, d), p: PRAYERS.map(k => [pName(k, isFriD(D)), clock(D.tm[k]), D.abs(k)]), f, v });
   }
-  return { v: 1, lang: st.lang, place: cname(c), lab: { next: t("next"), tomorrow: t("tomorrow"), votd: t("votd") },
+  return { v: 1, lang: st.lang, place: cname(c), soon: FORB_SOON, lab: { next: t("next"), tomorrow: t("tomorrow"), votd: t("votd"), inH: t("wg_in_h"), inM: t("wg_in_m") },
     col: { bg: cv("--surface"), ink: cv("--ink"), muted: cv("--muted"), accent: cv("--accent") },
     bg: { mode: st.wgMode, pic: st.wgPic, list: WPICS }, days };
 }

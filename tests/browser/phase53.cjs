@@ -1,4 +1,5 @@
 // Phase 5.3 browser checks (not part of `npm test`, which has no dependencies).
+// 14 Nov 2026: the avoided-times checks expect the status heading added on 13 Nov ("Voluntary prayer is avoided now").
 // Needs Playwright and a running server:  npm start   then   node tests/browser/phase53.cjs [http://localhost:8080/]
 // Set CHROMIUM=/path/to/chromium to use a specific browser. Uses a controlled clock in Australia/Sydney (UTC+11 in October).
 const { chromium, devices } = require("playwright");
@@ -60,14 +61,14 @@ const card = p => p.evaluate(() => ({ cur: document.querySelector("#cur-name")?.
   const step = async min => { const now = await p.evaluate(() => Date.now()); const target = new Date(syd(D, min)).getTime(); await p.clock.fastForward(target - now); await p.clock.runFor(1500); return (await card(p)).forb; };
   ok("12 min before sunrise: no warning", (await card(p)).forb === "");
   ok("8 min before sunrise: advance notice", /From sunrise at/.test(await step(T.Sunrise - 8)));
-  ok("just after sunrise: avoid until the sun has risen", /^Sunrise: voluntary prayer is avoided/.test(await step(T.Sunrise + 2)));
+  ok("just after sunrise: avoid until the sun has risen", /^Voluntary prayer is avoided now[\s\S]*\bSunrise: voluntary prayer is avoided/.test(await step(T.Sunrise + 2)));
   ok("17 min after sunrise: cleared", (await step(T.Sunrise + 17)) === "");
   ok("15 min before Dhuhr: advance notice", /until Dhuhr at/.test(await step(T.Dhuhr - 15)));
-  ok("6 min before Dhuhr: sun at its zenith", /^Sun at its zenith/.test(await step(T.Dhuhr - 6)));
+  ok("6 min before Dhuhr: sun at its zenith", /^Voluntary prayer is avoided now[\s\S]*\bSun at its zenith/.test(await step(T.Dhuhr - 6)));
   ok("Dhuhr has begun: cleared", (await step(T.Dhuhr + 2)) === "");
   ok("after Asr, Asr not ticked: no note", (await step(T.Asr + 10)) === "");
   ok("22 min before Maghrib: advance notice", /until sunset at/.test(await step(T.Maghrib - 22)));
-  ok("10 min before Maghrib: sun setting", /^Sun setting/.test(await step(T.Maghrib - 10)));
+  ok("10 min before Maghrib: sun setting", /^Voluntary prayer is avoided now[\s\S]*\bSun setting/.test(await step(T.Maghrib - 10)));
   ok("after sunset: cleared", (await step(T.Maghrib + 2)) === "");
   const wcss = await p.evaluate(() => { const e = document.querySelector(".cd"); return e ? getComputedStyle(e).fontWeight : ""; });
   ok("countdown line is present in the evening", !!wcss);
@@ -94,17 +95,17 @@ const card = p => p.evaluate(() => ({ cur: document.querySelector("#cur-name")?.
   ok("System mode follows a dark OS setting from the first paint", await p.evaluate(() => window.__firstTheme) === "dark" && await p.evaluate(() => document.documentElement.dataset.theme) === "dark");
   await p.emulateMedia({ colorScheme: "light" }); await p.waitForTimeout(200);
   ok("System mode follows an OS change without reload", await p.evaluate(() => document.documentElement.dataset.theme) === "light");
-  // Face 7 (intentional): Burgundy became the dark-only Plum Dusk; themes are chosen per appearance with setth.
-  await p.click('[data-act="setmode"][data-k="dark"]'); await p.click('[data-act="setth"][data-k="plum"]'); await p.waitForTimeout(300);
+  // Face 7 (intentional): Burgundy became the dark-only Plum Dusk; themes are chosen per appearance with setth. Nov 2026: Plum Dusk became Deep Teal.
+  await p.click('[data-act="setmode"][data-k="dark"]'); await p.click('[data-act="setth"][data-k="teal"]'); await p.waitForTimeout(300);
   await p.reload({ waitUntil: "domcontentloaded" });
-  ok("chosen mode and palette are applied before first paint after reload", await p.evaluate(() => [window.__firstTheme, window.__firstPal].join()) === "dark,plum");
+  ok("chosen mode and palette are applied before first paint after reload", await p.evaluate(() => [window.__firstTheme, window.__firstPal].join()) === "dark,teal");
   await p.waitForTimeout(600);
   await p.emulateMedia({ colorScheme: "light" }); await p.waitForTimeout(200);
   ok("an explicit Dark mode ignores the OS setting", await p.evaluate(() => document.documentElement.dataset.theme) === "dark");
   for (const hh of ["#today", "#more/hadith", "#more/calendar"]) { await p.goto(base + hh); await p.waitForTimeout(300); }
-  ok("palette kept on every page", await p.evaluate(() => document.documentElement.dataset.palette) === "plum");
+  ok("palette kept on every page", await p.evaluate(() => document.documentElement.dataset.palette) === "teal");
   await p.goto(base + "#more/settings"); await p.waitForTimeout(300);
-  ok("settings show the separate Appearance and Theme controls, pressed state correct", await p.getAttribute('[data-act="setmode"][data-k="dark"]', "aria-pressed") === "true" && await p.getAttribute('[data-act="setth"][data-k="plum"]', "aria-pressed") === "true");
+  ok("settings show the separate Appearance and Theme controls, pressed state correct", await p.getAttribute('[data-act="setmode"][data-k="dark"]', "aria-pressed") === "true" && await p.getAttribute('[data-act="setth"][data-k="teal"]', "aria-pressed") === "true");
   await ctx.close();
   ({ p, ctx } = await open(b, { state: { lang: "en", theme: "indigo" }, hash: "#today", firstPaint: true }));
   ok("Phase 5.2 setting 'indigo' migrates to Indigo palette in dark mode", await p.evaluate(() => [window.__firstTheme, window.__firstPal].join()) === "dark,indigo");
@@ -146,7 +147,7 @@ const card = p => p.evaluate(() => ({ cur: document.querySelector("#cur-name")?.
   ok("An-Nawawi's Forty: 42 numbered cards, kept apart from the general list", await p.locator(".hadith.nw").count() === 42 && await p.locator(".hadith:not(.nw)").count() === 0 && await p.locator(".hd-cats").count() === 0);
   const firstNos = await p.evaluate(() => [...document.querySelectorAll(".hadith.nw .nw-no")].map(x => +x.textContent));
   ok("numbered 1 to 42 in order", firstNos.length === 42 && firstNos.every((n, i) => n === i + 1));
-  await p.click('.nw-jump [data-n="20"]'); await p.waitForTimeout(900);
+  await p.click('.nw-jump [data-n="20"]'); await p.waitForTimeout(1800); // long smooth scroll (about 6,800 px on desktop) settles in about 1.5 s
   const j = await p.evaluate(() => ({ top: document.getElementById("nw-20").getBoundingClientRect().top, focus: document.activeElement.id }));
   ok("jump list moves to the hadith and focuses its heading", j.top > 40 && j.top < 140 && j.focus === "nw-h-20", JSON.stringify(j));
   await p.click('#nw-20 [data-act="nwread"]'); await p.click('#nw-21 [data-act="nwread"]'); await p.waitForTimeout(200);

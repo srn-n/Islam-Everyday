@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """Build assets/en-rwwad.js: the Rowwad Translation Center English translation (QuranEnc.com) for the verses the app
 shows outside the reader — every Verse-for-today passage (assets/votd.js), the Thursday/Friday entries
-(assets/votd-day.js) and Ayat al-Kursi (2:255, Core remembrance).
+(assets/votd-day.js), Ayat al-Kursi (2:255, Core remembrance) and (14 Nov 2026) the Qur'an verses of the Today,
+Qur'an and reminder heroes (tools/heroes/source.mjs). Run tools/heroes/build.mjs after this tool.
 
-Usage (Face 7.1): python3 tools/import-rwwad-subset.py <english_rwwad.sqlite> 
+Usage (Face 7.1): python3 tools/import-rwwad-subset.py <english_rwwad.sqlite> <version, e.g. 1.0.21>
 The sqlite file is QuranEnc's own download (https://quranenc.com/downloads/sqlite/english_rwwad.zip). Text and
 footnotes are copied exactly as published (QuranEnc term 1: no modification); nothing is added or removed.
 """
 import sqlite3, sys, json, hashlib, re, subprocess, os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 db = sys.argv[1]
+ver = sys.argv[2] if len(sys.argv) > 2 else '1.0.20'
 sha = hashlib.sha256(open(db, 'rb').read()).hexdigest()
 # Verse ranges from the schedule, read with node so the app's own data is the single source.
 js = r"""
@@ -19,6 +21,10 @@ new Function('self','module',fs.readFileSync(process.argv[1]+'/assets/votd-day.j
 const out=[];for(const e of c.DINSATHI_VOTD.SCHEDULE.concat(c.IE_VOTD_DAY.ENTRIES))for(let a=e.a;a<=e.b;a++)out.push([e.s,a]);
 out.push([2,255]);console.log(JSON.stringify(out));"""
 pairs = json.loads(subprocess.check_output(['node', '-e', js, ROOT]))
+hjs = r"""
+import(process.argv[1]+'/tools/heroes/source.mjs').then(m=>{const o=[];const add=x=>{if(x&&x.q)for(let a=x.q[1];a<=x.q[2];a++)o.push([x.q[0],a]);};
+Object.values(m.PRAYER).forEach(L=>L.forEach(add));m.QURAN.forEach(add);console.log(JSON.stringify(o));});"""
+pairs += json.loads(subprocess.check_output(['node', '--input-type=module', '-e', hjs, ROOT]))
 con = sqlite3.connect(db)
 V = {}
 for s, a in pairs:
@@ -32,8 +38,7 @@ src = f"""/* Islam Everyday — plain modern English for the Verse for today (Fa
  *
  * Translation: English Translation - Rowwad Translation Center (translated by the team of the Rowwad Translation
  * Center, in cooperation with the Rabwah Dawah Association, the Islamic Content Service Association in Languages,
- * and the IslamHouse.com website). Version 1.0.20 (QuranEnc list API, checked 24 October 2026; last update
- * 20 October 2026). Published by the Encyclopedia of the Noble Qur'an, QuranEnc.com:
+ * and the IslamHouse.com website). Version {ver} (QuranEnc list API; checked 14 November 2026 for 1.0.21). Published by the Encyclopedia of the Noble Qur'an, QuranEnc.com:
  * https://quranenc.com/en/browse/english_rwwad
  * Source file: english_rwwad.sqlite from https://quranenc.com/downloads/sqlite/english_rwwad.zip
  * (sha256 {sha}).
@@ -44,7 +49,7 @@ src = f"""/* Islam Everyday — plain modern English for the Verse for today (Fa
  * versions are to be used when issued (re-run the tool); no advertisements alongside it.
  *
  * Coverage: only the {len(keys)} verses the app shows outside the reader (Verse for today, Thursday/Friday entries,
- * Ayat al-Kursi). The Qur'an reader keeps Pickthall (1930).
+ * Ayat al-Kursi, the Qur'an verses of the heroes and reminders). The Qur'an reader keeps Pickthall (1930).
  */
 (function (root, factory) {{
   const api = factory();
@@ -52,7 +57,7 @@ src = f"""/* Islam Everyday — plain modern English for the Verse for today (Fa
   else root.IE_RWWAD = api;
 }})(typeof self !== "undefined" ? self : this, function () {{
   "use strict";
-  const META = {{ key: "english_rwwad", title: "English Translation - Rowwad Translation Center", version: "1.0.20", publisher: "QuranEnc.com", url: "https://quranenc.com/en/browse/english_rwwad", sha256: "{sha}" }};
+  const META = {{ key: "english_rwwad", title: "English Translation - Rowwad Translation Center", version: "{ver}", publisher: "QuranEnc.com", url: "https://quranenc.com/en/browse/english_rwwad", sha256: "{sha}" }};
   const V = {{
 {body}
   }};

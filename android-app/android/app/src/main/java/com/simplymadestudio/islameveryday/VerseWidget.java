@@ -10,8 +10,16 @@ import android.view.View;
 import android.widget.RemoteViews;
 import org.json.JSONObject;
 
-/** Home-screen widget: the Verse for today (the translation and its reference), as on Today. */
+/**
+ * Home-screen widget: the Verse for today (the translation and its reference), as on Today. 4x2; the large 4x4 one
+ * (VerseWidgetLarge) is the same widget with more room, so long verses show in full more often.
+ */
 public class VerseWidget extends AppWidgetProvider {
+    /** The layout this size uses. */
+    protected int layout() { return R.layout.widget_verse; }
+    /** Its own wake-up alarm (each kind of widget has one). */
+    protected int alarmCode() { return 2; }
+
     @Override
     public void onUpdate(Context c, AppWidgetManager m, int[] ids) {
         JSONObject d = WidgetData.load(c);
@@ -21,11 +29,11 @@ public class VerseWidget extends AppWidgetProvider {
         for (int id : ids) m.updateAppWidget(id, build(c, m, id, d, vs, pic));
         // the next verse at local midnight; with pictures changing on their own, also at each prayer time
         long next = day == null ? 0 : day.optLong("to"), pc = WidgetData.nextPicChange(d, now);
-        WidgetData.scheduleNext(c, VerseWidget.class, 2, pc > 0 && pc < next ? pc : next);
+        WidgetData.scheduleNext(c, getClass(), alarmCode(), pc > 0 && pc < next ? pc : next);
     }
 
-    private static RemoteViews build(Context c, AppWidgetManager m, int id, JSONObject d, JSONObject vs, String pic) {
-        RemoteViews v = new RemoteViews(c.getPackageName(), R.layout.widget_verse);
+    private RemoteViews build(Context c, AppWidgetManager m, int id, JSONObject d, JSONObject vs, String pic) {
+        RemoteViews v = new RemoteViews(c.getPackageName(), layout());
         v.setOnClickPendingIntent(R.id.wg_root, WidgetData.open(c));
         if (vs == null || vs.optString("t").isEmpty()) {
             v.setViewVisibility(R.id.wg_body, View.GONE);
@@ -54,7 +62,7 @@ public class VerseWidget extends AppWidgetProvider {
     public void onReceive(Context c, Intent i) {
         if (WidgetData.ACTION_TICK.equals(i.getAction())) {
             AppWidgetManager m = AppWidgetManager.getInstance(c);
-            onUpdate(c, m, m.getAppWidgetIds(new ComponentName(c, VerseWidget.class)));
+            onUpdate(c, m, m.getAppWidgetIds(new ComponentName(c, getClass())));
             return;
         }
         super.onReceive(c, i);
@@ -62,6 +70,6 @@ public class VerseWidget extends AppWidgetProvider {
 
     @Override
     public void onDisabled(Context c) {
-        WidgetData.scheduleNext(c, VerseWidget.class, 2, 0);
+        WidgetData.scheduleNext(c, getClass(), alarmCode(), 0);
     }
 }

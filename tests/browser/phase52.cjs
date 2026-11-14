@@ -137,7 +137,8 @@ const toMin = s => { const m = s.match(/(\d+):(\d+)\s*(am|pm|AM|PM)/); let h = +
      Emerald is checked in light mode and Midnight Indigo in dark mode, as they were shown before.
      Face 7 (intentional): themes are chosen per appearance (setth, saved as lightTheme/darkTheme); zakat left the UI. */
   ({ p, ctx } = await open(b, { state: { lang: "en" }, hash: "#more/settings" }));
-  for (const [th, mode] of [["emerald", "light"], ["indigo", "dark"]]) {
+  // Nov 2026: Emerald Ivory became Sky Blue (ground #EDF3FA).
+  for (const [th, mode] of [["sky", "light"], ["indigo", "dark"]]) {
     await p.click(`[data-act="setmode"][data-k="${mode}"]`); await p.waitForTimeout(100);
     await p.click(`[data-act="setth"][data-k="${th}"]`); await p.waitForTimeout(150);
     await p.reload(); await p.waitForTimeout(800);
@@ -146,7 +147,7 @@ const toMin = s => { const m = s.match(/(\d+):(\d+)\s*(am|pm|AM|PM)/); let h = +
     for (const hh of ["#today", "#quran", "#duas", "#more/hadith", "#more/calendar", "#more/names", "#more/guide", "#more/about"]) {
       await p.goto(base + hh); await p.waitForTimeout(500);
       const bg = await p.evaluate(() => getComputedStyle(document.body).backgroundColor);
-      if (hh === "#today") ok(`theme ${th}: page background follows the theme`, th === "emerald" ? bg === "rgb(246, 241, 228)" : bg === "rgb(10, 13, 30)", bg);
+      if (hh === "#today") ok(`theme ${th}: page background follows the theme`, th === "sky" ? bg === "rgb(237, 243, 250)" : bg === "rgb(10, 13, 30)", bg);
     }
     const glass = await p.evaluate(() => getComputedStyle(document.querySelector("nav.tabs")).backdropFilter);
     ok(`theme ${th}: tab bar uses glass`, /blur/.test(glass), glass);

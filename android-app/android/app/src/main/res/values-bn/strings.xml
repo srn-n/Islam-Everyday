@@ -5,5 +5,7 @@
     <string name="wg_prayer_d">পরের নামাজ আর আজকের সময়গুলো</string>
     <string name="wg_verse_name">আজকের আয়াত</string>
     <string name="wg_verse_d">অ্যাপ থেকে আজকের আয়াত</string>
+    <string name="wg_verse_lg_name">আজকের আয়াত (বড়)</string>
+    <string name="wg_verse_lg_d">পুরো আয়াত, আরও বড় করে</string>
     <string name="wg_empty">এটা দেখাতে Islam Everyday একবার খুলুন।</string>
 </resources>

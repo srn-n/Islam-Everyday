@@ -37,13 +37,13 @@ test("sounds: water drop kept; ripple and soft bubble replace soft tap and breez
   assert.match(app, /if \(st\.sndK === "air"\) st\.sndK = "bubble";/);
 });
 
-test("pictures behind the prayer: seven, small files, an honest note, the same daily rotation", () => {
-  assert.match(app, /const PHOTOS = \["mosque", "dunes", "lake", "paddy", "coast", "pines", "tea"\];/);
-  for (const k of ["mosque", "dunes", "lake", "paddy", "coast", "pines", "tea"]) for (const s of ["", "-s"]) {
+test("pictures behind the prayer: twelve (seven Figma, five Picsart), small files, an honest note, the same daily rotation", () => {
+  assert.match(app, /const PHOTOS = \["mosque", "dunes", "lake", "paddy", "coast", "pines", "tea", "canyon", "meadow", "mangrove", "village", "falls"\];/);
+  for (const k of ["mosque", "dunes", "lake", "paddy", "coast", "pines", "tea", "canyon", "meadow", "mangrove", "village", "falls"]) for (const s of ["", "-s"]) {
     const f = readFileSync(p(`assets/heroes-img/${k}${s}.webp`)); assert.equal(f.toString("latin1", 0, 4), "RIFF"); assert.equal(f.toString("latin1", 8, 12), "WEBP");
     assert.equal(f.readUInt32LE(4) + 8, f.length, `${k}${s} whole file`); assert.ok(f.length < 110e3, `${k}${s} small`);
     assert.ok(I18N.en["ph_" + k] && I18N.bn["ph_" + k]); }
-  assert.match(I18N.en.ph_note, /AI image tool/); assert.match(app, /Figma's AI image tool/);
+  assert.match(I18N.en.ph_note, /AI image tool/); assert.match(app, /Figma's AI image tool/); assert.match(app, /Picsart's AI Playground/);
   assert.match(app, /const sceneToday = \(\) => \{ const ph = st\.heroKind === "photo", list = ph \? PHOTOS : SCENES;/);
   assert.match(css, /\.sky\[data-p="night"\] \.sky-tint\{/);
 });

@@ -6,7 +6,7 @@
     android:width="288dp" android:height="288dp" android:viewportWidth="288" android:viewportHeight="288">
     <group android:scaleX="0.375" android:scaleY="0.375" android:translateX="48" android:translateY="50.25">
         <path android:pathData="M150,392V248A140,140 0,0 1,256 112.2A140,140 0,0 1,362 248V392"
-            android:strokeColor="@color/colorAccent" android:strokeWidth="20" android:strokeLineJoin="round" android:strokeLineCap="round" />
-        <path android:pathData="M118,393H394" android:strokeColor="@color/colorAccent" android:strokeWidth="20" android:strokeLineCap="round" />
+            android:strokeColor="@color/launch_accent" android:strokeWidth="20" android:strokeLineJoin="round" android:strokeLineCap="round" />
+        <path android:pathData="M118,393H394" android:strokeColor="@color/launch_accent" android:strokeWidth="20" android:strokeLineCap="round" />
     </group>
 </vector>

@@ -71,7 +71,7 @@ These were **drafted with an AI assistant during development** and are labelled 
   - Musa and the servant: the hadith part (Sahih al-Bukhari 3401) naming al-Khidr; the note that 18:74–81 is not a rule for anyone else.
   - Hadith stories (Bukhari 2272/Muslim 2743a; Muslim 2766a/Bukhari 3470; Bukhari 2363/Muslim 2244; Bukhari 3464/Muslim 2964; Muslim 3005; Bukhari 3436/Muslim 2550a): summaries faithful? The boy-and-king story is presented as linked to 85:4–8 only as a commentators' view.
   - The note in "Musa: the river, the palace and Madyan" that Pharaoh's wife is named Asiyah through hadith (Sahih al-Bukhari 3411 names her).
-- **Verse for today in English** now uses the Rowwad Translation Center translation (QuranEnc v1.0.20) with its own footnotes. Confirm the edition choice; QuranEnc's terms ask that newer versions be adopted when published.
+- **Verse for today in English** now uses the Rowwad Translation Center translation (QuranEnc v1.0.21 since 14 Nov 2026) with its own footnotes. Since 14 Nov 2026 the same translation is used for the verses at the top of Today and the Qur'an page, the reminders and the widgets (footnote numbers hidden there). Confirm the edition choice; QuranEnc's terms ask that newer versions be adopted when published.
 
 ## 6b. Added in Face 7.2 (25 October 2026) — drafts, labelled in the app
 

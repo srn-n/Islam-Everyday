@@ -3,7 +3,6 @@ package com.simplymadestudio.islameveryday;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -16,26 +15,19 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        // The appearance chosen in the app (not only the phone's) decides light or dark from the first frame.
-        AppearancePlugin.apply(this, AppearancePlugin.saved(this));
+        // The window behind everything: the ground colour of the theme chosen in the app (14 Nov 2026), set before the
+        // first frame. On Android 11 and older that IS the first thing on screen (no system launch picture).
+        getWindow().setBackgroundDrawable(new ColorDrawable(AppearancePlugin.ground(this)));
         registerPlugin(AppearancePlugin.class);
         registerPlugin(WidgetsPlugin.class); // what the home-screen widgets show
         registerPlugin(RingerPlugin.class); // the phone's sound profile, for the app's own sounds
         super.onCreate(savedInstanceState);
-        // Behind the page, the app's ground colour (light or dark with the phone), never the WebView's default white:
-        // the gap between Android's launch screen and the page's first frame is the same colour as both.
-        if (getBridge() != null && getBridge().getWebView() != null) {
-            getBridge().getWebView().setBackgroundColor(ground());
-        }
-        // The window behind everything too. With "light" or "dark" chosen in the app the colour is set outright, so the
-        // first frame is right on every Android version, whatever the phone's own mode is.
-        getWindow().setBackgroundDrawable(new ColorDrawable(ground()));
-    }
-
-    private int ground() {
-        String m = AppearancePlugin.saved(this);
-        if ("light".equals(m)) return 0xFFEEF3F1;
-        if ("dark".equals(m)) return 0xFF08120F;
-        return ContextCompat.getColor(this, R.color.ground);
+        int g = AppearancePlugin.ground(this);
+        // Behind the page, the same colour, never the WebView's default white: launch screen, window, WebView and page
+        // are one colour from the first frame to the opening.
+        if (getBridge() != null && getBridge().getWebView() != null) getBridge().getWebView().setBackgroundColor(g);
+        getWindow().setBackgroundDrawable(new ColorDrawable(g));
+        // Android 13+: the next start's launch screen in the chosen themes' colours (kept by Android between starts).
+        AppearancePlugin.applySplash(this);
     }
 }

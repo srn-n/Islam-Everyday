@@ -65,9 +65,9 @@ test("widgets: Android side (receivers, layouts, plugin, both languages)", () =>
 
 test("widget pictures: seven local WebP files, other scenes than the hero's, chosen in Settings (app only)", async () => {
   const { readFileSync } = await import("node:fs"), { p } = await import("./helpers.mjs");
-  const W = ["waterfall", "river", "snow", "wheat", "garden", "stars", "autumn"];
+  const W = ["lavender", "bamboo", "glacier", "olive", "aurora", "valley", "blossom"];
   assert.match(app, new RegExp(`const WPICS = ${JSON.stringify(W).replace(/[[\]]/g, "\\$&").replace(/,/g, ", ")};`));
-  const HERO = ["mosque", "dunes", "lake", "paddy", "coast", "pines", "tea"];
+  const HERO = ["mosque", "dunes", "lake", "paddy", "coast", "pines", "tea", "canyon", "meadow", "mangrove", "village", "falls"];
   assert.deepEqual(W.filter(k => HERO.includes(k)), []);
   for (const k of W) {
     const b = readFileSync(p(`assets/widgets-img/${k}.webp`));
@@ -95,4 +95,38 @@ test("widget pictures: the app and the phone use the same rule for the picture s
   assert.match(wd, /name\.matches\("\[a-z\]\+"\)/);
   // with pictures changing on their own, the verse widget also wakes at prayer times
   assert.match(read(J + "VerseWidget.java"), /WidgetData\.nextPicChange\(d, now\)/);
+});
+
+test("widget list previews (14 Nov): real pictures, not the empty layout; a large 4x4 Verse for today", async () => {
+  const { readFileSync } = await import("node:fs"), { p } = await import("./helpers.mjs");
+  for (const [f, img] of [["widget_prayer_info", "wg_prev_prayer"], ["widget_verse_info", "wg_prev_verse"], ["widget_verse_large_info", "wg_prev_verse_large"]]) {
+    const x = read(A + "res/xml/" + f + ".xml");
+    assert.match(x, new RegExp(`android:previewImage="@drawable/${img}"`), f);
+    assert.doesNotMatch(x, /previewLayout/, f + ": the layout preview was blank, its text is filled in only by the app");
+    const b = readFileSync(p(A + "res/drawable-nodpi/" + img + ".webp"));
+    assert.equal(b.subarray(8, 12).toString("latin1"), "WEBP"); assert.ok(b.length < 120e3, img + " " + b.length);
+  }
+  assert.match(read(A + "res/xml/widget_verse_large_info.xml"), /android:targetCellWidth="4"[^]*android:targetCellHeight="4"/);
+  assert.match(read(A + "AndroidManifest.xml"), /android:name="\.VerseWidgetLarge"[^]*?@xml\/widget_verse_large_info/);
+  const lg = read(J + "VerseWidgetLarge.java");
+  assert.match(lg, /extends VerseWidget/); assert.match(lg, /R\.layout\.widget_verse_large/); assert.match(lg, /alarmCode\(\) \{ return 3; \}/);
+  assert.match(read(J + "WidgetData.java"), /refresh\(c, VerseWidgetLarge\.class\);/);
+  assert.match(read(A + "res/layout/widget_verse_large.xml"), /android:autoSizeMaxTextSize="24sp"/);
+  for (const k of ["wg_verse_lg_name", "wg_verse_lg_d"]) { assert.match(read(A + "res/values/strings.xml"), new RegExp(`name="${k}"`)); assert.match(read(A + "res/values-bn/strings.xml"), new RegExp(`name="${k}"`)); }
+  assert.ok(exists("tools/widget-previews.mjs"));
+});
+
+test("Prayer times widget (14 Nov): time left in whole minutes, and the avoided times as on Today", () => {
+  // the app sends the three sun-based windows (same as forbiddenNow) with ready lines in the app's language
+  assert.match(app, /\[\[A\("sunrise"\), A\("sunrise"\) \+ 15 \* mi\], \[A\("dhuhr"\) - 10 \* mi, A\("dhuhr"\)\], \[A\("maghrib"\) - 15 \* mi, A\("maghrib"\)\]\]/);
+  assert.match(app, /soon: FORB_SOON, lab: \{[^}]*inH: t\("wg_in_h"\), inM: t\("wg_in_m"\) \}/);
+  for (const k of ["wg_in_h", "wg_in_m", "fw_w_now", "fw_w_soon"]) both(k);
+  const wd = read(J + "WidgetData.java"), pw = read(J + "PrayerWidget.java");
+  assert.match(wd, /long mins = Math\.max\(1, \(ms \+ 59999\) \/ 60000\)/, "rounded up, never 0 before the prayer");
+  assert.match(wd, /\(char\) \('০' \+ \(ch - '0'\)\)/, "Bangla digits in Bangla");
+  assert.match(pw, /WidgetData\.timeLeft\(d, next\.optLong\(2\) - now\)/);
+  assert.doesNotMatch(pw, /setTextViewText\(R\.id\.wg_next_time, next\.optString\(1\)\)/, "no clock time under the place any more");
+  assert.match(pw, /WidgetData\.forbidden\(d, now\)/); assert.match(pw, /setViewVisibility\(R\.id\.wg_place, View\.GONE\)/);
+  assert.match(pw, /WidgetData\.scheduleNext\(c, PrayerWidget\.class, 1, next, true\)/);
+  assert.match(wd, /am\.canScheduleExactAlarms\(\)/); assert.match(wd, /am\.setExact\(AlarmManager\.RTC,/, "non-waking");
 });

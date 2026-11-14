@@ -19,15 +19,15 @@ test("startup: the first frame follows the appearance chosen in the app", () => 
   assert.match(pl, /setApplicationNightMode/); assert.match(pl, /setDefaultNightMode/);
   assert.match(pl, /@CapacitorPlugin\(name = "Appearance"\)/);
   assert.ok(main.indexOf("AppearancePlugin.apply(base") < main.indexOf("super.attachBaseContext"), "applied before anything is drawn");
-  assert.match(main, /setBackgroundDrawable\(new ColorDrawable\(ground\(\)\)\)/);
+  assert.match(main, /setBackgroundDrawable\(new ColorDrawable\(AppearancePlugin\.ground\(this\)\)\)/); // 14 Nov: the theme's ground
   // Android 11 and older: no system launch picture (it can only follow the phone); Android 12+ keeps it
   const R = "android-app/android/app/src/main/res/";
   assert.match(read(R + "values/styles.xml"), /android:windowDisablePreview">true/);
   assert.ok(exists(R + "values-v31/styles.xml")); assert.doesNotMatch(read(R + "values-v31/styles.xml"), /windowDisablePreview"/);
   assert.match(read(R + "values-v31/styles.xml"), /windowSplashScreenAnimatedIcon/);
   assert.match(main, /registerPlugin\(AppearancePlugin\.class\)/);
-  assert.match(app, /natQ\("Appearance", "set", \{ mode: st\.mode \}\)/);
-  assert.match(css, /html\[data-theme="light"\]\{--sys-ground:#EEF3F1\}html\[data-theme="dark"\]\{--sys-ground:#08120F\}/);
+  assert.match(app, /natQ\("Appearance", "set", \{ mode: st\.mode, light: st\.lightTheme, dark: st\.darkTheme \}\)/);
+  assert.match(css, /html\[data-theme="light"\]\{--sys-ground:#F3EADB\}html\[data-theme="dark"\]\{--sys-ground:#08120F\}/);
   assert.match(read("assets/theme-boot.js"), /meta\[name="color-scheme"\]/);
   // the opening animation itself is unchanged
   assert.match(css, /html\.native \.splash\{animation:sp-sysbg/);

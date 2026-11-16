@@ -63,37 +63,46 @@ test("widgets: Android side (receivers, layouts, plugin, both languages)", () =>
   }
 });
 
-test("widget pictures: seven local WebP files, other scenes than the hero's, chosen in Settings (app only)", async () => {
+test("widget pictures (16 Nov): each widget its own seven local WebP files, other scenes than the hero's, nothing to choose", async () => {
   const { readFileSync } = await import("node:fs"), { p } = await import("./helpers.mjs");
-  const W = ["lavender", "bamboo", "glacier", "olive", "aurora", "valley", "blossom"];
-  assert.match(app, new RegExp(`const WPICS = ${JSON.stringify(W).replace(/[[\]]/g, "\\$&").replace(/,/g, ", ")};`));
+  const SETS = {
+    prayer: ["orchard", "fjord", "oasis", "heather", "terraces", "birch", "lagoon"],
+    verse: ["maple", "cliffs", "savanna", "tulips", "river", "bluebell", "starry"],
+    large: ["lavender", "bamboo", "glacier", "olive", "aurora", "valley", "blossom"]
+  };
+  for (const [k, l] of Object.entries(SETS)) assert.match(app, new RegExp(`  ${k}: ${JSON.stringify(l).replace(/[[\]]/g, "\\$&").replace(/,/g, ", ")}`));
+  const all = Object.values(SETS).flat();
+  assert.equal(new Set(all).size, 21, "no picture in two sets: two widgets never show the same one");
   const HERO = ["mosque", "dunes", "lake", "paddy", "coast", "pines", "tea", "canyon", "meadow", "mangrove", "village", "falls"];
-  assert.deepEqual(W.filter(k => HERO.includes(k)), []);
-  for (const k of W) {
+  assert.deepEqual(all.filter(k => HERO.includes(k)), []);
+  for (const k of all) {
     const b = readFileSync(p(`assets/widgets-img/${k}.webp`));
     assert.equal(b.subarray(0, 4).toString("latin1"), "RIFF"); assert.equal(b.subarray(8, 12).toString("latin1"), "WEBP");
     assert.ok(b.length < 160e3, k + " size " + b.length);
-    both("wp_" + k);
   }
-  for (const k of ["wg_set", "wg_set_h", "wg_plain", "wg_auto", "wg_auto_d", "wg_now", "wg_ai"]) both(k);
+  for (const k of ["wg_set", "wg_set_h", "wg_pics", "wg_ai"]) both(k);
+  for (const k of ["wg_plain", "wg_auto", "wg_now", "wp_lavender"]) assert.doesNotMatch(app, new RegExp(`t\\("${k}"\\)`));
   assert.match(app, /\$\{NATIVE \? `<li class="set-block" id="set-wg">/, "Settings section only in the Android app");
-  assert.match(fn("widgetCards"), /cur = wgNowPic\(\)/);
-  assert.match(app, /bg: \{ mode: st\.wgMode, pic: st\.wgPic, list: WPICS \}/);
+  assert.doesNotMatch(app, /data-act="wg(kind|auto|pic)"|st\.wgMode =|st\.wgPic =/, "no picture choice in Settings");
+  assert.match(app, /bg: \{ mode: "auto", sets: WG_SETS \}/);
   assert.match(app, /Pictures for the widgets/); assert.match(app, /উইজেটের ছবি/);
   assert.match(read(".gitattributes"), /\*\.webp binary/);
 });
 
-test("widget pictures: the app and the phone use the same rule for the picture shown now", () => {
-  // app: day number × 5 + prayers begun that day
-  assert.match(app, /const wgPicAt = \(dn, started\) => WPICS\[\(\(dn \* 5 \+ started\) % WPICS\.length/);
+test("widget pictures: each widget reads its own set, one step on at each prayer time", () => {
   assert.match(app, /days\.push\(\{ from: D\.base, to: N\.base, dn: wgDayNo\(y, m, d\),/);
   const wd = read(J + "WidgetData.java");
+  assert.match(wd, /static String picAt\(JSONObject d, long now, String kind\)/);
+  assert.match(wd, /JSONArray list = sets != null \? sets\.optJSONArray\(kind\) : bg\.optJSONArray\("list"\);/);
   assert.match(wd, /long i = \(day\.optLong\("dn"\) \* 5 \+ n\) % list\.length\(\);/);
   assert.match(wd, /r\.optLong\(2\) <= now\) n\+\+/);
+  assert.match(read(J + "PrayerWidget.java"), /WidgetData\.picAt\(d, now, "prayer"\)/);
+  assert.match(read(J + "VerseWidget.java"), /WidgetData\.picAt\(d, now, picSet\(\)\)/);
+  assert.match(read(J + "VerseWidget.java"), /protected String picSet\(\) \{ return "verse"; \}/);
+  assert.match(read(J + "VerseWidgetLarge.java"), /@Override protected String picSet\(\) \{ return "large"; \}/);
   // the phone reads the picture from the app's own files, never from the network
   assert.match(wd, /c\.getAssets\(\)\.open\("public\/assets\/widgets-img\/" \+ name \+ "\.webp"\)/);
   assert.match(wd, /name\.matches\("\[a-z\]\+"\)/);
-  // with pictures changing on their own, the verse widget also wakes at prayer times
   assert.match(read(J + "VerseWidget.java"), /WidgetData\.nextPicChange\(d, now\)/);
 });
 
@@ -116,17 +125,23 @@ test("widget list previews (14 Nov): real pictures, not the empty layout; a larg
   assert.ok(exists("tools/widget-previews.mjs"));
 });
 
-test("Prayer times widget (14 Nov): time left in whole minutes, and the avoided times as on Today", () => {
+test("Prayer times widget (16 Nov, Notion): current prayer left, next prayer right; avoided times as on Today", () => {
   // the app sends the three sun-based windows (same as forbiddenNow) with ready lines in the app's language
   assert.match(app, /\[\[A\("sunrise"\), A\("sunrise"\) \+ 15 \* mi\], \[A\("dhuhr"\) - 10 \* mi, A\("dhuhr"\)\], \[A\("maghrib"\) - 15 \* mi, A\("maghrib"\)\]\]/);
-  assert.match(app, /soon: FORB_SOON, lab: \{[^}]*inH: t\("wg_in_h"\), inM: t\("wg_in_m"\) \}/);
-  for (const k of ["wg_in_h", "wg_in_m", "fw_w_now", "fw_w_soon"]) both(k);
-  const wd = read(J + "WidgetData.java"), pw = read(J + "PrayerWidget.java");
-  assert.match(wd, /long mins = Math\.max\(1, \(ms \+ 59999\) \/ 60000\)/, "rounded up, never 0 before the prayer");
-  assert.match(wd, /\(char\) \('০' \+ \(ch - '0'\)\)/, "Bangla digits in Bangla");
-  assert.match(pw, /WidgetData\.timeLeft\(d, next\.optLong\(2\) - now\)/);
-  assert.doesNotMatch(pw, /setTextViewText\(R\.id\.wg_next_time, next\.optString\(1\)\)/, "no clock time under the place any more");
-  assert.match(pw, /WidgetData\.forbidden\(d, now\)/); assert.match(pw, /setViewVisibility\(R\.id\.wg_place, View\.GONE\)/);
+  assert.match(app, /lab: \{ next: t\("next"\), cur: t\("curp"\), nocur: t\("wg_nocur"\),/);
+  assert.match(app, /sr: A\("sunrise"\), pi: timesOk\(Y\) \? \[pName\("isha", isFriD\(Y\)\), Y\.abs\("isha"\)\] : null/);
+  for (const k of ["wg_nocur", "fw_w_now", "fw_w_soon"]) both(k);
+  const wd = read(J + "WidgetData.java"), pw = read(J + "PrayerWidget.java"), lay = read(A + "res/layout/widget_prayer.xml");
+  // no place and no countdown any more
+  assert.doesNotMatch(lay, /wg_place|wg_next_time/); assert.doesNotMatch(pw, /timeLeft|wg_place/); assert.doesNotMatch(wd, /timeLeft/);
+  assert.ok(lay.indexOf("wg_cur_name") < lay.indexOf("wg_next_name"), "current on the left, next on the right");
+  assert.match(lay, /android:id="@\+id\/wg_next_name"[\s\S]*?android:gravity="end"/);
+  // current prayer as Today: Fajr ends at sunrise, before Fajr it is last night's Isha
+  assert.match(pw, /if \(k < 0\) \{ JSONArray pi = o\.optJSONArray\("pi"\); return pi == null \? null : pi\.optString\(0\); \}/);
+  assert.match(pw, /if \(k == 0 && o\.optLong\("sr"\) > 0 && now >= o\.optLong\("sr"\)\) return null;/);
+  assert.match(pw, /WidgetData\.lab\(d, "nocur"\)/);
+  assert.match(pw, /WidgetData\.forbidden\(d, now\)/); assert.match(pw, /setViewVisibility\(R\.id\.wg_next_lbl, View\.GONE\)/);
+  assert.match(pw, /long sr = sunriseAfter\(d, now\);/, "wakes at sunrise too");
   assert.match(pw, /WidgetData\.scheduleNext\(c, PrayerWidget\.class, 1, next, true\)/);
   assert.match(wd, /am\.canScheduleExactAlarms\(\)/); assert.match(wd, /am\.setExact\(AlarmManager\.RTC,/, "non-waking");
 });

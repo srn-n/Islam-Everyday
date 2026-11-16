@@ -15,13 +15,13 @@ mkdirSync(out, { recursive: true });
 const pic = k => "data:image/webp;base64," + readFileSync(new URL(`assets/widgets-img/${k}.webp`, root)).toString("base64");
 const card = (k, w, h, body) => `<div class="w" style="width:${w}px;height:${h}px;background-image:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.65)),url(${pic(k)})">${body}</div>`;
 const P = [["Fajr", "4:09 am"], ["Dhuhr", "12:40 pm"], ["Asr", "4:23 pm"], ["Maghrib", "7:35 pm"], ["Isha", "9:05 pm"]];
-const prayer = card("lavender", 720, 330, `<div class="top"><span>Next prayer</span><span>Sydney</span></div>
-  <div class="next"><b>Asr</b><b class="g sm">in 2 h 15 min</b></div>
+const prayer = card("orchard", 720, 330, `<div class="top"><span>Current prayer</span><span>Next prayer</span></div>
+  <div class="next"><b>Dhuhr</b><b class="g">Asr</b></div>
   <div class="row">${P.map(([n, t], i) => `<div class="${i === 2 ? "on" : ""}"><span>${n}</span><b>${t}</b></div>`).join("")}</div>`);
 const verse = (k, w, h, cls, t, r) => card(k, w, h, `<div class="lab">Verse for today</div><p class="${cls}">${t}</p><div class="ref">${r}</div>`);
 const items = {
   wg_prev_prayer: prayer,
-  wg_prev_verse: verse("aurora", 720, 330, "t", "We have certainly made the Qur’an easy to understand and remember; is there anyone to take heed?", "Al-Qamar · 54:17"),
+  wg_prev_verse: verse("maple", 720, 330, "t", "We have certainly made the Qur’an easy to understand and remember; is there anyone to take heed?", "Al-Qamar · 54:17"),
   wg_prev_verse_large: verse("glacier", 720, 720, "t lg", "Do you not see how Allah compares a good word to a good tree? Its root is firm and its branches reach the sky, yielding its fruit all the times, by the permission of its Lord. Allah makes such comparisons for people, so that they may take heed.", "Ibrahim · 14:24–25"),
 };
 const css = `body{margin:0;background:transparent;font-family:Roboto,"Noto Sans","Liberation Sans",Arial,sans-serif;color:#fff}

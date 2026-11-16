@@ -17,6 +17,9 @@ import org.json.JSONObject;
 public class VerseWidget extends AppWidgetProvider {
     /** The layout this size uses. */
     protected int layout() { return R.layout.widget_verse; }
+    /** Its own pictures (WG_SETS in the app): not the same as any other widget's. */
+    protected String picSet() { return "verse"; }
+
     /** Its own wake-up alarm (each kind of widget has one). */
     protected int alarmCode() { return 2; }
 
@@ -25,7 +28,7 @@ public class VerseWidget extends AppWidgetProvider {
         JSONObject d = WidgetData.load(c);
         long now = System.currentTimeMillis();
         JSONObject day = WidgetData.dayAt(d, now), vs = day == null ? null : day.optJSONObject("v");
-        String pic = WidgetData.picAt(d, now);
+        String pic = WidgetData.picAt(d, now, picSet());
         for (int id : ids) m.updateAppWidget(id, build(c, m, id, d, vs, pic));
         // the next verse at local midnight; with pictures changing on their own, also at each prayer time
         long next = day == null ? 0 : day.optLong("to"), pc = WidgetData.nextPicChange(d, now);

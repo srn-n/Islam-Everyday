@@ -58,6 +58,19 @@ public class AppearancePlugin extends Plugin {
         { R.style.Launch_Sandstone_Jade, R.style.Launch_Sandstone_Indigo, R.style.Launch_Sandstone_Teal } };
     static int splashTheme(Context c) { return LAUNCH[lightTheme(c)][darkTheme(c)]; }
 
+    /** The date picker of each theme (res/values/date_pickers.xml, made by tools/launch-themes.mjs). */
+    static final int[] PICK_LIGHT = { R.style.Pick_Classic, R.style.Pick_Sky, R.style.Pick_Sandstone },
+        PICK_DARK = { R.style.Pick_Jade, R.style.Pick_Indigo, R.style.Pick_Teal };
+
+    /**
+     * 16 Nov 2026 (owner): the calendar the page's date field opens is Android's own dialog; it takes the theme the
+     * app shows now. The theme's picker style is laid over the activity's theme, so the next dialog uses it.
+     */
+    static void applyPicker(Activity a) {
+        if (a == null) return;
+        try { a.getTheme().applyStyle(isDark(a) ? PICK_DARK[darkTheme(a)] : PICK_LIGHT[lightTheme(a)], true); } catch (Exception ignored) {}
+    }
+
     /** Android 13+: the next start's launch screen uses the chosen themes' colours. Kept by Android between starts. */
     static void applySplash(Activity a) {
         if (a == null || Build.VERSION.SDK_INT < 33) return;
@@ -95,6 +108,7 @@ public class AppearancePlugin extends Plugin {
         getActivity().runOnUiThread(() -> {
             apply(getContext(), mode);
             applySplash(getActivity());
+            applyPicker(getActivity());
             // The window and the WebView behind the page take the new ground at once (seen if the page ever pauses).
             try {
                 int g = ground(getActivity());

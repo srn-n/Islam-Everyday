@@ -17,7 +17,7 @@ test("section slides: phones and the app only, skipped for reduced motion and Mo
   assert.match(app, /if \(vt\) \{ try \{ vt\.skipTransition\(\); \} catch \(e\) \{\} \}/);
   assert.match(app, /t\.ready\.catch\(\(\) => \{\}\); t\.updateCallbackDone\.catch\(\(\) => \{\}\);/);
   assert.match(css, /::view-transition\{pointer-events:none\}/, "taps pass through a slide");
-  assert.match(css, /html\[data-vt\] #top\{view-transition-name:ie-top\}/);
+  assert.match(css, /\n#top\{view-transition-name:ie-top\}/); assert.doesNotMatch(css, /html\[data-vt[^\]]*\] (#top|nav|\.)/);
 });
 
 test("Android: Back closes a sheet, steps back, returns to Today, then closes the app once", () => {
@@ -67,7 +67,8 @@ test("smooth opening: the splash waits for fonts and the verse, and nothing redr
   assert.match(app, /document\.querySelector\("#view \.a-verse"\)/, "the verse arriving redraws only its card");
   assert.doesNotMatch(app, /qEnsure\(i\)\.catch\(\(\) => \{\}\)\.then\(\(\) => \{ if \(R\.tab === "today" && !R\.sub\) render\(false\); \}\)/);
   assert.match(app, /if \(arcWait\(\)\) \{ setP\(0\); arcF = f; return; \}/, "the sun arc waits for the door to open");
-  assert.match(app, /if \(!\$\("splash"\) && \(now >= snap\.next\.at/, "the minute redraw waits for the splash");
+  assert.match(app, /if \(!splashUp\(\) && \(now >= snap\.next\.at/, "the minute redraw waits for the splash");
+  assert.match(app, /const keep = !anim && performance\.now\(\) < landEnd \? \[\.\.\.v\.classList\]\.filter\(c => c === "door" \|\| c === "enter"\)/, "a redraw during the rise keeps it running");
 });
 
 test("faster pages on phones: cached date formatters, lazily measured long lists, fewer blurs", () => {

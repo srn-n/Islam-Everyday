@@ -2,6 +2,24 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## For women, a new widget layout, widget pictures of their own, a calendar in the app's colours, smoother motion (16 November 2026)
+
+### Added
+- **For women (More):** a page only for women who choose it. After confirming, it shows a verse on the worth of women (Qur'an 3:195) and turns on:
+  - **Period days in the prayer tracker:** mark a day as a period day; prayers not prayed that day show as excused (a ring in a soft rose colour of the theme, not filled), and the streak does not break.
+  - **Gentle reminders on period days:** instead of the prayer reminders, three a day (at Dhuhr, Asr and Isha time): the worth of women and daughters, a remembrance, and a good deed, all from the Qur'an and authentic hadith (Sahih al-Bukhari, Sahih Muslim), word for word. The reminders never mention the period.
+  - Period days stay on the phone only and can be deleted at any time. The page is marked as not reviewed by a scholar.
+- **Share the tracker as an image:** the last seven days and the streak, with "simplymadestudio.net" at the bottom.
+
+### Changed
+- **Prayer widget:** the current prayer is on the left and the next prayer on the right; the place and the next-prayer time are gone. Before Fajr the current prayer is Isha; between sunrise and Dhuhr it says "No prayer now".
+- **Android opening:** the doorway on Android's own launch screen draws itself in, so the screen is never still while the app starts.
+- **Calendar in the app's colours (Android):** the calendar that opens from the tracker's date field now uses the theme you see (its card colour, text and accent), in light and dark.
+- **Widget pictures:** each widget has its own seven pictures (14 new ones for the Prayer times and Verse widgets; the large Verse keeps the first seven), so two widgets on one home screen never show the same picture. They move to the next picture at each prayer time, in order. The picture choices in Settings are gone; Settings now just says how this works.
+- **Smoother page changes:** a page change no longer makes the whole page restyle first, so the slide starts sooner; the Qur'an and Hadith tabs' data is read while the phone is idle after the opening, so their first visit slides straight in without "Loading…".
+- **Smoother landing:** the faded opening screen is taken away only after the page has risen, and a redraw during the rise no longer cuts it short.
+- AGENTS.md is no longer in the repository; it is kept on the owner's computer.
+
 ## No blink when the app opens (15 November 2026)
 
 ### Fixed

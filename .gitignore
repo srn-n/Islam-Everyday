@@ -5,3 +5,6 @@ node_modules/
 
 # scratch files Claude could not delete
 _to_delete/
+
+# Owner (15 Nov 2026): AGENTS.md is kept on the owner's computer only, kept up to date there; never pushed.
+AGENTS.md

@@ -4,4 +4,5 @@ package com.simplymadestudio.islameveryday;
 public class VerseWidgetLarge extends VerseWidget {
     @Override protected int layout() { return R.layout.widget_verse_large; }
     @Override protected int alarmCode() { return 3; }
+    @Override protected String picSet() { return "large"; }
 }

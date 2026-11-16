@@ -47,7 +47,7 @@ test("opening (14 Nov 2026): four seconds on the first open, smooth, tap to skip
   assert.deepEqual([...new Set(props)], []);
   assert.doesNotMatch(html.slice(html.indexOf('id="splash"'), html.indexOf("<aside")), /<(circle|g|clipPath|linearGradient|radialGradient)\b/, "the doorway SVG is a still drawing");
   // the app's background work waits until the opening has finished
-  assert.match(app, /const nfSync = \(\) => \{ clearTimeout\(nfT\); nfT = setTimeout\(afterSplash\(nfRun\), 500\); \};/);
+  assert.match(app, /const nfSync = \(\) => \{ clearTimeout\(nfT\); nfT = setTimeout\(afterSplash\(nfGo\), 500\); \};/); // 16 Nov: nfGo loads the women texts first when needed
   assert.match(app, /wgT = setTimeout\(afterSplash\(widgetRun\), 1200\)/);
 });
 

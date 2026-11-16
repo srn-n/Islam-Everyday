@@ -58,7 +58,7 @@ test("Today redraws in place: coming back to the app or the minute tick changes 
 });
 
 test("open: no blink as the splash leaves; content fades before the ground; the page rises after", () => {
-  assert.match(app, /setTimeout\(\(\) => \{ sp\.remove\(\); \}, 700\);/);
+  assert.match(app, /setTimeout\(\(\) => \{ sp\.remove\(\); \}, rise \? 1900 : 700\);/); assert.match(app, /setTimeout\(\(\) => sp\.classList\.add\("gone"\), 600\)/);
   assert.doesNotMatch(app, /sp\.remove\(\); v\.classList\.remove\("door"\)/, "removing door mid-rise restarted it from invisible (the blink)");
   assert.match(css, /\.splash\.out \.sp-in\{opacity:0;transform:scale\(1\.06\);transition:opacity \.2s ease/);
   assert.match(css, /transition:opacity \.38s cubic-bezier\(\.4,0,\.2,1\) \.16s,visibility 0s linear \.56s/);

@@ -64,16 +64,19 @@ final class WidgetData {
     static final int PIC_INK = 0xFFFFFFFF, PIC_MUTED = 0xE6FFFFFF, PIC_ACCENT = 0xFFFFE2A6;
 
     /**
-     * The picture behind the widgets now, or null for the theme colour. "auto" moves one step at each prayer time:
-     * day number × 5 + prayers begun that day (the same rule as wgPicAt in the app, so Settings marks the same one).
+     * The picture behind one kind of widget now ("prayer", "verse" or "large"), or null for the theme colour.
+     * 16 Nov 2026: each kind has its own seven (bg.sets in the app's data), so two widgets never show the same picture;
+     * it moves one step at each prayer time: day number × 5 + prayers begun that day, one after another.
+     * Data saved by an older version (one list for all, or a chosen picture) still works until the app is opened.
      */
-    static String picAt(JSONObject d, long now) {
+    static String picAt(JSONObject d, long now, String kind) {
         JSONObject bg = d == null ? null : d.optJSONObject("bg");
         if (bg == null || "plain".equals(bg.optString("mode"))) return null;
-        JSONArray list = bg.optJSONArray("list");
+        JSONObject sets = bg.optJSONObject("sets");
+        JSONArray list = sets != null ? sets.optJSONArray(kind) : bg.optJSONArray("list");
         if (!"auto".equals(bg.optString("mode")) || list == null || list.length() == 0) return bg.optString("pic", null);
         JSONObject day = dayAt(d, now);
-        if (day == null) return bg.optString("pic", null);
+        if (day == null) return list.optString(0, null);
         int n = 0; JSONArray p = day.optJSONArray("p");
         if (p != null) for (int k = 0; k < p.length(); k++) { JSONArray r = p.optJSONArray(k); if (r != null && r.optLong(2) <= now) n++; }
         long i = (day.optLong("dn") * 5 + n) % list.length();
@@ -132,20 +135,6 @@ final class WidgetData {
         return true;
     }
 
-    /** Bangla digits when the app is in Bangla. */
-    static String num(JSONObject d, long n) {
-        String s = String.valueOf(n);
-        if (d == null || !"bn".equals(d.optString("lang"))) return s;
-        StringBuilder b = new StringBuilder();
-        for (char ch : s.toCharArray()) b.append(ch >= '0' && ch <= '9' ? (char) ('০' + (ch - '0')) : ch);
-        return b.toString();
-    }
-
-    /** "in 2 h 15 min" / "in 15 min" (whole minutes, rounded up, so it never says 0 before the prayer begins). */
-    static String timeLeft(JSONObject d, long ms) {
-        long mins = Math.max(1, (ms + 59999) / 60000), h = mins / 60, m = mins % 60;
-        return h > 0 ? lab(d, "inH").replace("{h}", num(d, h)).replace("{m}", num(d, m)) : lab(d, "inM").replace("{m}", num(d, m));
-    }
 
     /**
      * The avoided time (the three sun-based ones, as on Today) to show now: its line, whether it is on now, and the

@@ -11,7 +11,8 @@ import android.widget.RemoteViews;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-/** Home-screen widget: the next prayer, and the five times of its day with the next one marked. */
+/** Home-screen widget: the current prayer (left) and the next one (right), and the five times of the next prayer's day
+ *  with the next one marked (16 Nov 2026, Notion: no place and no countdown on the right any more). */
 public class PrayerWidget extends AppWidgetProvider {
     static final int[] NAME = { R.id.wg_p0n, R.id.wg_p1n, R.id.wg_p2n, R.id.wg_p3n, R.id.wg_p4n };
     static final int[] TIME = { R.id.wg_p0t, R.id.wg_p1t, R.id.wg_p2t, R.id.wg_p3t, R.id.wg_p4t };
@@ -30,19 +31,46 @@ public class PrayerWidget extends AppWidgetProvider {
                 for (int k = 0; k < p.length(); k++) { JSONArray r = p.optJSONArray(k); if (r != null && r.optLong(2) > now) { day = o; nx = k; break; } }
             }
         }
-        String pic = WidgetData.picAt(d, now);
+        String pic = WidgetData.picAt(d, now, "prayer");
         Object[] fb = WidgetData.forbidden(d, now);
         for (int id : ids) m.updateAppWidget(id, build(c, m, id, d, day, nx, now, pic, fb));
-        // wake at the next change: the next whole minute of the time left, a prayer beginning, or an avoided time
+        // wake at the next change: a prayer beginning, sunrise (Fajr's time ends), or an avoided time
         long next = 0;
         if (day != null) {
-            long at = day.optJSONArray("p").optJSONArray(nx).optLong(2), left = at - now;
-            next = at - ((left - 1) / 60000) * 60000;
+            next = day.optJSONArray("p").optJSONArray(nx).optLong(2);
+            long sr = sunriseAfter(d, now);
+            if (sr > 0) next = Math.min(next, sr);
             if (fb != null) next = Math.min(next, (long) fb[2]);
             long notice = WidgetData.nextForbiddenNotice(d, now);
             if (notice > 0) next = Math.min(next, notice);
         }
         WidgetData.scheduleNext(c, PrayerWidget.class, 1, next, true);
+    }
+
+    /** The current prayer at `now`, as Today shows it: the latest prayer begun, except that Fajr ends at sunrise (then
+     *  none until Dhuhr) and before Fajr it is still last night's Isha. Null: none in progress. */
+    static String current(JSONObject d, long now) {
+        JSONArray days = d == null ? null : d.optJSONArray("days");
+        if (days == null) return null;
+        for (int i = 0; i < days.length(); i++) {
+            JSONObject o = days.optJSONObject(i);
+            if (o == null || now < o.optLong("from") || now >= o.optLong("to")) continue;
+            JSONArray p = o.optJSONArray("p"); if (p == null) return null;
+            int k = -1;
+            for (int j = 0; j < p.length(); j++) { JSONArray r = p.optJSONArray(j); if (r != null && r.optLong(2) <= now) k = j; }
+            if (k < 0) { JSONArray pi = o.optJSONArray("pi"); return pi == null ? null : pi.optString(0); }
+            if (k == 0 && o.optLong("sr") > 0 && now >= o.optLong("sr")) return null;
+            return p.optJSONArray(k).optString(0);
+        }
+        return null;
+    }
+
+    /** The next sunrise after `now` (when "Fajr" stops being current), or 0. */
+    static long sunriseAfter(JSONObject d, long now) {
+        JSONArray days = d == null ? null : d.optJSONArray("days");
+        if (days == null) return 0;
+        for (int i = 0; i < days.length(); i++) { JSONObject o = days.optJSONObject(i); long sr = o == null ? 0 : o.optLong("sr"); if (sr > now) return sr; }
+        return 0;
     }
 
     private static RemoteViews build(Context c, AppWidgetManager m, int id, JSONObject d, JSONObject day, int nx, long now, String pic, Object[] fb) {
@@ -61,23 +89,24 @@ public class PrayerWidget extends AppWidgetProvider {
         v.setViewVisibility(R.id.wg_empty, View.GONE);
         JSONArray p = day.optJSONArray("p"), next = p.optJSONArray(nx);
         boolean today = now >= day.optLong("from") && now < day.optLong("to");
-        v.setTextViewText(R.id.wg_place, d.optString("place", ""));
+        String cur = current(d, now);
+        v.setTextViewText(R.id.wg_cur_name, cur != null ? cur : WidgetData.lab(d, "nocur"));
+        v.setFloat(R.id.wg_cur_name, "setTextSize", cur != null ? 21f : 15f);
         v.setTextViewText(R.id.wg_next_name, next.optString(0));
-        // Nov 2026 (14th): the time left to the next prayer (whole minutes); its clock time is in the row below
-        v.setTextViewText(R.id.wg_next_time, WidgetData.timeLeft(d, next.optLong(2) - now));
-        v.setTextColor(R.id.wg_place, muted);
+        v.setTextViewText(R.id.wg_next_lbl, WidgetData.lab(d, "next") + (today ? "" : " · " + WidgetData.lab(d, "tomorrow")));
+        v.setTextColor(R.id.wg_next_lbl, muted);
         if (fb != null) {
-            // an avoided time is on (or begins within ten minutes): the top line says so, in amber
+            // an avoided time is on (or begins within ten minutes): one amber line across the top, in place of both labels
             int amber = onPic ? 0xFFFFC46E : 0xFFB06A0E;
             v.setTextViewText(R.id.wg_label, (boolean) fb[1] ? WidgetData.bold((String) fb[0]) : (String) fb[0]);
             v.setTextColor(R.id.wg_label, amber);
-            v.setViewVisibility(R.id.wg_place, View.GONE);
+            v.setViewVisibility(R.id.wg_next_lbl, View.GONE);
         } else {
-            v.setTextViewText(R.id.wg_label, WidgetData.lab(d, "next") + (today ? "" : " · " + WidgetData.lab(d, "tomorrow")));
+            v.setTextViewText(R.id.wg_label, WidgetData.lab(d, "cur"));
             v.setTextColor(R.id.wg_label, muted);
-            v.setViewVisibility(R.id.wg_place, View.VISIBLE);
+            v.setViewVisibility(R.id.wg_next_lbl, View.VISIBLE);
         }
-        v.setTextColor(R.id.wg_next_name, ink); v.setTextColor(R.id.wg_next_time, acc);
+        v.setTextColor(R.id.wg_cur_name, ink); v.setTextColor(R.id.wg_next_name, acc);
         for (int k = 0; k < NAME.length; k++) {
             JSONArray r = p.optJSONArray(k); String n = r == null ? "" : r.optString(0), t = r == null ? "" : r.optString(1);
             v.setTextViewText(NAME[k], k == nx ? WidgetData.bold(n) : n);

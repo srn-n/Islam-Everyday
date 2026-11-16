@@ -1306,9 +1306,13 @@ a.opt{color:inherit;text-decoration:none}
 /* Section changes on phones and in the Android app (Nov 2026). app.js wraps the page swap in a view transition only on
    touch screens with motion on, and sets html[data-vt] to the direction. The header and the tab bar are their own layers
    and stay still; the page leaves quickly and the next one settles in. Desktop never sets data-vt, so nothing here applies there. */
-html[data-vt] #top{view-transition-name:ie-top}
-html[data-vt] nav.tabs{view-transition-name:ie-tabs}
-html[data-vt="left"]{--vtx:1}html[data-vt="right"]{--vtx:-1}
+/* 16 Nov 2026 (Notion: smoother section changes): the names are always set (they do nothing outside a transition),
+   and the direction is set on the snapshots only. Both used to hang on html[data-vt]: setting an inherited custom
+   property on the root made every element on the page restyle twice per change (about 80 ms on a mid-range phone,
+   right when the slide should start). */
+#top{view-transition-name:ie-top}
+nav.tabs{view-transition-name:ie-tabs}
+html[data-vt="right"]::view-transition-old(root),html[data-vt="right"]::view-transition-new(root){--vtx:-1}
 ::view-transition-group(ie-top),::view-transition-group(ie-tabs){animation:none}
 ::view-transition-old(ie-top),::view-transition-old(ie-tabs){display:none}
 ::view-transition-new(ie-top),::view-transition-new(ie-tabs){animation:none}
@@ -1575,3 +1579,28 @@ html.native.sp-hold .splash{animation-play-state:paused!important}
 :root[data-motion="off"] :is(.sp-sky,.sp-halo,.sp-name span,.sp-by,.sp-tag,.sp-promise,.sp-skip){opacity:1;transform:none}
 :root[data-motion="off"] .sp-sun{transform:none}
 :root[data-motion="off"] :is(.sp-ring,.sp-bar){display:none}
+
+/* ---------- For women (16 Nov 2026, Notion) ----------
+   --pd: the colour of a period day, a rose that suits each theme. An excused prayer is a solid ring with a small dot,
+   never filled: unlike a recorded prayer (filled) and unlike one not recorded (dashed). */
+:root{--pd:#B04A72}
+:root[data-palette="sky"]{--pd:#9B4A86}
+:root[data-palette="sandstone"]{--pd:#B5524F}
+:root[data-theme="dark"]{--pd:#E68AB0}
+:root[data-palette="indigo"][data-theme="dark"]{--pd:#F094C4}
+:root[data-palette="teal"][data-theme="dark"]{--pd:#F29AA3}
+.tick.ex[aria-pressed="false"] i{border:1.8px solid var(--pd);background:radial-gradient(circle,var(--pd) 0 3.5px,transparent 4px)}
+.fg-c.ex,.fg-c.ex.sel{border:1.6px solid var(--pd);background:radial-gradient(circle,var(--pd) 0 2.4px,transparent 2.8px)}
+.fg-key .fg-c.ex{background:radial-gradient(circle,var(--pd) 0 2px,transparent 2.4px)}
+.pd-tag{color:var(--pd);font-weight:600;font-size:.78rem;margin-left:4px}
+.badge.pd{background:color-mix(in srgb,var(--pd) 14%,var(--surface));color:var(--pd);border:1px solid color-mix(in srgb,var(--pd) 45%,transparent)}
+.pd-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.pd-row .note{flex:1 1 180px;margin:0}
+.pd-btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:99px;border:1.5px solid color-mix(in srgb,var(--pd) 55%,transparent);background:transparent;color:var(--pd);font:inherit;font-weight:600;transition:background .2s,color .2s}
+.pd-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round}
+.pd-btn[aria-pressed="true"]{background:var(--pd);color:var(--surface);border-color:var(--pd)}
+.trk-share{display:flex;justify-content:flex-end;margin:6px 0 2px}
+.trk-share svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.w-list{margin:12px 0 4px;padding-left:20px;display:grid;gap:8px}
+.w-acts{gap:10px;flex-wrap:wrap;margin-top:10px}
+.w-intro .btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round}

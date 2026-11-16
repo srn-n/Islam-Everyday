@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Build assets/en-rwwad.js: the Rowwad Translation Center English translation (QuranEnc.com) for the verses the app
 shows outside the reader — every Verse-for-today passage (assets/votd.js), the Thursday/Friday entries
-(assets/votd-day.js), Ayat al-Kursi (2:255, Core remembrance) and (14 Nov 2026) the Qur'an verses of the Today,
-Qur'an and reminder heroes (tools/heroes/source.mjs). Run tools/heroes/build.mjs after this tool.
+(assets/votd-day.js), Ayat al-Kursi (2:255, Core remembrance), (14 Nov 2026) the Qur'an verses of the Today,
+Qur'an and reminder heroes (tools/heroes/source.mjs) and (16 Nov 2026) the For women verses (tools/women/source.mjs).
+Run tools/heroes/build.mjs and tools/women/build.mjs after this tool.
 
 Usage (Face 7.1): python3 tools/import-rwwad-subset.py <english_rwwad.sqlite> <version, e.g. 1.0.21>
 The sqlite file is QuranEnc's own download (https://quranenc.com/downloads/sqlite/english_rwwad.zip). Text and
@@ -25,6 +26,11 @@ hjs = r"""
 import(process.argv[1]+'/tools/heroes/source.mjs').then(m=>{const o=[];const add=x=>{if(x&&x.q)for(let a=x.q[1];a<=x.q[2];a++)o.push([x.q[0],a]);};
 Object.values(m.PRAYER).forEach(L=>L.forEach(add));m.QURAN.forEach(add);console.log(JSON.stringify(o));});"""
 pairs += json.loads(subprocess.check_output(['node', '--input-type=module', '-e', hjs, ROOT]))
+# 16 Nov 2026: the verses of the For women page and the period-day reminders (tools/women/source.mjs)
+wjs = r"""
+import(process.argv[1]+'/tools/women/source.mjs').then(m=>{const o=[];const add=x=>{if(x&&x.q)for(let a=x.q[1];a<=x.q[2];a++)o.push([x.q[0],a]);};
+add(m.WELCOME);m.WORTH.forEach(add);m.DEEDS.forEach(add);console.log(JSON.stringify(o));});"""
+pairs += json.loads(subprocess.check_output(['node', '--input-type=module', '-e', wjs, ROOT]))
 con = sqlite3.connect(db)
 V = {}
 for s, a in pairs:

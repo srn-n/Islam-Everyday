@@ -9,6 +9,7 @@ import { read, json, loadBrowser } from "./helpers.mjs";
 
 const app = read("assets/app.js"), css = read("assets/app.css"), html = read("index.html"), sw = read("sw.js");
 const { I18N } = loadBrowser("assets/data.js").DINSATHI;
+for (const l of ["en", "bn"]) Object.assign(I18N[l], loadBrowser("assets/women.js").IE_WOMEN.I18N[l]); // the For women page's words load with its texts
 const DV = loadBrowser("assets/dayviz.js").IE_DAYVIZ;
 const ZK = loadBrowser("assets/zakat.js").IE_ZAKAT;
 const hctx = loadBrowser("assets/hadith.js", "assets/nawawi.js"), HD = hctx.IE_HADITH, NW = hctx.IE_NAWAWI;

@@ -9,20 +9,22 @@ const LOC = window.IE_LOCALE, VE = window.IE_VOTD_EN, DV = window.IE_DAYVIZ;
 /* Phone speed (Oct 2026): page data that the Today screen does not need is loaded only when its page opens, so a phone
    downloads about a third of the scripts before the first screen appears. LAZY lists each group's files in load order;
    bindLazy() picks up the globals they define. The service worker still precaches all of them for offline use. */
-const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"] };
-let NM, NAMES = [], GD, HD, NW, SD, ST, LG = null, HCOLL = {}, NW_N = 0;
+const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"], women: ["women"] };
+let NM, NAMES = [], GD, HD, NW, SD, ST, LG = null, WM = null, HCOLL = {}, NW_N = 0;
 const lazyDone = new Set(), lazyP = {}, lazyFiles = new Set();
 /* Phones (touch screen) get the on-demand loading; computers with a mouse keep the previous behaviour: everything is
    loaded straight after the first screen, so their pages open with no "Loading…" step. */
 const phone = () => { try { return matchMedia("(pointer: coarse)").matches; } catch (e) { return false; } };
 function bindLazy() {
   NM = window.DINSATHI_NAMES; NAMES = NM ? NM.names : []; GD = window.IE_GUIDE; HD = window.IE_HADITH; NW = window.IE_NAWAWI;
-  SD = window.IE_STUDY; ST = window.IE_STORIES; LG = window.IE_LEGAL || null;
+  SD = window.IE_STUDY; ST = window.IE_STORIES; LG = window.IE_LEGAL || null; WM = window.IE_WOMEN || null;
+  // The For women page's words come with its texts (assets/women.js), so the first screen does not carry them.
+  if (WM && WM.I18N && !WM._in) { WM._in = 1; for (const l in WM.I18N) if (I18N[l]) Object.assign(I18N[l], WM.I18N[l]); }
   HCOLL = Object.assign({}, NW ? NW.COLLECTIONS : {}, HD ? HD.COLLECTIONS : {});
   NW_N = NW ? NW.HADITH.length : 0;
 }
 bindLazy();
-for (const g in LAZY) if ({ names: NM && window.IE_NAME_STORIES, guide: NM && GD, hadith: HD && NW, study: SD, stories: ST, legal: LG }[g]) lazyDone.add(g); // already on the page
+for (const g in LAZY) if ({ names: NM && window.IE_NAME_STORIES, guide: NM && GD, hadith: HD && NW, study: SD, stories: ST, legal: LG, women: WM }[g]) lazyDone.add(g); // already on the page
 function need(g) {
   if (!g || lazyDone.has(g)) return Promise.resolve();
   if (!lazyP[g]) lazyP[g] = LAZY[g].reduce((p, n) => p.then(() => lazyFiles.has(n) ? 0 : new Promise((ok, no) => {
@@ -33,7 +35,7 @@ function need(g) {
 }
 /* Which group a route or a shared link needs (null: nothing extra). */
 const routeGroup = r => r.tab === "quran" ? (r.sub === "stories" ? "stories" : (r.sub === "all" || r.surah) ? null : "study")
-  : r.tab === "hadith" ? "hadith" : r.tab === "more" ? ({ names: "names", guide: "guide", about: "legal", terms: "legal", privacy: "legal" }[r.sub] || null) : null;
+  : r.tab === "hadith" ? "hadith" : r.tab === "more" ? ({ names: "names", guide: "guide", about: "legal", terms: "legal", privacy: "legal", women: "women" }[r.sub] || null) : null;
 const hashGroup = h => /^story\//.test(h) ? "stories" : /^name\//.test(h) ? "names" : /^(hadith|nawawi)\//.test(h) ? "hadith" : null;
 const PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"], ROWS = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
 const TABS = ["today", "quran", "hadith", "more"]; // Nov 2026: Hadith is a tab; Duas moved into More
@@ -51,8 +53,8 @@ const KEY = "dinsathi.web.v1";
    (res/raw/ie_drop, ie_ripple, ie_bubble; previews in assets/sounds). */
 const NF_SND = ["default", "drop", "ripple", "bubble"]; // Nov 2026: "tap" and "breeze" were replaced
 const NF_OLD = ["tap", "breeze"]; // their channels are removed from the phone
-const DEF = { lang: "en", loc: "en-IN", mode: "system", lightTheme: "sandstone", darkTheme: "jade", glass: "balanced", motion: "subtle", scene: "landscape", sceneAuto: false, heroKind: "anim", photo: "mosque", wgMode: "auto", wgPic: "lavender", city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
-  school: null, vib: "light", snd: true, sndK: "soft", vol: 60, nfSnd: "default", nf: { pray: false, forb: false, thu: false, tahajjud: false, duha: false }, nfAsk: false, pray: null, log: {}, xlog: {}, fplan: {}, gloss: false, last: null, read: [], bm: [], fav: [], tab: "today", hcol: "general", nwread: [],
+const DEF = { lang: "en", loc: "en-IN", mode: "system", lightTheme: "sandstone", darkTheme: "jade", glass: "balanced", motion: "subtle", scene: "landscape", sceneAuto: false, heroKind: "anim", photo: "mosque", city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
+  school: null, vib: "light", snd: true, sndK: "soft", vol: 60, nfSnd: "default", nf: { pray: false, forb: false, thu: false, tahajjud: false, duha: false }, nfAsk: false, pray: null, log: {}, xlog: {}, women: 0, pd: {}, wnf: true, fplan: {}, gloss: false, last: null, read: [], bm: [], fav: [], tab: "today", hcol: "general", nwread: [],
   zk: { cur: "AUD", basis: "silver", w: "tola", price: "", v: {} } };
 let st = JSON.parse(JSON.stringify(DEF));
 try {
@@ -61,6 +63,7 @@ try {
     st = Object.assign(st, s);
     st.zk = Object.assign({}, DEF.zk, s.zk || {});
     st.nf = Object.assign({}, DEF.nf, s.nf && typeof s.nf === "object" ? s.nf : {});
+    if (!st.pd || typeof st.pd !== "object" || Array.isArray(st.pd)) st.pd = {};
   }
   if (!["off", "light", "medium", "strong"].includes(st.vib)) st.vib = "light";
   st.vol = Math.max(0, Math.min(100, +st.vol || 0));
@@ -72,8 +75,7 @@ try {
   st.sceneAuto = !!st.sceneAuto;
   if (st.heroKind !== "photo") st.heroKind = "anim";
   if (!PHOTOS.includes(st.photo)) st.photo = "mosque";
-  if (!["plain", "pic", "auto"].includes(st.wgMode)) st.wgMode = "auto";
-  if (!WPICS.includes(st.wgPic)) st.wgPic = "lavender";
+  delete st.wgMode; delete st.wgPic; // 16 Nov 2026: the widget pictures are no longer chosen (see WG_SETS)
   st.xlog = XT.clean(st.xlog);
   if (!st.fplan || typeof st.fplan !== "object" || Array.isArray(st.fplan)) st.fplan = {};
   if (st.hcol !== "nawawi") st.hcol = "general";
@@ -155,6 +157,8 @@ const P = {
   bell: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
   // Prayer guide (Nov 2026, 14th): a prayer mat with a pointed arch and a fringe (the old arch read like a headstone)
+  // For women (16 Nov 2026): a lotus
+  women: '<path d="M12 4.5c1.9 1.9 2.9 4.2 2.9 6.5s-1 4.4-2.9 6c-1.9-1.6-2.9-3.7-2.9-6s1-4.6 2.9-6.5z"/><path d="M9.4 16.4C6.9 16.6 4.6 15.4 3.5 13c1.9-1.2 4.3-1.4 6.2-.5M14.6 16.4c2.5.2 4.8-1 5.9-3.4-1.9-1.2-4.3-1.4-6.2-.5"/><path d="M7 20h10"/>',
   guide: '<rect x="5" y="3" width="14" height="15.5" rx="1.6"/><path d="M9 12.5V10.2c0-1.9 1.5-3.2 3-4.4 1.5 1.2 3 2.5 3 4.4v2.3M8.5 15h7M7.5 18.5v2.5M10.5 18.5v2.5M13.5 18.5v2.5M16.5 18.5v2.5"/>',
   hadith: '<path d="M7 3.5h10a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 11.5h6M9 15h3.5"/>',
   share: '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/>',
@@ -185,19 +189,17 @@ const SCENES = ["landscape", "sky", "mosque", "dunes", "mountains", "sea", "fore
 /* Nov 2026 (13th): pictures, as an alternative to the drawn scenes (st.heroKind "photo"). Generated for this app with
    Figma's AI image tool (the first seven) and Picsart's AI Playground (the last five, 14 Nov 2026); they show no real place. assets/heroes-img/<k>.webp (1200 px) and <k>-s.webp (720 px). */
 const PHOTOS = ["mosque", "dunes", "lake", "paddy", "coast", "pines", "tea", "canyon", "meadow", "mangrove", "village", "falls"]; // the mosque is Friday's picture when it changes daily
-/* Nov 2026 (13th; pictures replaced 14th): pictures behind the Android widgets, other scenes than the hero's
-   (assets/widgets-img/<k>.webp, 960 px; generated with Picsart's AI image generator, tools/widget-pictures.py). st.wgMode: "plain" (the
-   theme colour), "pic" (st.wgPic) or "auto": a new picture at each prayer time, in this order. */
-const WPICS = ["lavender", "bamboo", "glacier", "olive", "aurora", "valley", "blossom"];
-/* The picture "auto" shows at a moment: one step on at each prayer time, so it is the same in the app and on the
-   phone (WidgetData.picAt uses the same rule: day number × 5 + prayers begun that day). */
-const wgPicAt = (dn, started) => WPICS[((dn * 5 + started) % WPICS.length + WPICS.length) % WPICS.length];
+/* The pictures behind the Android widgets (assets/widgets-img/<k>.webp, 960 px; generated for this app with Picsart's AI
+   image generator, tools/widget-pictures.py; other scenes than the hero's). 16 Nov 2026 (owner): nothing to choose any
+   more; each kind of widget has its own seven and moves to the next at each prayer time, in this order, so two widgets
+   on one home screen never show the same picture. The Verse (large) keeps the first seven (14 Nov). */
+const WG_SETS = {
+  prayer: ["orchard", "fjord", "oasis", "heather", "terraces", "birch", "lagoon"],
+  verse: ["maple", "cliffs", "savanna", "tulips", "river", "bluebell", "starry"],
+  large: ["lavender", "bamboo", "glacier", "olive", "aurora", "valley", "blossom"]
+};
+/* Which one shows: WidgetData.picAt on the phone, one step on at each prayer time (day number × 5 + prayers begun). */
 const wgDayNo = (y, m, d) => Math.floor(Date.UTC(y, m - 1, d) / 864e5);
-function wgNowPic() {
-  if (st.wgMode !== "auto") return st.wgPic;
-  const c = city(), now = Date.now(), p = zoneParts(c.zone, new Date(now)), D = dayTimes(c, p.year, p.month, p.day);
-  return wgPicAt(wgDayNo(p.year, p.month, p.day), timesOk(D) ? PRAYERS.filter(k => D.abs(k) <= now).length : 0);
-}
 (() => {
   const old = st.theme, raw = (() => { try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { return {}; } })();
   if (!MODES.includes(raw.mode) || !MODES.includes(st.mode)) st.mode = old === "light" || old === "dark" ? old : old === "emerald" ? "light" : old === "indigo" ? "dark" : MODES.includes(raw.mode) ? raw.mode : "system";
@@ -403,14 +405,19 @@ const localNoon = (y, m, d) => { const c = city(), g = new Date(Date.UTC(y, m - 
 function eventsOn(h) { return h ? EVENTS.filter(e => e.m === h.m && e.d === h.d) : []; }
 
 /* ---------------- tracker ---------------- */
+/* For women (16 Nov 2026, Notion): a day marked as a period day (st.pd, kept only on this device). The prayers not
+   recorded that day are shown as excused, and the day is passed over by the streak: it does not break it and does
+   not add to it. Shown only after the For women page has been confirmed (st.women). */
+const womenOn = () => !!st.women;
+const isPd = k => womenOn() && !!(st.pd && st.pd[k]);
 function streak(s) {
   let n = 0, [y, m, d] = [s.p.year, s.p.month, s.p.day];
   const full = k => { const o = st.log[k] || {}; return PRAYERS.every(p => o[p]); };
   if (!full(s.key)) [y, m, d] = shiftDay(y, m, d, -1);
-  while (full(dkey(y, m, d)) && n < 400) { n++; [y, m, d] = shiftDay(y, m, d, -1); }
+  for (let i = 0; i < 400; i++) { const k = dkey(y, m, d); if (full(k)) n++; else if (!isPd(k)) break; [y, m, d] = shiftDay(y, m, d, -1); }
   return n;
 }
-function pruneLog(s) { const keep = new Set(); let [y, m, d] = [s.p.year, s.p.month, s.p.day]; for (let i = 0; i < 120; i++) { keep.add(dkey(y, m, d)); [y, m, d] = shiftDay(y, m, d, -1); } for (const k of Object.keys(st.log)) if (!keep.has(k)) delete st.log[k]; }
+function pruneLog(s) { const keep = new Set(); let [y, m, d] = [s.p.year, s.p.month, s.p.day]; for (let i = 0; i < 120; i++) { keep.add(dkey(y, m, d)); [y, m, d] = shiftDay(y, m, d, -1); } for (const k of Object.keys(st.log)) if (!keep.has(k)) delete st.log[k]; for (const k of Object.keys(st.pd || {})) if (!keep.has(k)) delete st.pd[k]; }
 
 /* Word help for Pickthall's older English (assets/glossary.js). Shown under the English translation only, labelled
    as help and kept outside the translation text. */
@@ -426,7 +433,7 @@ let tSel = null;                                   // selected date key, or null
 const trackKey = s => tSel ? XT.clamp(tSel, XT.shift(s.key, -(KEEP_DAYS - 1)), s.key) : s.key;
 const longDay = k => { const [y, m, d] = XT.parts(k); return DTF(LT(), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(y, m - 1, d, 12))); };
 function trackDay(s) {
-  const k = trackKey(s), min = XT.shift(s.key, -(KEEP_DAYS - 1)), ago = XT.diff(k, s.key), o = st.log[k] || {}, n = PRAYERS.filter(p => o[p]).length;
+  const k = trackKey(s), min = XT.shift(s.key, -(KEEP_DAYS - 1)), ago = XT.diff(k, s.key), o = st.log[k] || {}, n = PRAYERS.filter(p => o[p]).length, pd = isPd(k);
   const rel = ago === 0 ? t("t_today") : ago === 1 ? t("t_yday") : t("t_past");
   return `<div class="tday${ago ? " past" : ""}">
     <div class="tnav" role="group" aria-label="${esc(t("t_date"))}">
@@ -435,7 +442,8 @@ function trackDay(s) {
       <button type="button" class="icon-btn" data-act="tday" data-k="next" aria-label="${esc(t("t_next"))}"${ago === 0 ? " disabled" : ""}>${ic("chev")}</button>
     </div>
     <div class="tpick"><label for="t-date">${t("t_pick")}</label><input type="date" id="t-date" class="field" value="${k}" min="${min}" max="${s.key}">${ago ? `<button type="button" class="linkish" data-act="tday" data-k="today">${t("t_back")}</button>` : ""}</div>
-    <ul class="tlist">${PRAYERS.map(p => `<li><span>${pName(p, isFriK(k))}</span><button type="button" class="tick${justTicked === p ? " just" : ""}" data-act="trk" data-k="${p}" aria-pressed="${!!o[p]}" aria-label="${esc(t("markp"))}: ${esc(pName(p, isFriK(k)))}, ${esc(longDay(k))}"><i><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></i></button></li>`).join("")}</ul>
+    <ul class="tlist">${PRAYERS.map(p => { const ex = pd && !o[p]; return `<li><span>${pName(p, isFriK(k))}${ex ? ` <small class="pd-tag">${t("pd_ex")}</small>` : ""}</span><button type="button" class="tick${justTicked === p ? " just" : ""}${ex ? " ex" : ""}" data-act="trk" data-k="${p}" aria-pressed="${!!o[p]}" aria-label="${esc(t("markp"))}: ${esc(pName(p, isFriK(k)))}, ${esc(longDay(k))}${ex ? ", " + esc(t("pd_ex")) : ""}"><i><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></i></button></li>`; }).join("")}</ul>
+    ${womenOn() ? `<div class="pd-row"><button type="button" class="pd-btn" data-act="pd" aria-pressed="${pd}">${ic("women")}<span>${t("pd_btn")}</span></button><p class="note">${t(pd ? "pd_on" : "pd_hint")}</p></div>` : ""}
     <p class="note" aria-live="polite">${n ? (bn() ? `${num(5)} ওয়াক্তের মধ্যে ${num(n)} ${t("t_count")}` : `${n} ${t("of")} 5 ${t("t_count")}`) : t("t_empty")}</p>
     <p class="note tkeep">${t("t_keep")}</p>
   </div>`;
@@ -449,11 +457,11 @@ function fardGraph(s) {
   const dnum = k => num(XT.parts(k)[2]);
   const head = days.map(k => { const [yy, mm, dd] = XT.parts(k), isT = k === s.key, sel = k === tk, o = st.log[k] || {}, c = PRAYERS.filter(p => o[p]).length;
     return `<button type="button" class="fg-day${isT ? " today" : ""}${sel ? " sel" : ""}" data-act="tsel" data-k="${k}" aria-pressed="${sel}" aria-label="${esc(t("fg_pick").replace("{d}", longDay(k)))}, ${esc(`${num(c)}/${num(5)}`)}"><span class="fg-wd">${esc(fmt.format(new Date(Date.UTC(yy, mm - 1, dd, 12))))}</span><b>${dnum(k)}</b>${isT ? `<small class="sr">${t("t_today")}</small><i class="fg-tbar" aria-hidden="true"></i>` : ""}</button>`; }).join("");
-  const rows = PRAYERS.map(p => `<span class="fg-p">${t(p)}</span>${days.map(k => { const on = !!(st.log[k] || {})[p]; return `<i class="fg-c${on ? " on" : ""}${k === tk ? " sel" : ""}${k === s.key ? " today" : ""}"></i>`; }).join("")}`).join("");
+  const rows = PRAYERS.map(p => `<span class="fg-p">${t(p)}</span>${days.map(k => { const on = !!(st.log[k] || {})[p]; return `<i class="fg-c${on ? " on" : isPd(k) ? " ex" : ""}${k === tk ? " sel" : ""}${k === s.key ? " today" : ""}"></i>`; }).join("")}`).join("");
   const tot = days.map(k => { const o = st.log[k] || {}; return `<span class="fg-n${k === tk ? " sel" : ""}">${num(PRAYERS.filter(p => o[p]).length)}</span>`; }).join("");
-  const sr = days.map(k => { const o = st.log[k] || {}, got = PRAYERS.filter(p => o[p]); return `${longDay(k)}: ${t("fg_sr").replace("{n}", num(got.length))}${got.length ? " (" + got.map(p => t(p)).join(", ") + ")" : ""}`; }).join(". ");
+  const sr = days.map(k => { const o = st.log[k] || {}, got = PRAYERS.filter(p => o[p]); return `${longDay(k)}: ${t("fg_sr").replace("{n}", num(got.length))}${got.length ? " (" + got.map(p => t(p)).join(", ") + ")" : ""}${isPd(k) ? ", " + t("pd_btn") : ""}`; }).join(". ");
   return `<figure class="fg" aria-labelledby="fg-h">
-    <figcaption class="fg-top"><span class="wt-h" id="fg-h">${t("fg_h")}</span><span class="fg-key" aria-hidden="true"><span><i class="fg-c on"></i>${t("fg_on")}</span><span><i class="fg-c"></i>${t("fg_off")}</span><span><i class="fg-tbar"></i>${t("t_today")}</span></span></figcaption>
+    <figcaption class="fg-top"><span class="wt-h" id="fg-h">${t("fg_h")}</span><span class="fg-key" aria-hidden="true"><span><i class="fg-c on"></i>${t("fg_on")}</span><span><i class="fg-c"></i>${t("fg_off")}</span>${womenOn() && days.some(isPd) ? `<span><i class="fg-c ex"></i>${t("pd_ex_key")}</span>` : ""}<span><i class="fg-tbar"></i>${t("t_today")}</span></span></figcaption>
     <div class="fg-grid"><span class="fg-corner" aria-hidden="true"></span>${head}<div class="fg-body" aria-hidden="true">${rows}<span class="fg-p fg-tl">${t("fg_total")}</span>${tot}</div></div>
     <p class="sr">${esc(sr)}.</p>
     <p class="note fg-hint">${t("fg_hint")}</p>
@@ -540,7 +548,10 @@ function go(r, push = true) {
    still. A tap during a slide finishes it at once rather than queueing slides. Desktop, reduced motion and Motion: off
    keep the previous instant change. */
 let vt = null;
-const canVT = () => !!document.startViewTransition && !reduce && st.motion !== "off" && (NATIVE || phone()) && !document.hidden && !$("splash");
+/* The opening is still on screen (it stays in the page, hidden, for a moment after it has faded: see boot). */
+let landEnd = 0; // when the page has finished rising after the opening (see boot)
+const splashUp = () => { const s = $("splash"); return !!s && !s.classList.contains("gone"); };
+const canVT = () => !!document.startViewTransition && !reduce && st.motion !== "off" && (NATIVE || phone()) && !document.hidden && !splashUp();
 function paint(prev, then, back) {
   if (!canVT()) { render(true); then && then(); return; }
   const a = TABS.indexOf(prev.tab), b = TABS.indexOf(R.tab), la = lvl(prev), lb = lvl(R);
@@ -664,14 +675,16 @@ function render(anim, viaVT) {
   const fa = !anim && document.activeElement, fd = fa && $("view").contains(fa) && fa.dataset && fa.dataset.act ? fa.dataset : null;
   applyTheme(); header(); nav(); side(); widgetSync();
   const v = $("view"); post = []; heroAnim = !!anim;
-  v.className = "view v-" + (R.tab === "more" ? (R.sub || "more") : R.tab);
+  // 16 Nov 2026: a quiet redraw while the page is still rising after the opening keeps the rise running.
+  const keep = !anim && performance.now() < landEnd ? [...v.classList].filter(c => c === "door" || c === "enter").map(c => " " + c).join("") : "";
+  v.className = "view v-" + (R.tab === "more" ? (R.sub || "more") : R.tab) + keep;
   let f;
   if (R.tab === "today") f = vToday;
   // Face 7: the Qur'an tab opens the curated study library; the full reader (all 114 surahs) is R.sub === "all".
   else if (R.tab === "quran" && R.sub === "stories") f = R.story ? vStory : vStories; // Face 7.1 Qur'an Stories
   else if (R.tab === "quran") f = R.sub === "all" || R.surah ? (desk() ? vQuranDesk : (R.surah ? vReader : vQuran)) : (desk() ? vStudyDesk : (R.study ? vStudyDetail : vStudy));
   else if (R.tab === "hadith") f = vHadith;
-  else f = { duas: vDuas, dev: vDev, guide: vGuide, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy"), feedback: vFeedback }[R.sub] || vMore;
+  else f = { duas: vDuas, dev: vDev, guide: vGuide, women: vWomen, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy"), feedback: vFeedback }[R.sub] || vMore;
   const g = routeGroup(R);
   if (g && !lazyDone.has(g)) { // page data not loaded yet: show a short loading state, then draw the page
     v.dataset.pg = ""; todayTpl = null;
@@ -943,9 +956,10 @@ function vToday() {
   </section>
 
   <section class="card pad a-track" aria-labelledby="trk-h">
-    <div class="row wt-head"><div class="grow"><h3 class="sec-title" id="trk-h">${t("wtracker")}</h3><p class="note">${bn() ? `${num(5)} ওয়াক্তের মধ্যে ${num(n)} ${t("prayedtoday")}` : `${n} ${t("of")} 5 ${t("prayedtoday")}`}</p></div>
+    <div class="row wt-head"><div class="grow"><h3 class="sec-title" id="trk-h">${t("wtracker")}</h3><p class="note">${bn() ? `${num(5)} ওয়াক্তের মধ্যে ${num(n)} ${t("prayedtoday")}` : `${n} ${t("of")} 5 ${t("prayedtoday")}`}${isPd(s.key) ? ` <span class="badge pd">${t("pd_btn")}</span>` : ""}</p></div>
     <div class="streak"><strong>${num(streak(s))}</strong><span class="note">${t("daystreak")}</span></div></div>
     ${fardGraph(s)}
+    <div class="trk-share"><button type="button" class="btn ghost sm" data-act="trkshare">${ic("share")}<span>${t("t_share")}</span></button></div>
     ${trackDay(s)}
   </section>
 
@@ -1163,7 +1177,7 @@ setInterval(() => {
   const now = Date.now();
   const ps = snap.ps, cur = ps && ps.cur;
   // The minute redraw waits while the splash is up (it would land on the opening animation); the countdown still ticks.
-  if (!$("splash") && (now >= snap.next.at || (ps && now >= ps.next.at) || (cur && now >= cur.end) || zoneParts(snap.c.zone, new Date(now)).minute !== snap.p.minute)) { render(false); return; }
+  if (!splashUp() && (now >= snap.next.at || (ps && now >= ps.next.at) || (cur && now >= cur.end) || zoneParts(snap.c.zone, new Date(now)).minute !== snap.p.minute)) { render(false); return; }
   const c = $("count-next"); if (c && ps) c.textContent = countdown(ps.next.at - now);
   const fl = $("forb-left"), fw = $("forb-warn"); if (fl && fw) { const e = +fw.dataset.end; if (now >= e) { render(false); return; } fl.textContent = countdown(e - now); }
 }, 1000);
@@ -1538,9 +1552,94 @@ function nwGo(n) {
 function vMore() {
   const s = snap || snapshot(), hj = hijriNow(s);
   // Nov 2026 order: Duas, 99 Names, Prayer guide, Calendar, Developer message, then the rest as before.
-  const items = [["duas", "duas", t("duas_s")], ["names", "names", t("names_s")], ["guide", "guide", t("guide_s")], ["calendar", "calendar", hText(hj)], ["dev", "msg", t("dev_s")], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["feedback", "mail", t("feedback_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
+  const items = [["duas", "duas", t("duas_s")], ["names", "names", t("names_s")], ["guide", "guide", t("guide_s")], ["women", "women", t("women_s")], ["calendar", "calendar", hText(hj)], ["dev", "msg", t("dev_s")], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["feedback", "mail", t("feedback_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
   return `<div class="page-head"><h2>${t("more")}</h2></div>${installCard()}
   <ul class="card menu">${items.map(([k, icn, sub]) => `<li><button type="button" data-act="go" data-tab="more" data-sub="${k}"><span class="ic">${ic(icn)}</span><span class="grow"><b>${t(k === "names" ? "names99" : k)}</b><small>${esc(sub)}</small></span>${ic("chev", "chev")}</button></li>`).join("")}</ul>`;
+}
+/* For women (16 Nov 2026, Notion). Shown only here in More (not in Settings). Confirming turns on the period-day option
+   in the prayer tracker and the gentle reminders on those days; it then shows a verse on the worth of women (3:195),
+   which is not one of the reminder verses. Texts: assets/women.js (published sources, unchanged). */
+const wTr = x => (x[st.lang] || x.en).map(v => String(v).replace(/\s*\[[\d০-৯]+\]/g, "")).join(" ");
+const wRef = x => x.k === "q" ? `${sname(x.s)} · ${num(x.s)}:${x.b > x.a ? num(x.a) + "–" + num(x.b) : num(x.a)}`
+  : `${(x.att && (x.att[st.lang] || x.att.en)) || ""} · ${(x.grade && (x.grade[st.lang] || x.grade.en)) || ""}`;
+const wNote = x => x.k === "q" ? `“${wTr(x)}” — ${wRef(x)}` : `${x[st.lang] || x.en} — ${wRef(x)}`;
+function vWomen() {
+  const on = womenOn(), w = WM && WM.WELCOME, many = w && w.b > w.a;
+  const arN = k => String(k).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+  const verse = w ? `<section class="card verse w-verse" aria-labelledby="w-vh"><h3 class="sec-title" id="w-vh">${t("w_welcome")}</h3>
+    <p class="ar verse-ar" lang="ar" dir="rtl">${w.ar.map((x, j) => esc(x) + (many ? ` <span class="ayah-n">﴿${arN(w.a + j)}﴾</span>` : "")).join(" ")}</p>
+    <p class="verse-tr" lang="${st.lang}">${esc(wTr(w))}</p>
+    <div class="verse-foot"><span class="verse-ref">${esc(wRef(w))}</span><button type="button" class="btn soft" data-act="surah" data-s="${w.s}" data-a="${w.a}">${t("readsurah")}</button></div></section>` : "";
+  return `<div class="page-head">${back()}<h2>${t("women")}</h2></div>
+  <section class="card pad w-intro">
+    <p>${t("w_intro")}</p>
+    <ul class="w-list"><li>${t("w_l1")}</li><li>${t("w_l2")}</li><li>${t("w_l3")}</li></ul>
+    <p class="note">${t("w_private")}</p>
+    ${on ? "" : `<div class="row"><button type="button" class="btn" data-act="wconfirm">${ic("women")}<span>${t("w_confirm")}</span></button></div><p class="note">${t("w_confirm_n")}</p>`}
+  </section>
+  ${on ? `${verse}
+  <ul class="card set">
+    <li><span class="lb">${t("w_nf")}<small>${t(st.nf.pray ? "w_nf_h" : "w_nf_off")}</small></span><button type="button" class="switch" role="switch" data-act="wnf" aria-checked="${st.wnf !== false}" aria-label="${esc(t("w_nf"))}"></button></li>
+  </ul>
+  <section class="card pad">
+    <p class="note">${t("w_fiqh")}</p>
+    <p class="note">${t("w_src")}</p>
+    <div class="row w-acts"><button type="button" class="btn ghost" data-act="wclear">${t("w_clear")}</button><button type="button" class="btn ghost" data-act="woff">${t("w_off")}</button></div>
+  </section>` : ""}`;
+}
+/* Share the prayer tracker as an image (16 Nov 2026, Notion): the last seven days, the streak, and a line at the
+   bottom for Simply Made Studio (simplymadestudio.net). Period days show only as "Excused", never named. */
+async function trkImage(s) {
+  const SANS = '"DS Sans", system-ui, sans-serif', DISP = '"DS Display", Georgia, serif';
+  const days = lastDays(s, 7).reverse(), sk = streak(s);
+  try { await Promise.all([document.fonts.load(`400 34px ${SANS}`, t("tsh_title") + t("fg_on")), document.fonts.load(`600 34px ${SANS}`, "0123456789"), document.fonts.load(`400 34px ${DISP}`, "Islam Everyday")]); } catch (e) {}
+  const W = 1080, H = 1350, P = 96, c = document.createElement("canvas"), x = c.getContext("2d"); c.width = W; c.height = H;
+  const AC = "#0E6B5C", INK = "#0F2420", MUT = "#5A6E69", PD = "#B04A72";
+  x.fillStyle = "#F6F1E6"; x.fillRect(0, 0, W, H);
+  x.fillStyle = "#FFFFFF"; x.beginPath(); (x.roundRect ? x.roundRect(40, 40, W - 80, H - 80, 36) : x.rect(40, 40, W - 80, H - 80)); x.fill();
+  x.fillStyle = AC; x.fillRect(40, 40, W - 80, 10);
+  x.textBaseline = "middle"; x.textAlign = "left"; x.font = `400 34px ${DISP}`; x.fillStyle = AC; x.fillText("Islam Everyday", P, 112);
+  x.textAlign = "right"; x.font = `600 24px ${SANS}`; x.fillStyle = "#8A5A12"; x.fillText(t("wtracker").toUpperCase(), W - P, 112);
+  x.textAlign = "center"; x.fillStyle = INK; x.font = `600 46px ${SANS}`; x.fillText(t("tsh_title"), W / 2, 230);
+  x.fillStyle = AC; x.font = `600 112px ${SANS}`; x.fillText(num(sk), W / 2, 345);
+  x.fillStyle = MUT; x.font = `400 32px ${SANS}`; x.fillText(t("daystreak"), W / 2, 425);
+  // the grid: prayers down, days across (oldest on the left, today on the right)
+  const gx = P + 150, gw = W - P - gx, cw = gw / 7, top = 600, rh = 88, cs = 52;
+  const fmt = DTF(LT(), { weekday: "short", timeZone: "UTC" });
+  days.forEach((k, j) => { const [yy, mm, dd] = XT.parts(k), cx = gx + cw * j + cw / 2;
+    x.fillStyle = k === s.key ? AC : MUT; x.font = `600 24px ${SANS}`; x.fillText(fmt.format(new Date(Date.UTC(yy, mm - 1, dd, 12))), cx, top - 64);
+    x.font = `400 24px ${SANS}`; x.fillText(num(dd), cx, top - 32); });
+  let anyPd = false;
+  PRAYERS.forEach((p, i) => { const cy = top + rh * i + rh / 2;
+    x.textAlign = "left"; x.fillStyle = INK; x.font = `400 30px ${SANS}`; x.fillText(t(p), P, cy); x.textAlign = "center";
+    days.forEach((k, j) => { const cx = gx + cw * j + cw / 2, on = !!(st.log[k] || {})[p], ex = !on && isPd(k), r0 = cx - cs / 2, r1 = cy - cs / 2;
+      x.beginPath(); (x.roundRect ? x.roundRect(r0, r1, cs, cs, 12) : x.rect(r0, r1, cs, cs));
+      if (on) { x.fillStyle = AC; x.fill(); }
+      else if (ex) { anyPd = true; x.setLineDash([]); x.lineWidth = 3; x.strokeStyle = PD; x.stroke(); x.beginPath(); x.arc(cx, cy, 7, 0, Math.PI * 2); x.fillStyle = PD; x.fill(); }
+      else { x.setLineDash([7, 6]); x.lineWidth = 2.5; x.strokeStyle = "#B9C6C1"; x.stroke(); x.setLineDash([]); } }); });
+  // key
+  const ky = top + rh * 5 + 56, keys = [[t("fg_on"), "on"], [t("fg_off"), "off"]].concat(anyPd ? [[t("pd_ex_key"), "ex"]] : []);
+  x.font = `400 26px ${SANS}`; const kw = keys.map(([l]) => 34 + 14 + x.measureText(l).width + 44), tot = kw.reduce((a, b) => a + b, 0) - 44;
+  let kx = W / 2 - tot / 2; x.textAlign = "left";
+  keys.forEach(([l, kind], j) => { x.beginPath(); (x.roundRect ? x.roundRect(kx, ky - 17, 34, 34, 8) : x.rect(kx, ky - 17, 34, 34));
+    if (kind === "on") { x.fillStyle = AC; x.fill(); } else if (kind === "ex") { x.lineWidth = 3; x.strokeStyle = PD; x.stroke(); x.beginPath(); x.arc(kx + 17, ky, 5, 0, Math.PI * 2); x.fillStyle = PD; x.fill(); }
+    else { x.setLineDash([6, 5]); x.lineWidth = 2.5; x.strokeStyle = "#B9C6C1"; x.stroke(); x.setLineDash([]); }
+    x.fillStyle = MUT; x.fillText(l, kx + 48, ky); kx += kw[j]; });
+  // the shout-out
+  x.textAlign = "center"; x.fillStyle = "#DCE6E2"; x.fillRect(P, H - 210, W - P * 2, 2);
+  x.fillStyle = MUT; x.font = `400 28px ${SANS}`; x.fillText(t("tsh_by"), W / 2, H - 160);
+  x.fillStyle = AC; x.font = `600 34px ${SANS}`; x.fillText("simplymadestudio.net", W / 2, H - 112);
+  return new Promise(res => c.toBlob(res, "image/jpeg", 0.92));
+}
+async function trkShare() {
+  const s = snap || snapshot(); toast(t("sh_making"));
+  let blob = null; try { blob = await trkImage(s); } catch (e) {}
+  if (!blob) { toast(t("sh_fail")); return; }
+  const name = "islam-everyday-prayers-" + s.key + ".jpg", title = t("tsh_title");
+  if (NATIVE) { try { await natShareFile(blob, name, title); } catch (e) { if (!/cancel/i.test(String(e && e.message))) toast(t("sh_fail")); } return; }
+  if (canFiles()) { try { await navigator.share({ files: [new File([blob], name, { type: "image/jpeg" })], title }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
+  const u = URL.createObjectURL(blob), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 5000); toast(t("sh_saved"));
 }
 /* Developer message (Nov 2026): left blank on purpose until the owner sends the message. */
 function vDev() {
@@ -2027,17 +2126,8 @@ const SC_PREV = {
   fields: '<path d="M0 42 Q40 39 80 41 V60 H0Z" class="f1"/><rect y="44" width="80" height="16" class="wat"/><path d="M0 48 Q40 46 80 48 M0 53 Q40 51 80 53" class="bund"/><path d="M62 52 v-14 M62 38 l-6 3 M62 38 l6 3 M62 38 l-4 -3 M62 38 l4 -3 M72 52 v-11 M72 41 l-5 3 M72 41 l5 3" class="palmp"/>',
   canyon: '<path d="M38 60 L40 30 H58 L60 60Z M62 60 L64 38 H76 L78 60Z" class="f1"/><path d="M44 60 L46 40 H66 L68 60Z" class="f2"/><path d="M0 56 Q40 52 80 55 V60 H0Z" class="f3"/>'
 };
-/* Settings ▸ Home-screen widgets (Android app only): the theme colour, or one of the widget pictures, or a new one at
-   each prayer time. The card marked is the picture on the widgets now. */
-function widgetCards() {
-  const pic = st.wgMode !== "plain", cur = wgNowPic(), mark = st.wgMode === "auto" ? t("wg_now") : t("th_chosen");
-  const kind = `<div class="seg sc-kind" role="group" aria-label="${esc(t("wg_set"))}">${[["plain", t("wg_plain")], ["pic", t("sc_photo")]].map(([k, l]) => `<button type="button" data-act="wgkind" data-k="${k}" aria-pressed="${(pic ? "pic" : "plain") === k}">${l}</button>`).join("")}</div>`;
-  if (!pic) return kind;
-  const auto = `<div class="sc-auto"><div><span>${t("wg_auto")}</span><small class="muted">${t("wg_auto_d")}</small></div><button type="button" class="switch" role="switch" data-act="wgauto" aria-checked="${st.wgMode === "auto"}" aria-label="${esc(t("wg_auto"))}"></button></div>`;
-  return kind + auto + `<div class="sc-grid" role="group" aria-label="${esc(t("wg_set"))}">${WPICS.map(k => `<button type="button" class="sc-card ph" data-act="wgpic" data-k="${k}" aria-pressed="${cur === k}">
-    <img class="sc-img" src="assets/widgets-img/${k}.webp" alt="" loading="lazy" decoding="async" width="160" height="90">
-    <span class="th-name">${t("wp_" + k)}</span><span class="th-state">${cur === k ? CHECK + mark : ""}</span></button>`).join("")}</div><p class="note sc-ai">${t("wg_ai")}</p>`;
-}
+/* Settings ▸ Home-screen widgets (Android app only): how to add one, and what the pictures do (nothing to choose). */
+const widgetCards = () => `<p class="note">${t("wg_pics")}</p><p class="note sc-ai">${t("wg_ai")}</p>`;
 function sceneCards() {
   // the card marked is the picture on the hero now: with "Change every day" on, that is today's, not the last one tapped
   const ph = st.heroKind === "photo", cur = sceneToday(), mark = st.sceneAuto ? t("sc_today") : t("th_chosen");
@@ -2114,7 +2204,7 @@ function vAbout() {
     ["আজকের আয়াত", "১৮০ দিনের একটি নির্দিষ্ট তালিকা (১ জানুয়ারি ২০২৬ থেকে গণনা), প্রতিটি আয়াত আগের আয়াত ও আল-মুখতাসার তাফসিরের সঙ্গে মিলিয়ে বাছাই করা; প্রয়োজনে প্রেক্ষাপট টীকা দেওয়া আছে। কোনো যোগ্য আলেম এখনো যাচাই করেননি।"],
     ["নামাজ শিক্ষা", "sunnah.com-এ যাচাই করা হাদিস এবং হানাফি ও শাফিই ফতোয়া উত্তর (IslamQA.org), ইসলামওয়েব ও ইসলামকিউএ থেকে সংক্ষেপিত। এটি ফতোয়া নয়, এবং এখনো কোনো যোগ্য আলেম যাচাই করেননি।"],
     ["আজকের কার্ডের ছবি", "বারোটা ছবি (সেটিংস → নামাজের ছবি → ছবি) এই অ্যাপের জন্য নভেম্বর ২০২৬-এ বানানো: সাতটা Figma-র এআই ছবি-তৈরির টুল দিয়ে, পাঁচটা Picsart-এর AI Playground দিয়ে। এগুলো কোনো আসল জায়গার ছবি নয়।"],
-    ["উইজেটের ছবি", "Android হোম স্ক্রিন উইজেটের পেছনের সাতটা ছবি (সেটিংস → হোম স্ক্রিন উইজেট) এই অ্যাপের জন্য নভেম্বর ২০২৬-এ Picsart-এর এআই ছবি-তৈরির টুল দিয়ে বানানো। এগুলো কোনো আসল জায়গার ছবি নয়।"],
+    ["উইজেটের ছবি", "Android হোম স্ক্রিন উইজেটের পেছনের ২১টা ছবি (প্রতিটা উইজেটের নিজের সাতটা) এই অ্যাপের জন্য নভেম্বর ২০২৬-এ Picsart-এর এআই ছবি-তৈরির টুল দিয়ে বানানো। এগুলো কোনো আসল জায়গার ছবি নয়।"],
     ["লোগো", "মিহরাব-আকৃতির খোলা দরজায় উদীয়মান সূর্য—এই অ্যাপের জন্য আঁকা মৌলিক ভেক্টর ছবি (brand/ ফোল্ডার)।"],
     ["ফন্ট", "হিন্দ শিলিগুড়ি, শেহেরাজাদ নিউ ও তিরো বাংলা, SIL Open Font License 1.1, এই অ্যাপের সঙ্গেই সংযুক্ত।"]
   ] : [
@@ -2134,7 +2224,7 @@ function vAbout() {
     ["Verse for today", "A fixed 180-day schedule (counted from 1 January 2026). Each passage was read with the verses before it and the Al-Mukhtasar tafsir, and a context note is shown where the passage needs one. Not yet reviewed by a qualified scholar."],
     ["Prayer guide", "Summarised from hadith checked on sunnah.com and from Hanafi and Shafi'i fatwa answers (IslamQA.org), IslamWeb and IslamQA.info. It is not a fatwa and has not yet been independently reviewed by a qualified scholar."],
     ["Pictures for the Today card", "The twelve pictures (Settings → Picture behind the prayer → Pictures) were generated for this app in November 2026: seven with Figma's AI image tool and five with Picsart's AI Playground. They are not photographs of real places."],
-    ["Pictures for the widgets", "The seven pictures behind the Android home-screen widgets (Settings → Home-screen widgets) were generated for this app with Picsart's AI image generator in November 2026. They are not photographs of real places."],
+    ["Pictures for the widgets", "The 21 pictures behind the Android home-screen widgets (seven for each widget) were generated for this app with Picsart's AI image generator in November 2026. They are not photographs of real places."],
     ["Logo", "A mihrab-shaped open doorway framing a rising sun: original vector artwork drawn for this app (brand/ folder)."],
     ["Fonts", "Hind Siliguri, Scheherazade New and Tiro Bangla, SIL Open Font License 1.1, bundled with the app."]
   ];
@@ -2326,7 +2416,15 @@ function nfPlan(days) {
   const c = city(), now = Date.now(), p = zoneParts(c.zone, new Date(now)), out = [];
   for (let i = 0; i < days; i++) {
     const [y, m, d] = shiftDay(p.year, p.month, p.day, i), D = dayTimes(c, y, m, d); if (!timesOk(D)) continue;
-    const n = HR.dayNo(y, m, d), tm = D.tm;
+    const n = HR.dayNo(y, m, d), tm = D.tm, pd = isPd(dkey(y, m, d));
+    /* For women (16 Nov 2026): on a period day the prayer, avoided-time and voluntary-prayer reminders are left out;
+       with prayer reminders on (and the gentle ones not turned off), three come instead, at Dhuhr, Asr and Isha time:
+       her worth in Islam, a remembrance and a good deed (assets/women.js). They never mention the period. */
+    if (pd) {
+      if (st.nf.pray && st.wnf !== false && WM) WM.forDay(n).forEach((x, j) => out.push({ id: n * 16 + 13 + j, at: D.abs(["dhuhr", "asr", "isha"][j]), ch: "gentle", title: t("wn_t" + j), body: wNote(x) }));
+      if (st.nf.thu && new Date(Date.UTC(y, m - 1, d)).getUTCDay() === 4) out.push({ id: n * 16 + 10, at: D.base + 20 * 36e5, ch: "thu", title: t("nf_thu_t"), body: heroNote(HR.forWeek(n)) });
+      continue;
+    }
     if (st.nf.pray) PRAYERS.forEach((k, j) => { const x = heroFor(k, D); out.push({ id: n * 16 + j, at: D.abs(k), ch: "pray", title: `${pName(k, isFriD(D))} · ${clock(tm[k])}`, body: x ? heroNote(x) : "" }); });
     if (st.nf.forb) [["fsun", D.abs("sunrise"), tm.sunrise + 0.25], ["fzaw", D.abs("dhuhr") - 6e5, tm.dhuhr], ["fset", D.abs("maghrib") - 9e5, tm.maghrib]]
       .forEach(([w, at, end], j) => out.push({ id: n * 16 + 6 + j, at, ch: "forb", title: t("nf_forb_t"), body: t("nf_forb_b").replace("{w}", t(w)).replace("{e}", clock(end)) }));
@@ -2352,7 +2450,7 @@ async function widgetData() {
   const c = city(), p = zoneParts(c.zone, new Date()), cs = getComputedStyle(document.documentElement), cv = k => wgHex(cs.getPropertyValue(k).trim() || "inherit");
   const days = [];
   for (let i = 0; i < 7; i++) {
-    const [y, m, d] = shiftDay(p.year, p.month, p.day, i), D = dayTimes(c, y, m, d), N = dayTimes(c, ...shiftDay(y, m, d, 1));
+    const [y, m, d] = shiftDay(p.year, p.month, p.day, i), D = dayTimes(c, y, m, d), N = dayTimes(c, ...shiftDay(y, m, d, 1)), Y = dayTimes(c, ...shiftDay(y, m, d, -1));
     if (!timesOk(D)) continue;
     const e = votdFor(y, m, d); let v = null;
     try { await qEnsure(e.s); v = votdPlain(e); } catch (x) {}
@@ -2360,11 +2458,14 @@ async function widgetData() {
     const at = ms => clock(hOf(ms, D)), A = k => D.abs(k), mi = 6e4;
     const f = [[A("sunrise"), A("sunrise") + 15 * mi], [A("dhuhr") - 10 * mi, A("dhuhr")], [A("maghrib") - 15 * mi, A("maghrib")]]
       .map(([a, b]) => [a, b, t("fw_w_now").replace("{e}", at(b)), t("fw_w_soon").replace("{t}", at(a))]);
-    days.push({ from: D.base, to: N.base, dn: wgDayNo(y, m, d), p: PRAYERS.map(k => [pName(k, isFriD(D)), clock(D.tm[k]), D.abs(k)]), f, v });
+    // 16 Nov 2026 (Notion): the prayer widget shows the current prayer too, as Today does (prayerState): Fajr ends at
+    // sunrise (sr), from sunrise to Dhuhr none is in progress, and before Fajr it is still last night's Isha (pi).
+    days.push({ from: D.base, to: N.base, dn: wgDayNo(y, m, d), p: PRAYERS.map(k => [pName(k, isFriD(D)), clock(D.tm[k]), D.abs(k)]), f, v,
+      sr: A("sunrise"), pi: timesOk(Y) ? [pName("isha", isFriD(Y)), Y.abs("isha")] : null });
   }
-  return { v: 1, lang: st.lang, place: cname(c), soon: FORB_SOON, lab: { next: t("next"), tomorrow: t("tomorrow"), votd: t("votd"), inH: t("wg_in_h"), inM: t("wg_in_m") },
+  return { v: 1, lang: st.lang, place: cname(c), soon: FORB_SOON, lab: { next: t("next"), cur: t("curp"), nocur: t("wg_nocur"), tomorrow: t("tomorrow"), votd: t("votd") },
     col: { bg: cv("--surface"), ink: cv("--ink"), muted: cv("--muted"), accent: cv("--accent") },
-    bg: { mode: st.wgMode, pic: st.wgPic, list: WPICS }, days };
+    bg: { mode: "auto", sets: WG_SETS }, days };
 }
 async function widgetRun() {
   try { const d = JSON.stringify(await widgetData()); if (d === wgSig) return; wgSig = d; await nat("Widgets", "update", { data: d }); } catch (e) {}
@@ -2377,7 +2478,9 @@ const nfExactSet = r => { const v = (r && r.exact_alarm) || ""; if (v === nfExac
 const nfExactAsk = () => { if (NATIVE) nat("LocalNotifications", "checkExactNotificationSetting").then(nfExactSet, () => {}); };
 /* Work that can wait (reminders, widget data) waits while the opening plays, so it cannot make it stutter. */
 const afterSplash = fn => () => { if ($("splash")) { setTimeout(afterSplash(fn), 400); return; } fn(); };
-const nfSync = () => { clearTimeout(nfT); nfT = setTimeout(afterSplash(nfRun), 500); };
+// For women: the texts of the gentle reminders are loaded first when a period day is marked (assets/women.js).
+const nfGo = () => womenOn() && Object.keys(st.pd || {}).length && !lazyDone.has("women") ? need("women").then(nfRun, nfRun) : nfRun();
+const nfSync = () => { clearTimeout(nfT); nfT = setTimeout(afterSplash(nfGo), 500); };
 function nfRun() {
   if (!NATIVE) { webPlan = nfAny() && nfGranted() ? nfPlan(2) : []; return; }
   nat("LocalNotifications", "getPending").then(r => { const ns = ((r && r.notifications) || []).map(x => ({ id: x.id })); return ns.length ? nat("LocalNotifications", "cancel", { notifications: ns }) : 0; }).catch(() => {})
@@ -2390,7 +2493,7 @@ function nfRun() {
    phone's sound, "pray_drop" plays the app's water drop, and so on. A channel with the app's sound plays only that file
    (the phone's own sound is not played as well), and the unused variants are deleted so Settings ▸ Notifications on the
    phone lists one channel per kind. */
-const NF_KINDS = [["pray", "nf_pray", 4], ["forb", "nf_forb", 3], ["thu", "nf_thu", 3], ["nafl", "nf_nafl", 4]];
+const NF_KINDS = [["pray", "nf_pray", 4], ["forb", "nf_forb", 3], ["thu", "nf_thu", 3], ["nafl", "nf_nafl", 4], ["gentle", "nf_gentle", 3]];
 const nfCh = (base, s) => s === "default" ? base : base + "_" + s;
 function nfChannels() {
   const s = st.nfSnd;
@@ -2490,9 +2593,6 @@ function act(a, d, b) {
       st.photo = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
     case "herokind": if (d.k === "anim" || d.k === "photo") { st.heroKind = d.k; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
     case "gdet": if (GDET[d.k]) openSheet(GDET[d.k], b, "pop"); break;
-    case "wgkind": if (d.k === "plain" || d.k === "pic") { st.wgMode = d.k === "plain" ? "plain" : "auto"; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
-    case "wgauto": { const on = st.wgMode !== "auto"; if (!on) st.wgPic = wgNowPic(); st.wgMode = on ? "auto" : "pic"; save(); flipSw(b, on, () => { const y = scrollY; render(false); scrollTo(0, y); }); break; }
-    case "wgpic": if (WPICS.includes(d.k)) { st.wgPic = d.k; st.wgMode = "pic"; save(); const y = scrollY; render(false); scrollTo(0, y); } break;
     case "sceneauto": st.sceneAuto = !st.sceneAuto; save(); flipSw(b, st.sceneAuto, () => { const y = scrollY; render(false); scrollTo(0, y); }); break;
     case "setasr": st.asr = +d.k; save(); render(false); nfSync(); break;
     case "hadj": st.hadj = Math.max(-2, Math.min(2, st.hadj + +d.d)); save(); render(false); nfSync(); break;
@@ -2505,6 +2605,15 @@ function act(a, d, b) {
     case "loc": openLoc(); break;
     case "gps": locate(); break;
     case "city": { st.city = d.id; const c = city(), k = COUNTRIES[c.g]; if (k && METHODS[k.m]) { st.method = k.m; st.asr = k.a; } save(); closeSheet(); render(true); nfSync(); break; }
+    case "pd": { // For women: mark the selected day as a period day, or unmark it
+      if (!snap || !womenOn()) break;
+      const k = trackKey(snap); if (st.pd[k]) delete st.pd[k]; else st.pd[k] = 1; pruneLog(snap); save();
+      const y = scrollY; render(false); scrollTo(0, y); toast(t(st.pd[k] ? "pd_set" : "pd_unset")); nfSync(); break; }
+    case "trkshare": trkShare(); break;
+    case "wconfirm": st.women = 1; save(); toast(t("w_on")); render(false); scrollTo(0, 0); nfSync(); break;
+    case "woff": st.women = 0; save(); toast(t("w_offd")); render(false); nfSync(); break;
+    case "wnf": st.wnf = st.wnf === false; save(); render(false); nfSync(); break;
+    case "wclear": if (b.dataset.armed) { st.pd = {}; save(); toast(t("w_cleared")); render(false); nfSync(); } else { b.dataset.armed = "1"; b.textContent = t("tapagain"); } break;
     case "trk": {
       if (!snap) break;
       const k = trackKey(snap);
@@ -2648,6 +2757,14 @@ if (g0 && !lazyDone.has(g0)) { // opened from a shared link: show that page load
   if (d0) deepPost(d0);
 }
 if (!phone()) Object.keys(LAZY).forEach(g => need(g).catch(() => {})); // desktop: load all page data now
+/* 16 Nov 2026 (Notion: smoother section changes): on phones, the Qur'an and Hadith tabs' page data is read while the
+   phone is idle a few seconds after the opening, one file group at a time, so the first visit to those tabs slides
+   straight in, with no "Loading…" step and no second draw. Nothing loads during the opening or on a data saver. */
+else if (!(navigator.connection && navigator.connection.saveData)) {
+  const idle = fn => window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 4000 }) : setTimeout(fn, 300);
+  const pre = ["study", "hadith"], nextPre = () => { const g = pre.shift(); if (g) idle(() => need(g).then(nextPre, () => {})); };
+  setTimeout(afterSplash(() => setTimeout(nextPre, 2500)), 600);
+}
 /* Sound: starts on the first touch or key (browsers require one), pauses when the app or tab is hidden. In the Android
    app it follows the phone's sound profile through the small Ringer plugin (MainActivity): silent or vibrate mutes it. */
 sndApply();
@@ -2666,11 +2783,15 @@ nfSync();
   let done = false; const go = () => { if (done || !sp) return; done = true;
     const v = $("view"), rise = v.classList.contains("hold");
     if (rise) { [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); v.classList.add("door"); }
+    landEnd = performance.now() + (rise ? 1100 : 0);
     sp.classList.add("out"); if (rise) { v.classList.remove("hold"); v.classList.add("enter"); }
     // Only the splash goes. 15 Nov 2026: removing "door" here as well switched the page's rise animation (rise-door →
     // rise-b) while it was still playing, so it restarted from invisible: the page blinked out and faded in again on
     // every open. The class is cleared by the next render (v.className), long after the rise has finished.
-    setTimeout(() => { sp.remove(); }, 700);
+    // 16 Nov 2026 (Notion: a smoother landing): the hidden splash is taken out once the page has risen and the sun arc
+    // has run (about 1.9 s), not in the middle of them: taking a full-screen layer out costs a frame, and the work that
+    // waits for the splash to go (reminders, the widget) now starts after the landing instead of during it.
+    setTimeout(() => sp.classList.add("gone"), 600); setTimeout(() => { sp.remove(); }, rise ? 1900 : 700);
     if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), rise ? 260 : 0); } };
   // How long the opening lasts once it is on screen. Nov 2026 (14th): the first open in a session (a cold start in the
   // app) plays the four-second opening; with reduced motion it shows the still picture for a moment instead. A tap or a
@@ -2694,7 +2815,7 @@ if (NATIVE) (() => {
   const h = document.documentElement; let closing = false;
   const shut = () => {
     if (closing) return; closing = true;
-    if (reduce || st.motion === "off" || $("splash")) { natQ("App", "minimizeApp"); closing = false; return; }
+    if (reduce || st.motion === "off" || splashUp()) { natQ("App", "minimizeApp"); closing = false; return; }
     if (!$("bye")) { const d = document.createElement("div"); d.id = "bye"; d.className = "bye"; d.setAttribute("aria-hidden", "true");
       d.innerHTML = '<svg viewBox="96 76 320 348"><path pathLength="1" d="M150 392V248A140 140 0 0 1 256 112.2A140 140 0 0 1 362 248V392"/><path pathLength="1" d="M118 393H394"/></svg>'; document.body.appendChild(d); }
     requestAnimationFrame(() => { h.classList.add("closing"); setTimeout(() => natQ("App", "minimizeApp"), 300); });
@@ -2704,7 +2825,7 @@ if (NATIVE) (() => {
     window.Capacitor.addListener("App", "backButton", () => {
       if (closing) return;
       if (document.body.classList.contains("printing")) return;
-      if ($("splash")) { shut(); return; }
+      if (splashUp()) { shut(); return; }
       if ($("sheet").classList.contains("on")) { closeSheet(); return; }
       if (depth > 0) { try { history.back(); return; } catch (e) {} }
       if (!isRoot(R)) { go(R.story ? { tab: "quran", sub: "stories" } : { tab: R.tab }, false); try { history.replaceState(R, ""); } catch (e) {} return; }

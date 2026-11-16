@@ -11,7 +11,7 @@ test("tabs: Today, Qur'an, Hadith, More; Duas lives in More; old links still wor
   assert.match(app, /const oldHash = h => h === "duas" \? "more\/duas" : h === "more\/hadith" \? "hadith" : h;/);
   const m = app.slice(app.indexOf("function vMore()"), app.indexOf("function vDev()"));
   const order = [...m.matchAll(/\["(\w+)", "\w+", /g)].map(x => x[1]);
-  assert.deepEqual(order.slice(0, 5), ["duas", "names", "guide", "calendar", "dev"]);
+  assert.deepEqual(order.slice(0, 6), ["duas", "names", "guide", "women", "calendar", "dev"]); // 16 Nov: For women after Prayer guide
   assert.match(app, /function vDev\(\) \{\n  return `<div class="page-head">\$\{back\(\)\}<h2>\$\{t\("dev"\)\}<\/h2><\/div>`;/, "blank for now");
 });
 

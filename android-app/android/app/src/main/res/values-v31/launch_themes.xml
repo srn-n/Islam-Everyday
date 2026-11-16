@@ -7,6 +7,7 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_jade</item>
         <item name="android:windowSplashScreenBackground">@color/lg_classic_jade</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_jade</item>
+        <item name="android:windowSplashScreenAnimationDuration">700</item>
         <item name="android:windowBackground">@color/lg_classic_jade</item>
     </style>
     <style name="Launch.Classic.Indigo" parent="AppTheme.NoActionBarLaunch">
@@ -14,6 +15,7 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_indigo</item>
         <item name="android:windowSplashScreenBackground">@color/lg_classic_indigo</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_indigo</item>
+        <item name="android:windowSplashScreenAnimationDuration">700</item>
         <item name="android:windowBackground">@color/lg_classic_indigo</item>
     </style>
     <style name="Launch.Classic.Teal" parent="AppTheme.NoActionBarLaunch">
@@ -21,6 +23,7 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_teal</item>
         <item name="android:windowSplashScreenBackground">@color/lg_classic_teal</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_teal</item>
+        <item name="android:windowSplashScreenAnimationDuration">700</item>
         <item name="android:windowBackground">@color/lg_classic_teal</item>
     </style>
     <style name="Launch.Sky.Jade" parent="AppTheme.NoActionBarLaunch">
@@ -28,6 +31,7 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_jade</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sky_jade</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_jade</item>
+        <item name="android:windowSplashScreenAnimationDuration">700</item>
         <item name="android:windowBackground">@color/lg_sky_jade</item>
     </style>
     <style name="Launch.Sky.Indigo" parent="AppTheme.NoActionBarLaunch">
@@ -35,6 +39,7 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_indigo</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sky_indigo</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_indigo</item>
+        <item name="android:windowSplashScreenAnimationDuration">700</item>
         <item name="android:windowBackground">@color/lg_sky_indigo</item>
     </style>
     <style name="Launch.Sky.Teal" parent="AppTheme.NoActionBarLaunch">
@@ -42,6 +47,7 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_teal</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sky_teal</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_teal</item>
+        <item name="android:windowSplashScreenAnimationDuration">700</item>
         <item name="android:windowBackground">@color/lg_sky_teal</item>
     </style>
     <style name="Launch.Sandstone.Jade" parent="AppTheme.NoActionBarLaunch">
@@ -49,6 +55,7 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_jade</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sandstone_jade</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_jade</item>
+        <item name="android:windowSplashScreenAnimationDuration">700</item>
         <item name="android:windowBackground">@color/lg_sandstone_jade</item>
     </style>
     <style name="Launch.Sandstone.Indigo" parent="AppTheme.NoActionBarLaunch">
@@ -56,6 +63,7 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_indigo</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sandstone_indigo</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_indigo</item>
+        <item name="android:windowSplashScreenAnimationDuration">700</item>
         <item name="android:windowBackground">@color/lg_sandstone_indigo</item>
     </style>
     <style name="Launch.Sandstone.Teal" parent="AppTheme.NoActionBarLaunch">
@@ -63,6 +71,7 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_teal</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sandstone_teal</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_teal</item>
+        <item name="android:windowSplashScreenAnimationDuration">700</item>
         <item name="android:windowBackground">@color/lg_sandstone_teal</item>
     </style>
 </resources>

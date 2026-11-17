@@ -94,7 +94,7 @@ test("section slides ease out (Fade cross-fades); filter rows keep the page marg
   assert.match(css, /html\[data-vt\]\[data-motion="fade"\]::view-transition-new\(root\)\{animation:vt-fi /);
   assert.match(css, /--bounce:linear\(/);
   assert.match(css, /\.chips\{scroll-padding-inline:16px\}/);
-  assert.match(css, /@media \(pointer:coarse\)\{@supports[^{]*\{\s*\.scrim\{[^}]*backdrop-filter:blur\(14px\)/);
+  assert.match(css, /@supports[^{]*\{\s*\.scrim\{[^}]*backdrop-filter:blur\(14px\)/); assert.doesNotMatch(css, /@media \(pointer:coarse\)\{@supports[^{]*\{\s*\.scrim/, "17 Nov: the website blurs too");
 });
 
 test("splash: the doorway is there from the first frame, and the three promises are shown in both languages", () => {

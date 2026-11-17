@@ -1,7 +1,6 @@
 package com.simplymadestudio.islameveryday;
 
 import android.content.Context;
-import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
@@ -30,13 +29,5 @@ public class MainActivity extends BridgeActivity {
         getWindow().setBackgroundDrawable(new ColorDrawable(g));
         // Android 13+: the next start's launch screen in the chosen themes' colours (kept by Android between starts).
         AppearancePlugin.applySplash(this);
-        AppearancePlugin.applyPicker(this); // the date picker in the theme's colours
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration c) {
-        super.onConfigurationChanged(c);
-        // The phone switched light/dark (the activity is kept, see uiMode in the manifest): the date picker follows.
-        AppearancePlugin.applyPicker(this);
     }
 }

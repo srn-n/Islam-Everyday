@@ -168,8 +168,9 @@ const block = sel => { const i = css.indexOf(sel + "{"); assert.ok(i >= 0, sel);
 const SETS = { "classic-light": block(":root"), "classic-dark": block(':root[data-theme="dark"]') };
 // Face 7 (intentional): three light themes and three dark themes; no theme has a set for the other appearance.
 // Nov 2026 (intentional): Emerald Ivory → Sky Blue, Plum Dusk → Deep Teal.
-for (const p of ["sky", "sandstone"]) SETS[p + "-light"] = block(`:root[data-palette="${p}"]`);
-for (const p of ["indigo", "teal"]) SETS[p + "-dark"] = block(`:root[data-palette="${p}"][data-theme="dark"]`);
+// 17 Nov 2026 (owner, Notion): Sage Green and Dusty Rose (light), Ember Night and Violet Night (dark) added.
+for (const p of ["sky", "sandstone", "sage", "rose"]) SETS[p + "-light"] = block(`:root[data-palette="${p}"]`);
+for (const p of ["indigo", "teal", "ember", "violet"]) SETS[p + "-dark"] = block(`:root[data-palette="${p}"][data-theme="dark"]`);
 
 test("themes (Nov 2026): Classic Teal, Sky Blue, Sandstone Teal for light; Midnight Jade, Indigo Moon, Deep Teal for dark", () => {
   for (const k of ["pl_classic", "pl_sky", "pl_sandstone", "pl_jade", "pl_indigo", "pl_teal", "th_light", "th_dark", "md_system", "md_light", "md_dark", "appearance"]) { assert.ok(I18N.en[k], k); assert.ok(I18N.bn[k], "bn " + k); }
@@ -177,7 +178,11 @@ test("themes (Nov 2026): Classic Teal, Sky Blue, Sandstone Teal for light; Midni
   assert.equal(I18N.en.pl_jade, "Midnight Jade"); assert.equal(I18N.en.pl_indigo, "Indigo Moon"); assert.equal(I18N.en.pl_teal, "Deep Teal");
   assert.match(I18N.en.th_light, /Recommended for light appearance/); assert.match(I18N.en.th_dark, /Recommended for dark appearance/);
   assert.ok(!I18N.en.pl_burgundy, "Burgundy is no longer offered as a light theme");
-  assert.equal(Object.keys(SETS).length, 6);
+  assert.equal(Object.keys(SETS).length, 10);
+  assert.equal(I18N.en.pl_sage, "Sage Green"); assert.equal(I18N.en.pl_rose, "Dusty Rose"); assert.equal(I18N.en.pl_ember, "Ember Night"); assert.equal(I18N.en.pl_violet, "Violet Night");
+  for (const k of ["sage", "rose", "ember", "violet"]) assert.ok(I18N.bn["pl_" + k], "bn " + k);
+  assert.match(app, /LIGHT_TH = \["classic", "sky", "sandstone", "sage", "rose"\], DARK_TH = \["jade", "indigo", "teal", "ember", "violet"\]/);
+  assert.equal(boot({ mode: "light", lightTheme: "rose" }).palette, "rose"); assert.equal(boot({ mode: "dark", darkTheme: "violet" }).palette, "violet");
 });
 
 test("palettes: focus ring, controls and text keep contrast in every palette and mode", () => {

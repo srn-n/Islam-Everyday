@@ -131,7 +131,7 @@ test("tracker: each prayer on each date toggles independently and other dates ar
 
 test("tracker UI: selected date, previous/next, picker limited to stored days, empty state, separate handler", () => {
   const app = read("assets/app.js");
-  for (const m of [/data-act="tday" data-k="prev"/, /data-act="tday" data-k="next"/, /type="date" id="t-date"[^>]*min="\$\{min\}" max="\$\{s\.key\}"/, /data-act="trk" data-k="\$\{p\}"/, /t\("t_empty"\)/, /t\("t_today"\)/, /t\("t_yday"\)/, /t\("t_past"\)/])
+  for (const m of [/data-act="tday" data-k="prev"/, /data-act="tday" data-k="next"/, /data-act="tcal" aria-haspopup="dialog"/, /const k = dkey\(y, m, d\), off = k < min \|\| k > s\.key/, /XT\.clamp\(d\.k, XT\.shift\(snap\.key, -\(KEEP_DAYS - 1\)\), snap\.key\)/, /data-act="trk" data-k="\$\{p\}"/, /t\("t_empty"\)/, /t\("t_today"\)/, /t\("t_yday"\)/, /t\("t_past"\)/])
     assert.match(app, m);
   const h = app.slice(app.indexOf('case "trk":'), app.indexOf('case "tday":'));
   assert.match(h, /XT\.togglePrayer\(st\.log, k, d\.k\)/, "writes only the selected date");

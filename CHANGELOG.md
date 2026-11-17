@@ -2,6 +2,21 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Four new themes, the app's own calendar, shared pictures in your theme, a smoother opening (17 November 2026)
+
+### Added
+- **Four new themes:** Sage Green and Dusty Rose for the light appearance, Ember Night and Violet Night for the dark one (five of each now). Every one meets the same contrast checks as the others, and the Android launch screen has a version for each light and dark pair.
+- **A verse on the shared prayer tracker:** each tracker picture carries a verse from the Qur'an about answering Allah's call and keeping the prayer (8:24, 2:186, 20:14, 62:9, 2:238, 2:43; one a day, in turn), word for word from the app's sources.
+- **For women and Developer message in the website's side menu**, as in the app's More list.
+
+### Changed
+- **Calendar (tracker "Go to date"):** the app's own month calendar on the website and in the Android app: the week runs Monday to Sunday, in the theme's colours, with only the kept days (today and the 119 before it) to pick. Days with all five prayers recorded get a filled dot and days with some get a hollow one.
+- **Shared pictures (a Name of Allah, a dua, a hadith, a story, the prayer tracker):** they use the theme you have set, light or dark, and are as tall as your phone's screen: the card is the same, on the theme's page colour. On a computer the picture is 9:16. Saving as a PDF uses the theme's colours too.
+- **Tracker picture:** the web address is gone; "Simply Made Studio" is picked out in the theme's accent.
+- **Prayer widget:** the current prayer has its own colour too (a soft mint over the pictures), different from the next prayer's.
+- **Website:** the page behind a sheet (a Name of Allah, the location list, sharing) is blurred, as in the app.
+- **Opening:** smoother. Every moving part is ready from the first frame, the doorway settles in on the website and then breathes slowly until the page opens, and the doorway and words leave more gently.
+
 ## For women, a new widget layout, widget pictures of their own, a calendar in the app's colours, smoother motion (16 November 2026)
 
 ### Added

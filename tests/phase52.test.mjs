@@ -145,14 +145,15 @@ const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
    Midnight Jade (the base dark tokens) / Indigo Moon / Plum Dusk are dark only. The same contrast checks cover all six. */
 const THEMES = { light: block(":root"), dark: block(':root[data-theme="dark"]') };
 // Nov 2026 (intentional): Emerald Ivory → Sky Blue, Plum Dusk → Deep Teal.
-for (const p of ["sky", "sandstone"]) THEMES[p] = block(`:root[data-palette="${p}"]`);
-for (const p of ["indigo", "teal"]) THEMES[p + "-dark"] = block(`:root[data-palette="${p}"][data-theme="dark"]`);
+// 17 Nov 2026 (intentional): Sage Green, Dusty Rose (light), Ember Night, Violet Night (dark) added.
+for (const p of ["sky", "sandstone", "sage", "rose"]) THEMES[p] = block(`:root[data-palette="${p}"]`);
+for (const p of ["indigo", "teal", "ember", "violet"]) THEMES[p + "-dark"] = block(`:root[data-palette="${p}"][data-theme="dark"]`);
 
 test("every palette, light and dark, defines every colour token the primary theme defines", () => {
   const need = Object.keys(THEMES.dark);
   for (const n of Object.keys(THEMES).filter(n => n !== "light" && n !== "dark")) for (const k of need) assert.ok(THEMES[n][k], `${n}: --${k}`);
   assert.match(app, /const MODES = \["system", "light", "dark"\]/);
-  assert.match(app, /LIGHT_TH = \["classic", "sky", "sandstone"\], DARK_TH = \["jade", "indigo", "teal"\]/); // Face 7 (was PALETTES)
+  assert.match(app, /LIGHT_TH = \["classic", "sky", "sandstone", "sage", "rose"\], DARK_TH = \["jade", "indigo", "teal", "ember", "violet"\]/); // Face 7 (was PALETTES); 17 Nov 2026: five each
   assert.ok(!css.includes('[data-palette="burgundy"]') && !css.includes('[data-palette="sky"][data-theme="dark"]') && !css.includes('[data-palette="emerald"]') && !css.includes('[data-palette="plum"]'), "no light/dark crossover sets remain");
   assert.match(css, /:root:not\(\[data-theme\]\)\{/, "the system dark fallback applies only when no mode has been set");
 });

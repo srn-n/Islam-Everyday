@@ -1,7 +1,8 @@
 /* Islam Everyday — appearance before first paint (Phase 5.3, Face 7 themes).
  * Runs in <head> before the stylesheet applies, so the page never flashes the wrong colours.
  * Mode (st.mode: system | light | dark) picks the appearance; each appearance remembers its own theme:
- * st.lightTheme (classic | sky | sandstone) and st.darkTheme (jade | indigo | teal); Nov 2026: emerald → sky, plum → teal.
+ * st.lightTheme (classic | sky | sandstone | sage | rose) and st.darkTheme (jade | indigo | teal | ember | violet; the
+ * last two of each added 17 Nov 2026); Nov 2026: emerald → sky, plum → teal.
  * Older saved settings are read the same way app.js migrates them: Phase 5.2 st.theme and Phase 5.3 st.palette
  * (emerald/sandstone → that light theme, indigo → Indigo Moon, burgundy → Plum Dusk).
  * Also applies st.glass (subtle | balanced | high | solid) and st.motion (off | subtle = Slide | fade). */
@@ -15,9 +16,9 @@
   // Nov 2026: Emerald Ivory → Sky Blue, Plum Dusk (and the older Burgundy) → Deep Teal.
   if (lt === "emerald") lt = "sky";
   // Nov 2026 (13th): a new install starts on Sandstone Teal; settings saved before keep their light theme.
-  else if (lt !== "classic" && lt !== "sky" && lt !== "sandstone") lt = pal === "emerald" ? "sky" : pal === "sandstone" ? pal : (st.palette || old) ? "classic" : "sandstone";
+  else if (["classic", "sky", "sandstone", "sage", "rose"].indexOf(lt) < 0) lt = pal === "emerald" ? "sky" : pal === "sandstone" ? pal : (st.palette || old) ? "classic" : "sandstone";
   if (dt === "plum") dt = "teal";
-  else if (dt !== "jade" && dt !== "indigo" && dt !== "teal") dt = pal === "indigo" ? "indigo" : pal === "burgundy" ? "teal" : "jade";
+  else if (["jade", "indigo", "teal", "ember", "violet"].indexOf(dt) < 0) dt = pal === "indigo" ? "indigo" : pal === "burgundy" ? "teal" : "jade";
   // A host app (the Android wrapper) may set data-theme before this runs; keep it as the "system" answer.
   var host = r.getAttribute("data-host-theme") || r.getAttribute("data-theme");
   if (host) r.setAttribute("data-host-theme", host);

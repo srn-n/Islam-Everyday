@@ -23,9 +23,11 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 @CapacitorPlugin(name = "Appearance")
 public class AppearancePlugin extends Plugin {
     static final String PREFS = "ie_appearance", KEY = "mode", LT = "light", DT = "dark";
-    static final String[] LIGHT = { "classic", "sky", "sandstone" }, DARK = { "jade", "indigo", "teal" };
-    // Ground colours of the six themes, the same as assets/app.css (tools/launch-themes.mjs; tests/launch.test.mjs).
-    static final int[] LIGHT_GROUND = { 0xFFEEF3F1, 0xFFEDF3FA, 0xFFF3EADB }, DARK_GROUND = { 0xFF08120F, 0xFF0A0D1E, 0xFF051416 };
+    // 17 Nov 2026: five themes for each appearance (Sage, Rose, Ember and Violet added).
+    static final String[] LIGHT = { "classic", "sky", "sandstone", "sage", "rose" }, DARK = { "jade", "indigo", "teal", "ember", "violet" };
+    // Ground colours of the ten themes, the same as assets/app.css (tools/launch-themes.mjs; tests/launch.test.mjs).
+    static final int[] LIGHT_GROUND = { 0xFFEEF3F1, 0xFFEDF3FA, 0xFFF3EADB, 0xFFEDF0E6, 0xFFF6ECEB },
+        DARK_GROUND = { 0xFF08120F, 0xFF0A0D1E, 0xFF051416, 0xFF110F0E, 0xFF100C17 };
 
     static SharedPreferences prefs(Context c) { return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE); }
 
@@ -51,25 +53,14 @@ public class AppearancePlugin extends Plugin {
     static int ground(Context c) { return isDark(c) ? DARK_GROUND[darkTheme(c)] : LIGHT_GROUND[lightTheme(c)]; }
 
     /** The launch theme of the chosen light/dark pair (res/values-v31/launch_themes.xml). */
-    // Named directly (not looked up by name), so the build keeps all nine. Rows: light theme; columns: dark theme.
+    // Named directly (not looked up by name), so the build keeps all 25. Rows: light theme; columns: dark theme.
     static final int[][] LAUNCH = {
-        { R.style.Launch_Classic_Jade, R.style.Launch_Classic_Indigo, R.style.Launch_Classic_Teal },
-        { R.style.Launch_Sky_Jade, R.style.Launch_Sky_Indigo, R.style.Launch_Sky_Teal },
-        { R.style.Launch_Sandstone_Jade, R.style.Launch_Sandstone_Indigo, R.style.Launch_Sandstone_Teal } };
+        { R.style.Launch_Classic_Jade, R.style.Launch_Classic_Indigo, R.style.Launch_Classic_Teal, R.style.Launch_Classic_Ember, R.style.Launch_Classic_Violet },
+        { R.style.Launch_Sky_Jade, R.style.Launch_Sky_Indigo, R.style.Launch_Sky_Teal, R.style.Launch_Sky_Ember, R.style.Launch_Sky_Violet },
+        { R.style.Launch_Sandstone_Jade, R.style.Launch_Sandstone_Indigo, R.style.Launch_Sandstone_Teal, R.style.Launch_Sandstone_Ember, R.style.Launch_Sandstone_Violet },
+        { R.style.Launch_Sage_Jade, R.style.Launch_Sage_Indigo, R.style.Launch_Sage_Teal, R.style.Launch_Sage_Ember, R.style.Launch_Sage_Violet },
+        { R.style.Launch_Rose_Jade, R.style.Launch_Rose_Indigo, R.style.Launch_Rose_Teal, R.style.Launch_Rose_Ember, R.style.Launch_Rose_Violet } };
     static int splashTheme(Context c) { return LAUNCH[lightTheme(c)][darkTheme(c)]; }
-
-    /** The date picker of each theme (res/values/date_pickers.xml, made by tools/launch-themes.mjs). */
-    static final int[] PICK_LIGHT = { R.style.Pick_Classic, R.style.Pick_Sky, R.style.Pick_Sandstone },
-        PICK_DARK = { R.style.Pick_Jade, R.style.Pick_Indigo, R.style.Pick_Teal };
-
-    /**
-     * 16 Nov 2026 (owner): the calendar the page's date field opens is Android's own dialog; it takes the theme the
-     * app shows now. The theme's picker style is laid over the activity's theme, so the next dialog uses it.
-     */
-    static void applyPicker(Activity a) {
-        if (a == null) return;
-        try { a.getTheme().applyStyle(isDark(a) ? PICK_DARK[darkTheme(a)] : PICK_LIGHT[lightTheme(a)], true); } catch (Exception ignored) {}
-    }
 
     /** Android 13+: the next start's launch screen uses the chosen themes' colours. Kept by Android between starts. */
     static void applySplash(Activity a) {
@@ -108,7 +99,6 @@ public class AppearancePlugin extends Plugin {
         getActivity().runOnUiThread(() -> {
             apply(getContext(), mode);
             applySplash(getActivity());
-            applyPicker(getActivity());
             // The window and the WebView behind the page take the new ground at once (seen if the page ever pauses).
             try {
                 int g = ground(getActivity());

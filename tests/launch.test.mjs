@@ -7,7 +7,7 @@ import { read, p, exists } from "./helpers.mjs";
 
 const app = read("assets/app.js"), css = read("assets/app.css"), boot = read("assets/theme-boot.js");
 const J = "android-app/android/app/src/main/java/com/simplymadestudio/islameveryday/", R = "android-app/android/app/src/main/res/";
-const LIGHT = ["classic", "sky", "sandstone"], DARK = ["jade", "indigo", "teal"];
+const LIGHT = ["classic", "sky", "sandstone", "sage", "rose"], DARK = ["jade", "indigo", "teal", "ember", "violet"]; // 17 Nov 2026: five each
 const cap = s => s[0].toUpperCase() + s.slice(1);
 
 test("launch colours: generated from app.css, one launch theme per light/dark pair, the same table in Java", () => {
@@ -60,7 +60,10 @@ test("Today redraws in place: coming back to the app or the minute tick changes 
 test("open: no blink as the splash leaves; content fades before the ground; the page rises after", () => {
   assert.match(app, /setTimeout\(\(\) => \{ sp\.remove\(\); \}, rise \? 1900 : 700\);/); assert.match(app, /setTimeout\(\(\) => sp\.classList\.add\("gone"\), 600\)/);
   assert.doesNotMatch(app, /sp\.remove\(\); v\.classList\.remove\("door"\)/, "removing door mid-rise restarted it from invisible (the blink)");
-  assert.match(css, /\.splash\.out \.sp-in\{opacity:0;transform:scale\(1\.06\);transition:opacity \.2s ease/);
+  // 17 Nov 2026: a softer curve and a smaller zoom; the doorway and words are still gone before the ground lifts (0.16 s)
+  assert.match(css, /\.splash\.out \.sp-in\{opacity:0;transform:scale\(1\.04\);transition:opacity \.24s cubic-bezier\(\.4,0,\.2,1\)/);
+  assert.match(css, /html:not\(\.native\) \.sp-logo\{animation:sp-settle/, "the website's doorway settles in");
+  assert.match(css, /html\.native \.sp-logo\{animation:sp-breathe 3\.2s ease-in-out 2\.3s infinite alternate\}/, "no settle in the app: it starts where Android's launch screen left it");
   assert.match(css, /transition:opacity \.38s cubic-bezier\(\.4,0,\.2,1\) \.16s,visibility 0s linear \.56s/);
   assert.match(css, /\.view\.door\.enter>\*\{animation:rise-door \.62s var\(--bounce\) both;animation-delay:calc\(140ms \+ var\(--i,0\)\*30ms\)\}/);
 });

@@ -16,8 +16,8 @@ const pic = k => "data:image/webp;base64," + readFileSync(new URL(`assets/widget
 const card = (k, w, h, body) => `<div class="w" style="width:${w}px;height:${h}px;background-image:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.65)),url(${pic(k)})">${body}</div>`;
 const P = [["Fajr", "4:09 am"], ["Dhuhr", "12:40 pm"], ["Asr", "4:23 pm"], ["Maghrib", "7:35 pm"], ["Isha", "9:05 pm"]];
 const prayer = card("orchard", 720, 330, `<div class="top"><span>Current prayer</span><span>Next prayer</span></div>
-  <div class="next"><b>Dhuhr</b><b class="g">Asr</b></div>
-  <div class="row">${P.map(([n, t], i) => `<div class="${i === 2 ? "on" : ""}"><span>${n}</span><b>${t}</b></div>`).join("")}</div>`);
+  <div class="next"><b class="m">Dhuhr</b><b class="g">Asr</b></div>
+  <div class="row">${P.map(([n, t], i) => `<div class="${i === 2 ? "on" : i === 1 ? "cur" : ""}"><span>${n}</span><b>${t}</b></div>`).join("")}</div>`);
 const verse = (k, w, h, cls, t, r) => card(k, w, h, `<div class="lab">Verse for today</div><p class="${cls}">${t}</p><div class="ref">${r}</div>`);
 const items = {
   wg_prev_prayer: prayer,
@@ -28,7 +28,7 @@ const css = `body{margin:0;background:transparent;font-family:Roboto,"Noto Sans"
 .w{box-sizing:border-box;border-radius:44px;background-size:cover;background-position:center;padding:30px 34px;display:flex;flex-direction:column;overflow:hidden}
 .top{display:flex;justify-content:space-between;font-size:24px;opacity:.9}.next{display:flex;justify-content:space-between;margin-top:6px;font-size:44px}
 .g{color:#FFE2A6}.next .sm{font-size:36px;align-self:flex-end}.row{display:flex;margin-top:auto}.row div{flex:1;text-align:center;display:flex;flex-direction:column;gap:6px}
-.row span{font-size:22px;opacity:.9}.row b{font-size:25px;font-weight:400}.row .on span,.row .on b{color:#FFE2A6;font-weight:700;opacity:1}
+.row span{font-size:22px;opacity:.9}.row b{font-size:25px;font-weight:400}.row .on span,.row .on b{color:#FFE2A6;font-weight:700;opacity:1}.m,.row .cur span,.row .cur b{color:#AEF0DA;opacity:1} /* the current prayer (PIC_CUR) */
 .lab{color:#FFE2A6;font-weight:700;font-size:25px}.t{margin:14px 0 0;font-size:31px;line-height:1.35;flex:1}.t.lg{font-size:40px;line-height:1.45;margin-top:22px}
 .ref{font-size:24px;opacity:.9;margin-top:10px}`;
 const b = await chromium.launch(); const pg = await b.newPage({ deviceScaleFactor: 1 });

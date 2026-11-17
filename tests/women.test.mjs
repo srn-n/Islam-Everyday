@@ -59,7 +59,8 @@ test("tracker: a period day keeps the streak without adding to it; excused praye
   assert.match(app, /const ex = pd && !o\[p\];/);
   assert.match(app, /<i class="fg-c\$\{on \? " on" : isPd\(k\) \? " ex" : ""\}/);
   assert.match(css, /\.tick\.ex\[aria-pressed="false"\] i\{border:1\.8px solid var\(--pd\);background:radial-gradient/, "a ring with a dot, not filled");
-  for (const sel of [':root{--pd:', ':root[data-palette="sky"]{--pd:', ':root[data-palette="sandstone"]{--pd:', ':root[data-theme="dark"]{--pd:', ':root[data-palette="indigo"][data-theme="dark"]{--pd:', ':root[data-palette="teal"][data-theme="dark"]{--pd:'])
+  for (const sel of [':root{--pd:', ':root[data-palette="sky"]{--pd:', ':root[data-palette="sandstone"]{--pd:', ':root[data-theme="dark"]{--pd:', ':root[data-palette="indigo"][data-theme="dark"]{--pd:', ':root[data-palette="teal"][data-theme="dark"]{--pd:',
+    ':root[data-palette="sage"]{--pd:', ':root[data-palette="rose"]{--pd:', ':root[data-palette="ember"][data-theme="dark"]{--pd:', ':root[data-palette="violet"][data-theme="dark"]{--pd:'])
     assert.ok(css.includes(sel), "a period-day colour for " + sel);
 });
 
@@ -72,10 +73,22 @@ test("reminders on a period day: three gentle ones in place of the prayer remind
   assert.match(app, /const wNote = x => x\.k === "q" \? `“\$\{wTr\(x\)\}” — \$\{wRef\(x\)\}` : `\$\{x\[st\.lang\] \|\| x\.en\} — \$\{wRef\(x\)\}`;/);
 });
 
-test("tracker share image: last seven days, streak, and simplymadestudio.net at the bottom; period days only as Excused", () => {
+test("tracker share image (17 Nov): last seven days, streak, a verse on answering the call, the studio's name; period days only as Excused", () => {
+  const img = read("assets/share-img.js"), sh = loadBrowser("assets/share.js").IE_SHARE;
   assert.match(app, /case "trkshare": trkShare\(\); break;/);
-  assert.match(app, /x\.fillText\("simplymadestudio\.net", W \/ 2, H - 112\)/);
-  assert.match(app, /\[t\("pd_ex_key"\), "ex"\]/); assert.doesNotMatch(app.slice(app.indexOf("async function trkImage"), app.indexOf("async function trkShare")), /pd_btn/);
+  assert.match(app, /try \{ blob = await \(await shareImg\(\)\)\.trkImage\(s\); \}/);
+  assert.match(app, /const shareImg = \(\) => need\("share"\)\.then\(\(\) => SI \|\| \(SI = window\.IE_SHARE_IMG\(\{/);
+  assert.match(img, /x\.fillText\("Simply Made Studio", W \/ 2, H - foot \+ 108\)/);
+  assert.doesNotMatch(img + JSON.stringify(D), /simplymadestudio\.net/, "no web address on the picture (owner, 17 Nov)");
+  assert.match(img, /\[t\("pd_ex_key"\), "ex"\]/); assert.doesNotMatch(img.slice(img.indexOf("async function trkImage")), /pd_btn/);
   assert.equal(D.en.pd_ex_key, "Excused");
   assert.match(app, /if \(NATIVE\) \{ try \{ await natShareFile\(blob, name, title\);/);
+  // the verse: Qur'an only, references as in tools/share/source.mjs, texts as published (Arabic, Bangla from data/quran)
+  assert.equal(sh.TRACK.map(v => v.s + ":" + v.a).join(" "), "8:24 2:186 20:14 62:9 2:238 2:43");
+  for (const v of sh.TRACK) {
+    const ar = JSON.parse(read(`data/quran/ar/${String(v.s).padStart(3, "0")}.json`)), bn = JSON.parse(read(`data/quran/bn/${String(v.s).padStart(3, "0")}.json`));
+    const A = Array.isArray(ar) ? ar : ar.t, B = Array.isArray(bn) ? bn : bn.t;
+    assert.equal(v.ar[0], A[v.a - 1]); assert.equal(v.bn[0], B[v.a - 1]); assert.ok(v.en[0].length > 20);
+  }
+  assert.equal(sh.trackFor(0).s + ":" + sh.trackFor(0).a, "8:24"); assert.equal(sh.trackFor(-1).a, 43);
 });

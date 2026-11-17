@@ -62,6 +62,8 @@ final class WidgetData {
 
     /** Text colours on a picture: white, with a soft gold for the highlight (the picture has a dark wash). */
     static final int PIC_INK = 0xFFFFFFFF, PIC_MUTED = 0xE6FFFFFF, PIC_ACCENT = 0xFFFFE2A6;
+    /** 17 Nov 2026 (owner): the current prayer in a colour too, not the next prayer's: a soft mint over the pictures. */
+    static final int PIC_CUR = 0xFFAEF0DA;
 
     /**
      * The picture behind one kind of widget now ("prayer", "verse" or "large"), or null for the theme colour.

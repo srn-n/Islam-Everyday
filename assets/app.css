@@ -19,7 +19,7 @@
   --r-night:#1B3238; --r-twi:#B97B36; --r-day:#3F8F97; --r-day2:#3A8072; --r-late:#B8943F;
   --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.25); --shadow-up:0 2px 6px rgba(0,0,0,.45),0 16px 36px rgba(0,0,0,.42);
   color-scheme:dark}}
-/* Face 7 themes. Three themes for each appearance; the mode (System, Light, Dark) picks the appearance and each
+/* Face 7 themes. Five themes for each appearance (three until 17 Nov 2026); the mode (System, Light, Dark) picks the appearance and each
    appearance remembers its own theme (st.lightTheme, st.darkTheme). Classic Teal (light) and Midnight Jade (dark)
    are the base tokens: :root and :root[data-theme="dark"]. The others set data-palette, and only ever in their own
    appearance, so there is no low-contrast light/dark crossover (e.g. no light Burgundy, no dark Sandstone). */
@@ -60,6 +60,40 @@
   --accent:#4FD0D8; --accent-2:#0F3B40; --on-accent:#032125; --gold:#E8C06A; --gold-soft:#2A2A1C;
   --danger:#F09A8A; --ok:#6FD4A4;
   --r-night:#0E2E34; --r-twi:#B5803D; --r-day:#2E8890; --r-day2:#2B726E; --r-late:#B9963F;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
+  color-scheme:dark}
+
+/* 17 Nov 2026 (owner, Notion: "add four new themes, two each for light and dark"). */
+/* Sage Green (light): soft green-grey paper, deep olive-green accent, warm gold */
+:root[data-palette="sage"]{
+  --ground:#EDF0E6; --surface:#FAFBF6; --surface-2:#E8EDDF; --ink:#1D2519; --muted:#566250; --line:#D8E0CD;
+  --accent:#42652A; --accent-2:#E1EBD3; --on-accent:#FFFFFF; --gold:#85560F; --gold-soft:#F1E5CB;
+  --danger:#A8392E; --ok:#2E6C47;
+  --r-night:#2C3B2E; --r-twi:#CF8F55; --r-day:#9CC3A4; --r-day2:#C1D8BC; --r-late:#E4C47C;
+  --shadow:0 1px 2px rgba(25,35,20,.05),0 8px 24px rgba(25,35,20,.07); --shadow-up:0 2px 4px rgba(25,35,20,.08),0 14px 32px rgba(25,35,20,.14);
+  color-scheme:light}
+/* Dusty Rose (light): blush paper, deep berry accent, warm gold */
+:root[data-palette="rose"]{
+  --ground:#F6ECEB; --surface:#FFFAF9; --surface-2:#F2E3E1; --ink:#2C1A1E; --muted:#6C5257; --line:#E8D4D2;
+  --accent:#963A52; --accent-2:#F5DEE4; --on-accent:#FFFFFF; --gold:#85560F; --gold-soft:#F5E4CC;
+  --danger:#A8392E; --ok:#2E6C47;
+  --r-night:#3E2A35; --r-twi:#D58A62; --r-day:#C9A3B8; --r-day2:#E2C9D2; --r-late:#E8C27F;
+  --shadow:0 1px 2px rgba(45,25,30,.05),0 8px 24px rgba(45,25,30,.07); --shadow-up:0 2px 4px rgba(45,25,30,.08),0 14px 32px rgba(45,25,30,.14);
+  color-scheme:light}
+/* Ember Night (dark): warm charcoal, amber accent, pale warm text */
+:root[data-palette="ember"][data-theme="dark"]{
+  --ground:#110F0E; --surface:#1B1816; --surface-2:#24201D; --ink:#F2EAE2; --muted:#B4A79B; --line:#362F2A;
+  --accent:#F0A35E; --accent-2:#3A2A1C; --on-accent:#251408; --gold:#E9C46E; --gold-soft:#2E271A;
+  --danger:#F09A8A; --ok:#7FD3A8;
+  --r-night:#2A211C; --r-twi:#B9773A; --r-day:#8E6A4A; --r-day2:#6F5640; --r-late:#B9963F;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
+  color-scheme:dark}
+/* Violet Night (dark): deep plum-black, soft lilac accent, restrained gold */
+:root[data-palette="violet"][data-theme="dark"]{
+  --ground:#100C17; --surface:#191423; --surface-2:#211A2F; --ink:#EEE8F5; --muted:#ABA1BD; --line:#32284A;
+  --accent:#CDA6F5; --accent-2:#2E2145; --on-accent:#1A0E2A; --gold:#E6C06C; --gold-soft:#2C2533;
+  --danger:#F09A8A; --ok:#7FD3A8;
+  --r-night:#241A3A; --r-twi:#B5803D; --r-day:#6A4F9A; --r-day2:#58447F; --r-late:#B9963F;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3); --shadow-up:0 2px 6px rgba(0,0,0,.5),0 16px 36px rgba(0,0,0,.45);
   color-scheme:dark}
 
@@ -1238,21 +1272,24 @@ ul.sg-legend li{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .sh-hit{box-shadow:0 0 0 3px var(--accent),var(--shadow);transition:box-shadow .4s}
 #print-area{display:none}
 @media print{
-  body.printing{background:#fff;color:#111;padding:0}
+  /* 17 Nov 2026 (owner, Notion): the PDF in the user's theme too: the theme's page colour around a card in its card,
+     text and accent colours (printed exactly, backgrounds included). */
+  @page{margin:0}
+  body.printing{background:var(--ground);color:var(--ink);padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body.printing > *:not(#print-area){display:none!important}
-  body.printing #print-area{display:block;font-family:var(--body);font-size:12pt;line-height:1.6;color:#111;max-width:none}
-  #print-area .pr-head{display:flex;justify-content:space-between;border-bottom:2px solid #0E6B5C;padding-bottom:6pt;margin-bottom:14pt;color:#0E6B5C;font-size:10pt}
+  body.printing #print-area{display:block;font-family:var(--body);font-size:12pt;line-height:1.6;color:var(--ink);max-width:none;background:var(--surface);margin:12mm;padding:14mm 16mm;border-radius:6mm;border-top:2.5mm solid var(--accent);-webkit-box-decoration-break:clone;box-decoration-break:clone}
+  #print-area .pr-head{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:6pt;margin-bottom:14pt;color:var(--accent);font-size:10pt}
   #print-area .pr-head b{font-family:var(--display);font-weight:400;font-size:13pt}
   #print-area h1{font-family:var(--display);font-weight:400;font-size:20pt;line-height:1.25;margin:0 0 10pt}
-  #print-area h2{font-size:13pt;margin:16pt 0 6pt;color:#0E6B5C;break-after:avoid}
+  #print-area h2{font-size:13pt;margin:16pt 0 6pt;color:var(--accent);break-after:avoid}
   #print-area h3{font-size:11pt;margin:10pt 0 3pt;break-after:avoid}
   #print-area p{margin:0 0 8pt;orphans:3;widows:3}
-  #print-area .pr-lead{font-size:12.5pt;color:#333}
+  #print-area .pr-lead{font-size:12.5pt;color:var(--ink)}
   #print-area .pr-ar{font-family:var(--arabic);direction:rtl;text-align:right;font-size:19pt;line-height:2;margin:6pt 0 10pt}
-  #print-area .pr-tl{font-style:italic;color:#444}
+  #print-area .pr-tl{font-style:italic;color:var(--muted)}
   #print-area .pr-mean{font-weight:600}
-  #print-area .pr-ref{color:#7a4f10;font-size:10.5pt;margin-top:10pt}
-  #print-area .pr-foot{border-top:1px solid #ccc;margin-top:18pt;padding-top:6pt;font-size:9pt;color:#555;overflow-wrap:anywhere}
+  #print-area .pr-ref{color:var(--gold);font-size:10.5pt;margin-top:10pt}
+  #print-area .pr-foot{border-top:1px solid var(--line);margin-top:18pt;padding-top:6pt;font-size:9pt;color:var(--muted);overflow-wrap:anywhere}
   #print-area .ar-in{font-family:var(--arabic)}
 }
 
@@ -1394,11 +1431,12 @@ html.closing nav.tabs{transform:translateY(12px)}
 /* Filter rows (All, Saved, categories): the row scrolls edge to edge, but its first chip rests on the page margin. Without
    this the scroll snap pulled "All" to the very edge of the screen, out of line with everything else. */
 .chips{scroll-padding-inline:16px}
-/* A sheet (a Name of Allah, share, location…) blurs the page behind it on phones and in the app. */
-@media (pointer:coarse){@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+/* A sheet (a Name of Allah, share, location…) blurs the page behind it. 17 Nov 2026 (owner, Notion): on the website
+   too, as in the app (it used to be phones only). */
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
   .scrim{background:rgba(5,15,12,.34);-webkit-backdrop-filter:blur(14px) saturate(1.15);backdrop-filter:blur(14px) saturate(1.15)}
   :root[data-glass="solid"] .scrim{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(5,15,12,.5)}
-}}
+}
 @media (prefers-reduced-transparency:reduce){.scrim{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
 /* Hero line on the Today card: the verse or hadith for the current prayer */
 .sky-quote{margin:14px 0 0;padding-top:12px;border-top:1px solid rgba(255,255,255,.22)}
@@ -1555,7 +1593,19 @@ html[data-lang="bn"] .sp-promise [lang="bn"]{display:inline-flex}
 /* 15 Nov 2026: in three steps that never overlap: the doorway and words fade first (0.2 s), then the plain ground
    lifts (from 0.16 s), then the page rises (from 0.14 s, under the ground). They used to fade out together, so the
    doorway's sun and the name showed through over the picture and the verse for a moment, like a glitch. */
-.splash.out .sp-in{opacity:0;transform:scale(1.06);transition:opacity .2s ease,transform .45s cubic-bezier(.4,0,.2,1)}
+.splash.out .sp-in{opacity:0;transform:scale(1.04);transition:opacity .24s cubic-bezier(.4,0,.2,1),transform .55s cubic-bezier(.22,1,.36,1)}
+/* 17 Nov 2026 (owner, Notion: "the opening is stable; a smoother animation would be appreciated"):
+   - every moving part is on its own layer from the first frame (will-change), so none of them waits for a repaint
+     when its turn comes while the app is still starting underneath;
+   - on the website the doorway settles into place as the sky appears (in the Android app it stays exactly where
+     Android's launch screen left it, so the hand-over does not jump);
+   - once the words are in, the doorway breathes very slowly, so the screen is never still before the page opens;
+   - the doorway and words leave a little more gently (a softer curve, a smaller zoom), keeping the 15 Nov order. */
+.sp-in,.sp-logo,.sp-sun,.sp-sky,.sp-halo,.sp-ring,.sp-name span,.sp-by,.sp-tag,.sp-bar i{will-change:transform,opacity}
+html:not(.native) .sp-logo{animation:sp-settle 1.2s cubic-bezier(.22,1,.36,1) both,sp-breathe 3.2s ease-in-out 2.3s infinite alternate}
+html.native .sp-logo{animation:sp-breathe 3.2s ease-in-out 2.3s infinite alternate}
+@keyframes sp-settle{from{transform:translateY(10px) scale(.94)}to{transform:none}}
+@keyframes sp-breathe{from{transform:none}to{transform:translateY(-3px) scale(1.015)}}
 @keyframes sp-o{to{opacity:1}}
 @keyframes sp-up{to{opacity:1;transform:none}}
 @keyframes sp-rise{to{transform:none}}
@@ -1589,6 +1639,8 @@ html.native.sp-hold .splash{animation-play-state:paused!important}
 :root[data-theme="dark"]{--pd:#E68AB0}
 :root[data-palette="indigo"][data-theme="dark"]{--pd:#F094C4}
 :root[data-palette="teal"][data-theme="dark"]{--pd:#F29AA3}
+:root[data-palette="sage"]{--pd:#A44A6A}:root[data-palette="rose"]{--pd:#8E3B7A}
+:root[data-palette="ember"][data-theme="dark"]{--pd:#F29AB4}:root[data-palette="violet"][data-theme="dark"]{--pd:#F59AC6}
 .tick.ex[aria-pressed="false"] i{border:1.8px solid var(--pd);background:radial-gradient(circle,var(--pd) 0 3.5px,transparent 4px)}
 .fg-c.ex,.fg-c.ex.sel{border:1.6px solid var(--pd);background:radial-gradient(circle,var(--pd) 0 2.4px,transparent 2.8px)}
 .fg-key .fg-c.ex{background:radial-gradient(circle,var(--pd) 0 2px,transparent 2.4px)}
@@ -1604,3 +1656,25 @@ html.native.sp-hold .splash{animation-play-state:paused!important}
 .w-list{margin:12px 0 4px;padding-left:20px;display:grid;gap:8px}
 .w-acts{gap:10px;flex-wrap:wrap;margin-top:10px}
 .w-intro .btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round}
+/* 17 Nov 2026: the tracker's date picker (tCalHtml): the app's own month grid, Monday to Sunday, in the theme. */
+.tpick-btn{display:inline-flex;align-items:center;gap:8px;width:auto;cursor:pointer;font:inherit;font-size:.9rem;color:var(--ink)}
+.tpick-btn svg{width:18px;height:18px;color:var(--accent)}
+.dpick{display:grid;gap:12px;padding-top:4px}
+.dpick .cal-head .t b{font-size:1.25rem}
+.dp-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.dp-wd{font-size:.75rem;font-weight:600;color:var(--muted);padding:2px 0 4px}
+.dp-wd.fri{color:var(--accent)}
+.dp-c{aspect-ratio:1;min-height:40px;border-radius:50%;border:1.5px solid transparent;background:none;color:var(--ink);font:inherit;font-weight:600;font-variant-numeric:tabular-nums;cursor:pointer;position:relative;transition:background .2s,color .2s,border-color .2s}
+.dp-c.pad{cursor:default}
+.dp-c:not(:disabled):hover{background:var(--surface-2)}
+.dp-c:disabled{color:var(--muted);opacity:.45;cursor:default}
+.dp-c.today{border-color:var(--accent)}
+.dp-c.some::after,.dp-c.full::after{content:"";position:absolute;left:50%;bottom:4px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--muted)}
+.dp-c.full::after{background:var(--accent)}
+.dp-c[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.dp-c[aria-pressed="true"]::after{background:var(--on-accent)}
+.dp-acts{align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap}
+.dp-acts .note{margin:0;font-size:.8rem}
+@media (min-width:1024px){.sheet:has(.dpick){max-width:420px}}
+.dp-h{margin:4px 52px 2px 2px;font-size:1.05rem;line-height:44px}
+.dpick .icon-btn:disabled{opacity:.35;cursor:default}

@@ -83,7 +83,8 @@ public class PrayerWidget extends AppWidgetProvider {
         }
         boolean onPic = WidgetData.applyPicture(c, m, id, v, pic);
         int ink = onPic ? WidgetData.PIC_INK : WidgetData.col(d, "ink", 0xFF14211D), muted = onPic ? WidgetData.PIC_MUTED : WidgetData.col(d, "muted", 0xFF5F6B66),
-            acc = onPic ? WidgetData.PIC_ACCENT : WidgetData.col(d, "accent", 0xFF0E6B5C);
+            acc = onPic ? WidgetData.PIC_ACCENT : WidgetData.col(d, "accent", 0xFF0E6B5C),
+            curC = onPic ? WidgetData.PIC_CUR : WidgetData.col(d, "cur", 0xFF996010); // the current prayer: its own colour
         if (!onPic) v.setInt(R.id.wg_bg, "setColorFilter", WidgetData.col(d, "bg", 0xFFF6F3EC));
         v.setViewVisibility(R.id.wg_body, View.VISIBLE);
         v.setViewVisibility(R.id.wg_empty, View.GONE);
@@ -106,13 +107,17 @@ public class PrayerWidget extends AppWidgetProvider {
             v.setTextColor(R.id.wg_label, muted);
             v.setViewVisibility(R.id.wg_next_lbl, View.VISIBLE);
         }
-        v.setTextColor(R.id.wg_cur_name, ink); v.setTextColor(R.id.wg_next_name, acc);
+        v.setTextColor(R.id.wg_cur_name, cur != null ? curC : muted); v.setTextColor(R.id.wg_next_name, acc);
+        // The current prayer's row in the list: today's prayer that has begun most recently (none from sunrise to Dhuhr,
+        // and none before Fajr, when the current prayer is yesterday's Isha).
+        int ci = -1;
+        if (cur != null && today) for (int k = 0; k < NAME.length; k++) { JSONArray r = p.optJSONArray(k); if (r != null && r.optLong(2) <= now && k != nx) ci = k; }
         for (int k = 0; k < NAME.length; k++) {
             JSONArray r = p.optJSONArray(k); String n = r == null ? "" : r.optString(0), t = r == null ? "" : r.optString(1);
             v.setTextViewText(NAME[k], k == nx ? WidgetData.bold(n) : n);
             v.setTextViewText(TIME[k], k == nx ? WidgetData.bold(t) : t);
-            v.setTextColor(NAME[k], k == nx ? acc : muted);
-            v.setTextColor(TIME[k], k == nx ? acc : ink);
+            v.setTextColor(NAME[k], k == nx ? acc : k == ci ? curC : muted);
+            v.setTextColor(TIME[k], k == nx ? acc : k == ci ? curC : ink);
         }
         return v;
     }

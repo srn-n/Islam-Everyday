@@ -9,7 +9,7 @@ const LOC = window.IE_LOCALE, VE = window.IE_VOTD_EN, DV = window.IE_DAYVIZ;
 /* Phone speed (Oct 2026): page data that the Today screen does not need is loaded only when its page opens, so a phone
    downloads about a third of the scripts before the first screen appears. LAZY lists each group's files in load order;
    bindLazy() picks up the globals they define. The service worker still precaches all of them for offline use. */
-const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"], women: ["women"] };
+const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"], women: ["women"], share: ["share", "share-img"] };
 let NM, NAMES = [], GD, HD, NW, SD, ST, LG = null, WM = null, HCOLL = {}, NW_N = 0;
 const lazyDone = new Set(), lazyP = {}, lazyFiles = new Set();
 /* Phones (touch screen) get the on-demand loading; computers with a mouse keep the previous behaviour: everything is
@@ -174,7 +174,8 @@ const ic = (n, cls) => `<svg viewBox="0 0 24 24" aria-hidden="true"${cls ? ` cla
 
 /* ---------------- theme ---------------- */
 /* Appearance (Face 7). The mode (System, Light, Dark) picks the appearance; each appearance has three themes and
-   remembers its own choice: st.lightTheme (classic | sky | sandstone) and st.darkTheme (jade | indigo | teal).
+   remembers its own choice: st.lightTheme (classic | sky | sandstone | sage | rose) and st.darkTheme (jade | indigo | teal |
+   ember | violet; the last two of each added 17 Nov 2026).
    A light theme is only ever shown in the light appearance and a dark theme only in the dark one.
    Migration, idempotent and non-destructive (st.palette/st.mode are left in place):
    - Phase 5.2 st.theme: light/dark/system keep that mode; emerald → light + Emerald; indigo → dark + Indigo.
@@ -183,7 +184,7 @@ const ic = (n, cls) => `<svg viewBox="0 0 24 24" aria-hidden="true"${cls ? ` cla
    - Nov 2026: Emerald Ivory and Plum Dusk were removed; whoever had them gets Sky Blue (light) and Deep Teal (dark).
      Interaction motion "playful" was removed; it becomes "subtle" (Slide). The new option is "fade".
    assets/theme-boot.js applies the same rules before first paint. st.glass, st.motion and st.scene are new. */
-const MODES = ["system", "light", "dark"], LIGHT_TH = ["classic", "sky", "sandstone"], DARK_TH = ["jade", "indigo", "teal"];
+const MODES = ["system", "light", "dark"], LIGHT_TH = ["classic", "sky", "sandstone", "sage", "rose"], DARK_TH = ["jade", "indigo", "teal", "ember", "violet"]; // 17 Nov 2026: Sage, Rose, Ember, Violet added
 const GLASS = ["subtle", "balanced", "high", "solid"], MOTION = ["off", "subtle", "fade"];
 const SCENES = ["landscape", "sky", "mosque", "dunes", "mountains", "sea", "forest", "fields", "canyon"];
 /* Nov 2026 (13th): pictures, as an alternative to the drawn scenes (st.heroKind "photo"). Generated for this app with
@@ -441,12 +442,34 @@ function trackDay(s) {
       <p class="tdate" aria-live="polite"><b>${esc(longDay(k))}</b><span class="badge ${ago ? "past" : "cur"}">${rel}</span></p>
       <button type="button" class="icon-btn" data-act="tday" data-k="next" aria-label="${esc(t("t_next"))}"${ago === 0 ? " disabled" : ""}>${ic("chev")}</button>
     </div>
-    <div class="tpick"><label for="t-date">${t("t_pick")}</label><input type="date" id="t-date" class="field" value="${k}" min="${min}" max="${s.key}">${ago ? `<button type="button" class="linkish" data-act="tday" data-k="today">${t("t_back")}</button>` : ""}</div>
+    <div class="tpick"><button type="button" class="field tpick-btn" data-act="tcal" aria-haspopup="dialog" aria-label="${esc(t("t_pick") + ": " + longDay(k))}">${ic("calendar")}<span>${t("t_pick")}</span></button>${ago ? `<button type="button" class="linkish" data-act="tday" data-k="today">${t("t_back")}</button>` : ""}</div>
     <ul class="tlist">${PRAYERS.map(p => { const ex = pd && !o[p]; return `<li><span>${pName(p, isFriK(k))}${ex ? ` <small class="pd-tag">${t("pd_ex")}</small>` : ""}</span><button type="button" class="tick${justTicked === p ? " just" : ""}${ex ? " ex" : ""}" data-act="trk" data-k="${p}" aria-pressed="${!!o[p]}" aria-label="${esc(t("markp"))}: ${esc(pName(p, isFriK(k)))}, ${esc(longDay(k))}${ex ? ", " + esc(t("pd_ex")) : ""}"><i><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></i></button></li>`; }).join("")}</ul>
     ${womenOn() ? `<div class="pd-row"><button type="button" class="pd-btn" data-act="pd" aria-pressed="${pd}">${ic("women")}<span>${t("pd_btn")}</span></button><p class="note">${t(pd ? "pd_on" : "pd_hint")}</p></div>` : ""}
     <p class="note" aria-live="polite">${n ? (bn() ? `${num(5)} ওয়াক্তের মধ্যে ${num(n)} ${t("t_count")}` : `${n} ${t("of")} 5 ${t("t_count")}`) : t("t_empty")}</p>
     <p class="note tkeep">${t("t_keep")}</p>
   </div>`;
+}
+
+/* 17 Nov 2026 (owner, Notion: "fix the calendar to match the theme, even on the web"; "start from Monday, end on
+   Sunday"): the tracker's date picker is the app's own month grid in a centred card, in the theme's colours, the week
+   from Monday to Sunday, the same on the website and in the Android app (it used to be the browser's or Android's own
+   calendar, in their colours and with their first day). Only the kept days (today and the 119 before it) can be picked. */
+let tCalM = null;                                  // [year, month] the picker shows
+function tCalHtml() {
+  const s = snap || snapshot(), sel = trackKey(s), min = XT.shift(s.key, -(KEEP_DAYS - 1));
+  if (!tCalM) { const [yy, mm] = XT.parts(sel); tCalM = [yy, mm]; }
+  const [y, m] = tCalM, first = new Date(Date.UTC(y, m - 1, 1)), dim = new Date(Date.UTC(y, m, 0)).getUTCDate(), lead = (first.getUTCDay() + 6) % 7; // Monday first
+  const loc = calLoc(), wdf = (k, f) => DTF(loc, { weekday: f, timeZone: "UTC" }).format(new Date(Date.UTC(2024, 0, 1 + k))); // 1 Jan 2024 was a Monday
+  const [minY, minM] = XT.parts(min), [maxY, maxM] = XT.parts(s.key), canPrev = y * 12 + m > minY * 12 + minM, canNext = y * 12 + m < maxY * 12 + maxM;
+  let cells = '<span class="dp-c pad" aria-hidden="true"></span>'.repeat(lead);
+  for (let d = 1; d <= dim; d++) {
+    const k = dkey(y, m, d), off = k < min || k > s.key, o = st.log[k] || {}, n = PRAYERS.filter(p => o[p]).length;
+    cells += `<button type="button" class="dp-c${k === s.key ? " today" : ""}${n === 5 ? " full" : n ? " some" : ""}" data-act="tcalday" data-k="${k}" aria-pressed="${k === sel}"${k === s.key ? ' aria-current="date"' : ""}${off ? " disabled" : ""} aria-label="${esc(longDay(k))}${off ? "" : ", " + esc(`${num(n)}/${num(5)}`)}">${num(d)}</button>`;
+  }
+  return `<div class="dpick"><h3 class="dp-h">${t("t_pick")}</h3>
+    <div class="cal-head"><button type="button" class="icon-btn" data-act="tcalm" data-d="-1" aria-label="${esc(t("prevm"))}"${canPrev ? "" : " disabled"}>${ic("back")}</button><div class="t" aria-live="polite"><b>${esc(DTF(loc, { month: "long", year: "numeric", timeZone: "UTC" }).format(first))}</b></div><button type="button" class="icon-btn" data-act="tcalm" data-d="1" aria-label="${esc(t("nextm"))}"${canNext ? "" : " disabled"}>${ic("chev")}</button></div>
+    <div class="dp-grid" role="group">${Array.from({ length: 7 }, (_, k) => `<span class="dp-wd${k === 4 ? " fri" : ""}" aria-hidden="true" title="${esc(wdf(k, "long"))}">${wdf(k, "narrow")}</span>`).join("")}${cells}</div>
+    <div class="row dp-acts"><button type="button" class="btn ghost sm" data-act="tcalday" data-k="${s.key}">${t("t_today")}</button><p class="note">${t("t_keep")}</p></div></div>`;
 }
 
 /* Prayer tracker history (Face 7.1): a 7-day × 5-prayer grid. The cells are information only (filled square =
@@ -1589,51 +1612,9 @@ function vWomen() {
 }
 /* Share the prayer tracker as an image (16 Nov 2026, Notion): the last seven days, the streak, and a line at the
    bottom for Simply Made Studio (simplymadestudio.net). Period days show only as "Excused", never named. */
-async function trkImage(s) {
-  const SANS = '"DS Sans", system-ui, sans-serif', DISP = '"DS Display", Georgia, serif';
-  const days = lastDays(s, 7).reverse(), sk = streak(s);
-  try { await Promise.all([document.fonts.load(`400 34px ${SANS}`, t("tsh_title") + t("fg_on")), document.fonts.load(`600 34px ${SANS}`, "0123456789"), document.fonts.load(`400 34px ${DISP}`, "Islam Everyday")]); } catch (e) {}
-  const W = 1080, H = 1350, P = 96, c = document.createElement("canvas"), x = c.getContext("2d"); c.width = W; c.height = H;
-  const AC = "#0E6B5C", INK = "#0F2420", MUT = "#5A6E69", PD = "#B04A72";
-  x.fillStyle = "#F6F1E6"; x.fillRect(0, 0, W, H);
-  x.fillStyle = "#FFFFFF"; x.beginPath(); (x.roundRect ? x.roundRect(40, 40, W - 80, H - 80, 36) : x.rect(40, 40, W - 80, H - 80)); x.fill();
-  x.fillStyle = AC; x.fillRect(40, 40, W - 80, 10);
-  x.textBaseline = "middle"; x.textAlign = "left"; x.font = `400 34px ${DISP}`; x.fillStyle = AC; x.fillText("Islam Everyday", P, 112);
-  x.textAlign = "right"; x.font = `600 24px ${SANS}`; x.fillStyle = "#8A5A12"; x.fillText(t("wtracker").toUpperCase(), W - P, 112);
-  x.textAlign = "center"; x.fillStyle = INK; x.font = `600 46px ${SANS}`; x.fillText(t("tsh_title"), W / 2, 230);
-  x.fillStyle = AC; x.font = `600 112px ${SANS}`; x.fillText(num(sk), W / 2, 345);
-  x.fillStyle = MUT; x.font = `400 32px ${SANS}`; x.fillText(t("daystreak"), W / 2, 425);
-  // the grid: prayers down, days across (oldest on the left, today on the right)
-  const gx = P + 150, gw = W - P - gx, cw = gw / 7, top = 600, rh = 88, cs = 52;
-  const fmt = DTF(LT(), { weekday: "short", timeZone: "UTC" });
-  days.forEach((k, j) => { const [yy, mm, dd] = XT.parts(k), cx = gx + cw * j + cw / 2;
-    x.fillStyle = k === s.key ? AC : MUT; x.font = `600 24px ${SANS}`; x.fillText(fmt.format(new Date(Date.UTC(yy, mm - 1, dd, 12))), cx, top - 64);
-    x.font = `400 24px ${SANS}`; x.fillText(num(dd), cx, top - 32); });
-  let anyPd = false;
-  PRAYERS.forEach((p, i) => { const cy = top + rh * i + rh / 2;
-    x.textAlign = "left"; x.fillStyle = INK; x.font = `400 30px ${SANS}`; x.fillText(t(p), P, cy); x.textAlign = "center";
-    days.forEach((k, j) => { const cx = gx + cw * j + cw / 2, on = !!(st.log[k] || {})[p], ex = !on && isPd(k), r0 = cx - cs / 2, r1 = cy - cs / 2;
-      x.beginPath(); (x.roundRect ? x.roundRect(r0, r1, cs, cs, 12) : x.rect(r0, r1, cs, cs));
-      if (on) { x.fillStyle = AC; x.fill(); }
-      else if (ex) { anyPd = true; x.setLineDash([]); x.lineWidth = 3; x.strokeStyle = PD; x.stroke(); x.beginPath(); x.arc(cx, cy, 7, 0, Math.PI * 2); x.fillStyle = PD; x.fill(); }
-      else { x.setLineDash([7, 6]); x.lineWidth = 2.5; x.strokeStyle = "#B9C6C1"; x.stroke(); x.setLineDash([]); } }); });
-  // key
-  const ky = top + rh * 5 + 56, keys = [[t("fg_on"), "on"], [t("fg_off"), "off"]].concat(anyPd ? [[t("pd_ex_key"), "ex"]] : []);
-  x.font = `400 26px ${SANS}`; const kw = keys.map(([l]) => 34 + 14 + x.measureText(l).width + 44), tot = kw.reduce((a, b) => a + b, 0) - 44;
-  let kx = W / 2 - tot / 2; x.textAlign = "left";
-  keys.forEach(([l, kind], j) => { x.beginPath(); (x.roundRect ? x.roundRect(kx, ky - 17, 34, 34, 8) : x.rect(kx, ky - 17, 34, 34));
-    if (kind === "on") { x.fillStyle = AC; x.fill(); } else if (kind === "ex") { x.lineWidth = 3; x.strokeStyle = PD; x.stroke(); x.beginPath(); x.arc(kx + 17, ky, 5, 0, Math.PI * 2); x.fillStyle = PD; x.fill(); }
-    else { x.setLineDash([6, 5]); x.lineWidth = 2.5; x.strokeStyle = "#B9C6C1"; x.stroke(); x.setLineDash([]); }
-    x.fillStyle = MUT; x.fillText(l, kx + 48, ky); kx += kw[j]; });
-  // the shout-out
-  x.textAlign = "center"; x.fillStyle = "#DCE6E2"; x.fillRect(P, H - 210, W - P * 2, 2);
-  x.fillStyle = MUT; x.font = `400 28px ${SANS}`; x.fillText(t("tsh_by"), W / 2, H - 160);
-  x.fillStyle = AC; x.font = `600 34px ${SANS}`; x.fillText("simplymadestudio.net", W / 2, H - 112);
-  return new Promise(res => c.toBlob(res, "image/jpeg", 0.92));
-}
 async function trkShare() {
   const s = snap || snapshot(); toast(t("sh_making"));
-  let blob = null; try { blob = await trkImage(s); } catch (e) {}
+  let blob = null; try { blob = await (await shareImg()).trkImage(s); } catch (e) {}
   if (!blob) { toast(t("sh_fail")); return; }
   const name = "islam-everyday-prayers-" + s.key + ".jpg", title = t("tsh_title");
   if (NATIVE) { try { await natShareFile(blob, name, title); } catch (e) { if (!/cancel/i.test(String(e && e.message))) toast(t("sh_fail")); } return; }
@@ -1778,44 +1759,14 @@ function shareSheet(kind, key, opener) {
     ${kind === "name" ? `<div class="row"><button type="button" class="btn ghost" data-act="name" data-i="${+key}">${ic("back")} ${t("sh_backname")}</button></div>` : ""}</div>`, opener);
   delete $("sheet").dataset.name; // a Name sheet still loading its verses must not redraw over this one
 }
-/* The image: drawn on a canvas with the bundled fonts, in a fixed light palette so it reads the same wherever it is sent. */
-async function shImage(o) {
-  const SANS = '"DS Sans", system-ui, sans-serif', AR = '"DS Arabic", "Amiri", "Noto Naskh Arabic", serif', DISP = '"DS Display", Georgia, serif';
-  const all = [o.title, o.tl, o.mean, o.ref].concat(o.body).filter(Boolean).join(" ");
-  try { await Promise.all([document.fonts.load(`400 60px ${AR}`, o.ar || "ا"), document.fonts.load(`400 34px ${SANS}`, all), document.fonts.load(`600 34px ${SANS}`, all), document.fonts.load(`400 34px ${DISP}`, "Islam Everyday")]); } catch (e) {}
-  const W = 1080, P = 96, MW = W - P * 2, c = document.createElement("canvas"), x = c.getContext("2d");
-  const wrap = (txt, font, rtl) => { x.font = font; x.direction = rtl ? "rtl" : "ltr"; const out = [];
-    String(txt).split("\n").forEach(par => { let line = ""; par.split(/\s+/).filter(Boolean).forEach(w => { const tt = line ? line + " " + w : w; if (line && x.measureText(tt).width > MW) { out.push(line); line = w; } else line = tt; }); if (line) out.push(line); });
-    return out; };
-  const blocks = [], add = (txt, font, lh, color, gap, align, rtl) => { if (txt) blocks.push({ lines: wrap(txt, font, rtl), font, lh, color, gap, align, rtl }); };
-  const arPx = o.kind === "name" ? 128 : 60;
-  add(o.title, `600 40px ${SANS}`, 56, "#0E6B5C", 0, "center");
-  add(o.ar, `400 ${arPx}px ${AR}`, Math.round(arPx * (o.kind === "name" ? 1.45 : 2.15)), "#0F2420", 40, "center", true);
-  add(o.tl, `400 32px ${SANS}`, 48, "#5A6E69", 24, "center");
-  add(o.mean, `600 40px ${SANS}`, 56, "#0F2420", 22, "center");
-  o.body.forEach((b, k) => add(b, `400 34px ${SANS}`, 52, "#1C3530", k ? 18 : 34, o.kind === "name" ? "left" : "center"));
-  add(o.ref, `400 28px ${SANS}`, 42, "#8A5A12", 36, "center");
-  const head = 168, foot = 150, bodyH = blocks.reduce((s, b) => s + b.gap + b.lines.length * b.lh, 0);
-  const H = Math.max(W, head + bodyH + foot);
-  c.width = W; c.height = H;
-  x.fillStyle = "#F6F1E6"; x.fillRect(0, 0, W, H);
-  x.fillStyle = "#FFFFFF"; x.beginPath(); (x.roundRect ? x.roundRect(40, 40, W - 80, H - 80, 36) : x.rect(40, 40, W - 80, H - 80)); x.fill();
-  x.fillStyle = "#0E6B5C"; x.fillRect(40, 40, W - 80, 10);
-  x.textBaseline = "middle"; x.direction = "ltr"; x.textAlign = "left"; x.font = `400 34px ${DISP}`; x.fillStyle = "#0E6B5C"; x.fillText("Islam Everyday", P, 112);
-  x.textAlign = "right"; x.font = `600 24px ${SANS}`; x.fillStyle = "#8A5A12"; x.fillText(t("sh_" + (o.kind === "nawawi" ? "hadith" : o.kind)).toUpperCase(), W - P, 112);
-  let y = head + Math.max(0, (H - head - foot - bodyH) / 2);
-  blocks.forEach(b => { y += b.gap; x.font = b.font; x.fillStyle = b.color; x.direction = b.rtl ? "rtl" : "ltr"; x.textAlign = b.align;
-    const bx = b.align === "center" ? W / 2 : P;
-    b.lines.forEach(l => { x.fillText(l, bx, y + b.lh / 2); y += b.lh; }); });
-  x.direction = "ltr"; x.textAlign = "center"; x.fillStyle = "#DCE6E2"; x.fillRect(P, H - foot + 10, MW, 2);
-  x.font = `400 26px ${SANS}`; x.fillStyle = "#5A6E69";
-  x.fillText(SITE ? shUrl(o.hash).replace(/^https?:\/\//, "") : "Islam Everyday", W / 2, H - foot / 2 - 6, MW);
-  return new Promise(res => c.toBlob(res, "image/jpeg", 0.92));
-}
+/* The shared pictures (shImage, trkImage) are drawn by assets/share-img.js, loaded with the "share" group when one is
+   made (17 Nov 2026: kept off the first screen). */
+let SI = null;
+const shareImg = () => need("share").then(() => SI || (SI = window.IE_SHARE_IMG({ t, num, XT, DTF, LT, lastDays, streak, isPd, PRAYERS, wTr, wRef, SITE, shUrl, NATIVE, phone, log: () => st.log })));
 async function shJpg(share) {
   const o = shCur && shItem(shCur.kind, shCur.key); if (!o) return;
   toast(t("sh_making"));
-  let blob = null; try { blob = await shImage(o); } catch (e) {}
+  let blob = null; try { blob = await (await shareImg()).shImage(o); } catch (e) {}
   if (!blob) { toast(t("sh_fail")); return; }
   const name = "islam-everyday-" + o.hash.replace("/", "-") + ".jpg";
   if (share && NATIVE) { try { await natShareFile(blob, name, o.title); } catch (e) { if (!/cancel/i.test(String(e && e.message))) toast(t("sh_fail")); } return; }
@@ -2103,7 +2054,9 @@ function vZakat() {
 /* Face 7 settings previews. Theme cards draw a miniature of the real tokens (ground, card, ink, accent, gold);
    the selected card is marked with a check and the word "Chosen", not colour alone. */
 const TH_PREV = { classic: ["#EEF3F1", "#FFFFFF", "#0F2420", "#0E6B5C", "#996010"], sky: ["#EDF3FA", "#FFFFFF", "#0F1E33", "#1D5FAE", "#8A5A0E"], sandstone: ["#F3EADB", "#FCF7EE", "#2A2118", "#0F5C66", "#874C12"],
-  jade: ["#08120F", "#101C18", "#F1EADB", "#5DCAAE", "#E6BA62"], indigo: ["#0A0D1E", "#12172F", "#E9EAF3", "#AEB6FF", "#E3BF6E"], teal: ["#051416", "#0B1F22", "#E4F2F0", "#4FD0D8", "#E8C06A"] };
+  jade: ["#08120F", "#101C18", "#F1EADB", "#5DCAAE", "#E6BA62"], indigo: ["#0A0D1E", "#12172F", "#E9EAF3", "#AEB6FF", "#E3BF6E"], teal: ["#051416", "#0B1F22", "#E4F2F0", "#4FD0D8", "#E8C06A"],
+  sage: ["#EDF0E6", "#FAFBF6", "#1D2519", "#42652A", "#85560F"], rose: ["#F6ECEB", "#FFFAF9", "#2C1A1E", "#963A52", "#85560F"],
+  ember: ["#110F0E", "#1B1816", "#F2EAE2", "#F0A35E", "#E9C46E"], violet: ["#100C17", "#191423", "#EEE8F5", "#CDA6F5", "#E6C06C"] };
 const CHECK = '<svg class="ck" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 function themeCards() {
   const now = themeNow();
@@ -2334,8 +2287,10 @@ function locate() {
 /* ---------------- desktop ---------------- */
 let sideNext = null;
 const SIDE = [["today", "today", "today"], ["study_nav", "quran", "quran"], ["stories_nav", "stories", "quran/stories"], ["duas", "duas", "more/duas"], null,
-  ["guide", "guide", "more/guide"], ["hadith", "hadith", "hadith"], ["calendar", "calendar", "more/calendar"], ["names99", "names", "more/names"], null,
-  ["settings", "gear", "more/settings"], ["about", "info", "more/about"], ["feedback", "mail", "more/feedback"]];
+  ["guide", "guide", "more/guide"], ["hadith", "hadith", "hadith"], ["calendar", "calendar", "more/calendar"], ["names99", "names", "more/names"], ["women", "women", "more/women"], null,
+  ["settings", "gear", "more/settings"], ["dev", "msg", "more/dev"], ["about", "info", "more/about"], ["feedback", "mail", "more/feedback"]];
+/* 17 Nov 2026 (owner, Notion): every page in the app's More list is here too (For women and the developer's note were
+   missing); Privacy and Terms are the links under the panel. */
 function side() {
   const el = $("side"); if (!el) return;
   el.setAttribute("aria-label", t("sidebar")); // a named landmark, distinct from the reader's surah list
@@ -2464,7 +2419,7 @@ async function widgetData() {
       sr: A("sunrise"), pi: timesOk(Y) ? [pName("isha", isFriD(Y)), Y.abs("isha")] : null });
   }
   return { v: 1, lang: st.lang, place: cname(c), soon: FORB_SOON, lab: { next: t("next"), cur: t("curp"), nocur: t("wg_nocur"), tomorrow: t("tomorrow"), votd: t("votd") },
-    col: { bg: cv("--surface"), ink: cv("--ink"), muted: cv("--muted"), accent: cv("--accent") },
+    col: { bg: cv("--surface"), ink: cv("--ink"), muted: cv("--muted"), accent: cv("--accent"), cur: cv("--gold") },
     bg: { mode: "auto", sets: WG_SETS }, days };
 }
 async function widgetRun() {
@@ -2624,6 +2579,9 @@ function act(a, d, b) {
       break;
     }
     case "tday": { if (!snap) break; const cur = trackKey(snap); tSel = d.k === "today" ? null : XT.shift(cur, d.k === "prev" ? -1 : 1); if (tSel && XT.clamp(tSel, XT.shift(snap.key, -(KEEP_DAYS - 1)), snap.key) === snap.key) tSel = null; const y = scrollY; render(false); scrollTo(0, y); break; }
+    case "tcal": tCalM = null; openSheet(tCalHtml(), b, "pop"); break;
+    case "tcalm": { if (!tCalM) break; let [y, m] = tCalM; m += +d.d; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; } tCalM = [y, m]; const sh = $("sheet"), dp = sh.querySelector(".dpick"); if (!dp) break; dp.outerHTML = tCalHtml(); const f = sh.querySelector(`[data-act="tcalm"][data-d="${d.d}"]:not([disabled])`) || sh.querySelector('[data-act="tcalm"]:not([disabled])'); if (f) f.focus({ preventScroll: true }); break; }
+    case "tcalday": { if (!snap) break; const k = XT.clamp(d.k, XT.shift(snap.key, -(KEEP_DAYS - 1)), snap.key); tSel = k === snap.key ? null : k; closeSheet(); const y = scrollY; render(false); scrollTo(0, y); const f = document.querySelector('[data-act="tcal"]'); if (f) f.focus({ preventScroll: true }); break; }
     case "tsel": { if (!snap) break; tSel = d.k === snap.key ? null : d.k; const y = scrollY; render(false); scrollTo(0, y); break; }
     case "xw": {
       if (!snap) break;
@@ -2742,7 +2700,6 @@ document.addEventListener("change", e => {
     const c = document.querySelector(`.cal .c[data-k="${k}"]`); if (c) c.classList.toggle("fp", !!o.f); const cf = $("cp-fasts"); if (cf) cf.innerHTML = calFasts(snap || snapshot()); toast(t(el.checked ? "fp_on" : "fp_off")); return; }
   if (el.id === "method") { st.method = el.value; save(); toast(t("saved2")); nfSync(); }
   else if (el.id === "zk-cur") { st.zk.cur = el.value; save(); $("zk-result").innerHTML = zakatCalc(); }
-  else if (el.id === "t-date" && snap) { const k = XT.clamp(el.value, XT.shift(snap.key, -(KEEP_DAYS - 1)), snap.key); tSel = k === snap.key ? null : k; const y = scrollY; render(false); scrollTo(0, y); const f = $("t-date"); if (f) f.focus({ preventScroll: true }); }
 });
 
 /* ---------------- boot ---------------- */

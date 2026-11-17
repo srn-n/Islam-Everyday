@@ -24,21 +24,11 @@ test("landing: the faded splash stays hidden in the page until the rise and the 
   assert.match(app, /if \(splashUp\(\)\) \{ shut\(\); return; \}/, "Back right after the landing still goes back");
 });
 
-test("date picker (16 Nov, owner): Android's calendar dialog takes the theme the app shows", () => {
-  const R = "android-app/android/app/src/main/", J = R + "java/com/simplymadestudio/islameveryday/";
-  const x = readFileSync(new URL("../" + R + "res/values/date_pickers.xml", import.meta.url), "utf8");
-  const ap = readFileSync(new URL("../" + J + "AppearancePlugin.java", import.meta.url), "utf8");
-  const ma = readFileSync(new URL("../" + J + "MainActivity.java", import.meta.url), "utf8");
-  const acc = { Classic: /:root\{[^}]*--accent:(#[0-9A-F]{6})/i, Sandstone: /:root\[data-palette="sandstone"\]\{[^}]*--accent:(#[0-9A-F]{6})/i,
-    Jade: /:root\[data-theme="dark"\]\{[^}]*--accent:(#[0-9A-F]{6})/i, Teal: /:root\[data-palette="teal"\]\[data-theme="dark"\]\{[^}]*--accent:(#[0-9A-F]{6})/i };
-  for (const [N, re] of Object.entries(acc)) {
-    const a = css.match(re)[1].toUpperCase();
-    assert.match(x, new RegExp(`<style name="PickDlg\\.${N}"[^]*?<item name="android:colorAccent">${a}</item>`), N + " accent");
-    assert.match(x, new RegExp(`<style name="PickStyle\\.${N}"[^]*?<item name="android:headerBackground">${a}</item>`), N + " header");
-  }
-  for (const N of ["Classic", "Sky", "Sandstone", "Jade", "Indigo", "Teal"]) assert.match(x, new RegExp(`<style name="Pick\\.${N}" parent="">\\s*<item name="android:datePickerDialogTheme">@style/PickDlg\\.${N}</item>`));
-  assert.match(x, /PickDlg\.Jade" parent="android:Theme\.Material\.Dialog\.Alert"/); assert.match(x, /PickDlg\.Sky" parent="android:Theme\.Material\.Light\.Dialog\.Alert"/);
-  assert.match(ap, /a\.getTheme\(\)\.applyStyle\(isDark\(a\) \? PICK_DARK\[darkTheme\(a\)\] : PICK_LIGHT\[lightTheme\(a\)\], true\)/);
-  assert.match(ap, /applySplash\(getActivity\(\)\);\s*applyPicker\(getActivity\(\)\);/, "a theme change in the app");
-  assert.match(ma, /AppearancePlugin\.applyPicker\(this\); \/\/ the date picker/); assert.match(ma, /onConfigurationChanged[^]*applyPicker\(this\)/, "the phone switching light/dark");
+
+test("17 Nov (owner, Notion): the tracker's date picker is the app's own month grid, Monday to Sunday, in the theme", () => {
+  assert.doesNotMatch(app, /type="date"/, "no browser or Android date dialog");
+  assert.match(app, /lead = \(first\.getUTCDay\(\) \+ 6\) % 7; \/\/ Monday first\n  const loc = calLoc\(\), wdf/);
+  assert.match(app, /case "tcal": tCalM = null; openSheet\(tCalHtml\(\), b, "pop"\); break;/);
+  for (const v of ["--accent", "--on-accent", "--ink", "--muted"]) assert.match(css.slice(css.indexOf(".dp-grid")), new RegExp(`var\\(${v}\\)`));
+  assert.doesNotMatch(css, /#[0-9a-f]{6}/i.source && /\.dp-c[^{]*\{[^}]*#[0-9a-fA-F]{3,6}/, "theme colours only");
 });

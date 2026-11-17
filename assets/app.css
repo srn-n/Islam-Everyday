@@ -1569,7 +1569,11 @@ nav.tabs button span{transition:color .25s,transform .35s var(--bounce)}
 .sp-win{position:absolute;inset:0;overflow:hidden;clip-path:path("M20.25 118.5V64.5A52.5 52.5 0 0 1 60 13.575A52.5 52.5 0 0 1 99.75 64.5V118.5Z")}
 .sp-sky{position:absolute;inset:0;background:linear-gradient(180deg,var(--r-night),var(--r-twi) 62%,var(--r-late));opacity:0;animation:sp-o .9s ease .15s forwards}
 .sp-sun{position:absolute;left:28.5px;top:87px;width:63px;height:63px;border-radius:50%;background:var(--r-late);transform:translateY(48px);animation:sp-rise 1.6s cubic-bezier(.22,1,.36,1) .4s forwards}
-.sp-halo{position:absolute;left:50%;top:62%;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;background:radial-gradient(circle,rgba(242,182,90,.28) 0,rgba(242,182,90,0) 68%);background:radial-gradient(circle,color-mix(in srgb,var(--r-late) 34%,transparent) 0,transparent 68%);opacity:0;transform:scale(.55);animation:sp-halo 1.7s cubic-bezier(.22,1,.36,1) .8s forwards}
+.sp-halo{position:absolute;left:50%;top:62%;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;background:radial-gradient(circle,rgba(242,182,90,.28) 0,rgba(242,182,90,0) 68%);background:radial-gradient(circle,color-mix(in srgb,var(--r-late) 34%,transparent) 0,transparent 68%);opacity:0;transform:scale(.82);animation:sp-halo 1.9s cubic-bezier(.45,.05,.25,1) .45s forwards}
+/* 17 Nov 2026 (owner: "the glow just before the sun rises feels a bit laggy"): the glow used to start at 0.8 s and do
+   most of its growing (from 55 % size, on a fast-start curve) in its first fifth of a second, while the app is still
+   busy starting underneath, so phones showed it in a few jumps. It now grows with the sun (from 0.45 s, the sun from
+   0.4 s), from 82 % size, on an even ease-in-out curve over 1.9 s, so no single frame has much to move. */
 .sp-ring{position:absolute;left:50%;top:62%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;border:1.5px solid var(--accent);opacity:0;transform:scale(.7);animation:sp-ring 2.2s cubic-bezier(.2,.7,.3,1) 1.25s forwards}
 .sp-ring.sp-r2{animation-delay:2.05s}
 .sp-name,.sp-by,.sp-tag{position:absolute;left:0;right:0;margin:0;padding:0 16px;text-align:center}
@@ -1678,3 +1682,5 @@ html.native.sp-hold .splash{animation-play-state:paused!important}
 @media (min-width:1024px){.sheet:has(.dpick){max-width:420px}}
 .dp-h{margin:4px 52px 2px 2px;font-size:1.05rem;line-height:44px}
 .dpick .icon-btn:disabled{opacity:.35;cursor:default}
+/* 17 Nov 2026: a solid icon (For the believing women) takes the colour its list draws its icons in. */
+.menu .ic svg [data-solid]{fill:var(--accent)}

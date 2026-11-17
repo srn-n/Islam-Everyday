@@ -7,7 +7,8 @@ Phases 1–3 were built under the working name DinSathi; the project folder is s
 ### Added
 - **Four new themes:** Sage Green and Dusty Rose for the light appearance, Ember Night and Violet Night for the dark one (five of each now). Every one meets the same contrast checks as the others, and the Android launch screen has a version for each light and dark pair.
 - **A verse on the shared prayer tracker:** each tracker picture carries a verse from the Qur'an about answering Allah's call and keeping the prayer (8:24, 2:186, 20:14, 62:9, 2:238, 2:43; one a day, in turn), word for word from the app's sources.
-- **For women and Developer message in the website's side menu**, as in the app's More list.
+- **For the believing women and Developer message in the website's side menu**, as in the app's More list.
+- **"For women" is now "For the believing women"** (Bangla: মুমিন নারীদের জন্য), the way the Qur'an addresses women (al-mu'minat, for example An-Nur 24:31 and Al-Ahzab 33:35), with a new mark: a woman in a hijab, a solid silhouette with no face.
 
 ### Changed
 - **Calendar (tracker "Go to date"):** the app's own month calendar on the website and in the Android app: the week runs Monday to Sunday, in the theme's colours, with only the kept days (today and the 119 before it) to pick. Days with all five prayers recorded get a filled dot and days with some get a hollow one.
@@ -15,7 +16,7 @@ Phases 1–3 were built under the working name DinSathi; the project folder is s
 - **Tracker picture:** the web address is gone; "Simply Made Studio" is picked out in the theme's accent.
 - **Prayer widget:** the current prayer has its own colour too (a soft mint over the pictures), different from the next prayer's.
 - **Website:** the page behind a sheet (a Name of Allah, the location list, sharing) is blurred, as in the app.
-- **Opening:** smoother. Every moving part is ready from the first frame, the doorway settles in on the website and then breathes slowly until the page opens, and the doorway and words leave more gently.
+- **Opening:** smoother. Every moving part is ready from the first frame, the doorway settles in on the website and then breathes slowly until the page opens, and the doorway and words leave more gently. The glow behind the doorway now grows together with the sun, evenly, instead of in a quick burst just before it (it looked laggy on phones).
 
 ## For women, a new widget layout, widget pictures of their own, a calendar in the app's colours, smoother motion (16 November 2026)
 

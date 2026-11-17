@@ -157,8 +157,9 @@ const P = {
   bell: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
   // Prayer guide (Nov 2026, 14th): a prayer mat with a pointed arch and a fringe (the old arch read like a headstone)
-  // For women (16 Nov 2026): a lotus
-  women: '<path d="M12 4.5c1.9 1.9 2.9 4.2 2.9 6.5s-1 4.4-2.9 6c-1.9-1.6-2.9-3.7-2.9-6s1-4.6 2.9-6.5z"/><path d="M9.4 16.4C6.9 16.6 4.6 15.4 3.5 13c1.9-1.2 4.3-1.4 6.2-.5M14.6 16.4c2.5.2 4.8-1 5.9-3.4-1.9-1.2-4.3-1.4-6.2-.5"/><path d="M7 20h10"/>',
+  // For the believing women (16 Nov 2026; 17 Nov, owner): a woman in a hijab, a solid silhouette with the face as an
+  // empty opening (no features), so it reads at icon size; earlier tries (a flower, a rose, outline drawings) did not.
+  women: '<path data-solid fill="currentColor" stroke="none" fill-rule="evenodd" d="M12 2.2c-3.9 0-6.8 3.1-6.8 7.1 0 2.6 1.2 4.7 3 5.9-2.7.8-4.6 3-5.1 5.8h17.8c-.5-2.8-2.4-5-5.1-5.8 1.8-1.2 3-3.3 3-5.9 0-4-2.9-7.1-6.8-7.1zM12 5.6c-2 0-3.5 1.8-3.5 4.1 0 2.6 1.6 4.7 3.5 4.7s3.5-2.1 3.5-4.7c0-2.3-1.5-4.1-3.5-4.1z"/>',
   guide: '<rect x="5" y="3" width="14" height="15.5" rx="1.6"/><path d="M9 12.5V10.2c0-1.9 1.5-3.2 3-4.4 1.5 1.2 3 2.5 3 4.4v2.3M8.5 15h7M7.5 18.5v2.5M10.5 18.5v2.5M13.5 18.5v2.5M16.5 18.5v2.5"/>',
   hadith: '<path d="M7 3.5h10a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 11.5h6M9 15h3.5"/>',
   share: '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/>',

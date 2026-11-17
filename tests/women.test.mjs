@@ -92,3 +92,9 @@ test("tracker share image (17 Nov): last seven days, streak, a verse on answerin
   }
   assert.equal(sh.trackFor(0).s + ":" + sh.trackFor(0).a, "8:24"); assert.equal(sh.trackFor(-1).a, 43);
 });
+
+test("17 Nov (owner): the page is named as the Qur'an addresses women (al-mu'minat, 24:31, 33:35), with a girl in a hijab as its mark", () => {
+  assert.equal(D.en.women, "For the believing women"); assert.equal(D.bn.women, "মুমিন নারীদের জন্য");
+  assert.doesNotMatch(D.en.women + D.bn.women, /queen|রানি/i, "a name the Qur'an uses, not a made-up title");
+  assert.match(app, /women: '<path data-solid fill="currentColor" stroke="none" fill-rule="evenodd" d="M12 2\.2c-3\.9 0-6\.8 3\.1/);
+});

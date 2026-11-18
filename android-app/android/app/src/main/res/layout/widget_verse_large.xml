@@ -13,50 +13,79 @@
         android:scaleType="fitXY"
         android:src="@drawable/widget_bg" />
 
+    <!-- 18 Nov 2026 (Notion): the reference at the top in the middle, the verse centred in the box, and small share and
+         save buttons at the bottom that work without opening the app (VerseWidget.ACTION_SAVE). -->
     <LinearLayout
         android:id="@+id/wg_body"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingStart="20dp"
-        android:paddingTop="18dp"
+        android:paddingTop="16dp"
         android:paddingEnd="20dp"
-        android:paddingBottom="18dp">
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/wg_ref"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="#0E6B5C"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/wg_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:gravity="center"
             android:maxLines="1"
-            android:textColor="#0E6B5C"
-            android:textSize="13sp"
-            android:textStyle="bold" />
+            android:textColor="#5F6B66"
+            android:textSize="11sp" />
 
         <!-- The whole verse is in the app; a long one is cut here with "…" and a tap opens it. -->
         <TextView
             android:id="@+id/wg_text"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:layout_weight="1"
             android:autoSizeMaxTextSize="24sp"
             android:autoSizeMinTextSize="13sp"
             android:autoSizeStepGranularity="1sp"
             android:autoSizeTextType="uniform"
             android:ellipsize="end"
+            android:gravity="center"
             android:lineSpacingMultiplier="1.25"
             android:textColor="#14211D"
             android:textSize="19sp" />
 
-        <TextView
-            android:id="@+id/wg_ref"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textColor="#5F6B66"
-            android:textSize="12sp" />
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/wg_share"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@string/wg_share"
+                android:padding="10dp"
+                android:src="@drawable/ic_wg_share" />
+
+            <ImageView
+                android:id="@+id/wg_save"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="12dp"
+                android:contentDescription="@string/wg_save"
+                android:padding="10dp"
+                android:src="@drawable/ic_wg_save" />
+        </LinearLayout>
     </LinearLayout>
 
     <TextView

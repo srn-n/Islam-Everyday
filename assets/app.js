@@ -9,7 +9,7 @@ const LOC = window.IE_LOCALE, VE = window.IE_VOTD_EN, DV = window.IE_DAYVIZ;
 /* Phone speed (Oct 2026): page data that the Today screen does not need is loaded only when its page opens, so a phone
    downloads about a third of the scripts before the first screen appears. LAZY lists each group's files in load order;
    bindLazy() picks up the globals they define. The service worker still precaches all of them for offline use. */
-const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"], women: ["women"], share: ["share", "share-img"] };
+const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"], women: ["women"], qibla: ["qibla"], zakat: ["zakat"], share: ["share", "share-img"] };
 let NM, NAMES = [], GD, HD, NW, SD, ST, LG = null, WM = null, HCOLL = {}, NW_N = 0;
 const lazyDone = new Set(), lazyP = {}, lazyFiles = new Set();
 /* Phones (touch screen) get the on-demand loading; computers with a mouse keep the previous behaviour: everything is
@@ -18,13 +18,15 @@ const phone = () => { try { return matchMedia("(pointer: coarse)").matches; } ca
 function bindLazy() {
   NM = window.DINSATHI_NAMES; NAMES = NM ? NM.names : []; GD = window.IE_GUIDE; HD = window.IE_HADITH; NW = window.IE_NAWAWI;
   SD = window.IE_STUDY; ST = window.IE_STORIES; LG = window.IE_LEGAL || null; WM = window.IE_WOMEN || null;
+  if (GD && GD.I18N && !GD._in) { GD._in = 1; for (const l in GD.I18N) if (I18N[l]) Object.assign(I18N[l], GD.I18N[l]); } // the Prayer guide's words (assets/guide.js)
+  if (window.IE_QIBLA && window.IE_QIBLA.I18N && !window.IE_QIBLA._in) { const Q = window.IE_QIBLA; Q._in = 1; for (const l in Q.I18N) if (I18N[l]) Object.assign(I18N[l], Q.I18N[l]); }
   // The For women page's words come with its texts (assets/women.js), so the first screen does not carry them.
   if (WM && WM.I18N && !WM._in) { WM._in = 1; for (const l in WM.I18N) if (I18N[l]) Object.assign(I18N[l], WM.I18N[l]); }
   HCOLL = Object.assign({}, NW ? NW.COLLECTIONS : {}, HD ? HD.COLLECTIONS : {});
   NW_N = NW ? NW.HADITH.length : 0;
 }
 bindLazy();
-for (const g in LAZY) if ({ names: NM && window.IE_NAME_STORIES, guide: NM && GD, hadith: HD && NW, study: SD, stories: ST, legal: LG, women: WM }[g]) lazyDone.add(g); // already on the page
+for (const g in LAZY) if ({ names: NM && window.IE_NAME_STORIES, guide: NM && GD, hadith: HD && NW, study: SD, stories: ST, legal: LG, women: WM, qibla: window.IE_QIBLA }[g]) lazyDone.add(g); // already on the page
 function need(g) {
   if (!g || lazyDone.has(g)) return Promise.resolve();
   if (!lazyP[g]) lazyP[g] = LAZY[g].reduce((p, n) => p.then(() => lazyFiles.has(n) ? 0 : new Promise((ok, no) => {
@@ -35,7 +37,7 @@ function need(g) {
 }
 /* Which group a route or a shared link needs (null: nothing extra). */
 const routeGroup = r => r.tab === "quran" ? (r.sub === "stories" ? "stories" : (r.sub === "all" || r.surah) ? null : "study")
-  : r.tab === "hadith" ? "hadith" : r.tab === "more" ? ({ names: "names", guide: "guide", about: "legal", terms: "legal", privacy: "legal", women: "women" }[r.sub] || null) : null;
+  : r.tab === "hadith" ? "hadith" : r.tab === "more" ? ({ names: "names", guide: "guide", about: "legal", terms: "legal", privacy: "legal", women: "women", qibla: "qibla" }[r.sub] || null) : null;
 const hashGroup = h => /^story\//.test(h) ? "stories" : /^name\//.test(h) ? "names" : /^(hadith|nawawi)\//.test(h) ? "hadith" : null;
 const PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"], ROWS = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
 const TABS = ["today", "quran", "hadith", "more"]; // Nov 2026: Hadith is a tab; Duas moved into More
@@ -54,7 +56,7 @@ const KEY = "dinsathi.web.v1";
 const NF_SND = ["default", "drop", "ripple", "bubble"]; // Nov 2026: "tap" and "breeze" were replaced
 const NF_OLD = ["tap", "breeze"]; // their channels are removed from the phone
 const DEF = { lang: "en", loc: "en-IN", mode: "system", lightTheme: "sandstone", darkTheme: "jade", glass: "balanced", motion: "subtle", scene: "landscape", sceneAuto: false, heroKind: "anim", photo: "mosque", city: "syd", gps: null, method: "MWL", asr: 1, hadj: 0, ar: 1, tl: true,
-  school: null, vib: "light", snd: true, sndK: "soft", vol: 60, nfSnd: "default", nf: { pray: false, forb: false, thu: false, tahajjud: false, duha: false }, nfAsk: false, pray: null, log: {}, xlog: {}, women: 0, pd: {}, wnf: true, fplan: {}, gloss: false, last: null, read: [], bm: [], fav: [], tab: "today", hcol: "general", nwread: [],
+  school: null, vib: "light", snd: true, sndK: "soft", vol: 60, nfSnd: "default", nf: { pray: false, forb: false, thu: false, tahajjud: false, duha: false }, nfAsk: false, pray: null, log: {}, xlog: {}, women: 0, pd: {}, wnf: true, fplan: {}, gloss: false, last: null, read: [], bm: [], fav: [], tab: "today", hcol: "general", nwread: [], hread: [], dread: [],
   zk: { cur: "AUD", basis: "silver", w: "tola", price: "", v: {} } };
 let st = JSON.parse(JSON.stringify(DEF));
 try {
@@ -79,6 +81,9 @@ try {
   st.xlog = XT.clean(st.xlog);
   if (!st.fplan || typeof st.fplan !== "object" || Array.isArray(st.fplan)) st.fplan = {};
   if (st.hcol !== "nawawi") st.hcol = "general";
+  // 18 Nov 2026: hadith (by id) and duas (by position) marked as read; checked again once their data has loaded.
+  st.hread = Array.isArray(st.hread) ? [...new Set(st.hread.filter(x => typeof x === "string" && /^[\w-]{1,40}$/.test(x)))] : [];
+  st.dread = Array.isArray(st.dread) ? [...new Set(st.dread.filter(n => Number.isInteger(n) && n >= 0 && n < 1000))] : [];
   st.nwread = Array.isArray(st.nwread) ? [...new Set(st.nwread.filter(n => Number.isInteger(n) && n >= 1 && n <= 42))] : [];
 } catch (e) {}
 let saveT = 0;
@@ -132,6 +137,7 @@ const P = {
   msg: '<path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8.5a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17H5a1.5 1.5 0 0 1-1.5-1.5V7A1.5 1.5 0 0 1 5 5.5z"/><path d="M8 10h8M8 13h5"/>',
   more: '<rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/>',
   pin: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',
+  qibla: '<circle cx="12" cy="12" r="8.5"/><path d="M12 6.2l2.3 5.8L12 17.8 9.7 12z"/><path d="M12 2v1.6M12 20.4V22M2 12h1.6M20.4 12H22"/>',
   gear: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/>',
   names: '<path d="' + STAR(12, 9.5, 6.6) + '"/>',
   calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
@@ -708,7 +714,7 @@ function render(anim, viaVT) {
   else if (R.tab === "quran" && R.sub === "stories") f = R.story ? vStory : vStories; // Face 7.1 Qur'an Stories
   else if (R.tab === "quran") f = R.sub === "all" || R.surah ? (desk() ? vQuranDesk : (R.surah ? vReader : vQuran)) : (desk() ? vStudyDesk : (R.study ? vStudyDetail : vStudy));
   else if (R.tab === "hadith") f = vHadith;
-  else f = { duas: vDuas, dev: vDev, guide: vGuide, women: vWomen, names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy"), feedback: vFeedback }[R.sub] || vMore;
+  else f = { duas: vDuas, dev: vDev, guide: vGuide, women: vWomen, qibla: () => NATIVE ? vQibla() : vMore(), names: vNames, calendar: vCalendar, settings: vSettings, about: vAbout, terms: () => vLegal("terms"), privacy: () => vLegal("privacy"), feedback: vFeedback }[R.sub] || vMore;
   const g = routeGroup(R);
   if (g && !lazyDone.has(g)) { // page data not loaded yet: show a short loading state, then draw the page
     v.dataset.pg = ""; todayTpl = null;
@@ -934,7 +940,7 @@ function vToday() {
   let [y, m, d] = [s.p.year, s.p.month, s.p.day];
   const nowStr = ex.forb.find(w => s.nowH >= w[1] && s.nowH < w[2]);
   const ev = (() => { for (let i = 0; i < 400; i++) { const [a1, b1, c1] = shiftDay(y, m, d, i); const h = hijri(localNoon(a1, b1, c1)); const e = eventsOn(h).filter(x => !x.minor); if (e.length) return { e: e[0], i }; } return null; })();
-  const v = votdPick = votdFor(s.p.year, s.p.month, s.p.day);
+  const vp = votdDay(s.c, s.now), v = votdPick = votdFor(vp.year, vp.month, vp.day);
   return `
   <section class="sky a-hero" data-p="${per}" data-scene="${sceneToday()}" data-kind="${st.heroKind === "photo" ? "photo" : "anim"}" aria-label="${esc(t("curp"))}">
     ${heroScene()}
@@ -1063,6 +1069,9 @@ function dayViz(s) {
 }
 /* The Hijri day begins at maghrib, so after maghrib the Today page and menus show the next Hijri date. */
 function hijriNow(s) { return hijri(new Date(s.now + (s.now >= s.d0.abs("maghrib") ? 864e5 : 0))); }
+/* 18 Nov 2026 (Notion): the Verse for today changes every day at 00:01, in the app and the widgets alike, so the
+   verse's day is the date one minute ago (WidgetData.VERSE_LAG on the phone). */
+const VOTD_LAG = 6e4, votdDay = (c, now) => zoneParts(c.zone, new Date(now - VOTD_LAG));
 let votdPick = null, votdP = null; // votdP: the verse file arriving (the app's splash waits for it)
 // Face 7: Thursday/Friday may use a reviewed day entry (assets/votd-day.js); otherwise the normal schedule.
 function votdFor(y, m, d) {
@@ -1150,9 +1159,14 @@ function fitCards(cards, fit) {
   // after it is shown; the rest when they come within half a screen.
   [...cards].forEach((c, i) => { if (i < 8) { fitQ.delete(c); fitIO.unobserve(c); fit(c); } else { fitQ.set(c, fit); fitIO.unobserve(c); fitIO.observe(c); } });
 }
+/* 18 Nov 2026 (owner): a closed hadith or dua shows the start of the Arabic and then the start of the meaning (each cut
+   to a few lines, app.css), so someone who does not read Arabic knows what it is before opening it. It counts as
+   fitting (shown whole, no "Read more") when nothing in it is cut. */
+const cutOff = c => [...c.querySelectorAll(".pv")].some(p => p.scrollHeight > p.clientHeight + 2);
 const fitClamp = c => {
   if (c.classList.contains("open")) return;
   c.classList.remove("fits");
+  if (c.classList.contains("hd-main")) { if (!cutOff(c)) c.classList.add("fits"); return; }
   const b = c.querySelector(".clamp-body");
   if (b && b.scrollHeight <= b.clientHeight + 48) c.classList.add("fits");
 };
@@ -1179,24 +1193,47 @@ function moonSvg(day, lat) {
 let justTicked = null;
 let arcF = null;
 const arcWait = () => { const sp = $("splash"); return !!sp && !sp.classList.contains("out") && (NATIVE || phone()); };
+/* A point at a share x (0–1) of the length of a quadratic curve "M x y Q x y x y", from a table of lengths built once
+   per curve. Null for any other path (then the browser measures it). */
+const arcTabs = {};
+function arcAt(d) {
+  if (arcTabs[d] !== undefined) return arcTabs[d];
+  const n = String(d || "").match(/^M\s*(-?[\d.]+)[ ,](-?[\d.]+)\s*Q\s*(-?[\d.]+)[ ,](-?[\d.]+)\s+(-?[\d.]+)[ ,](-?[\d.]+)\s*$/);
+  if (!n) return (arcTabs[d] = null);
+  const [x0, y0, x1, y1, x2, y2] = n.slice(1).map(Number), B = t => { const u = 1 - t; return { x: u * u * x0 + 2 * u * t * x1 + t * t * x2, y: u * u * y0 + 2 * u * t * y1 + t * t * y2 }; };
+  const K = 240, L = [0]; let prev = B(0);
+  for (let i = 1; i <= K; i++) { const q = B(i / K); L.push(L[i - 1] + Math.hypot(q.x - prev.x, q.y - prev.y)); prev = q; }
+  return (arcTabs[d] = x => { const want = Math.max(0, Math.min(1, x)) * L[K]; let lo = 0, hi = K;
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (L[m] < want) lo = m; else hi = m; }
+    const seg = L[hi] - L[lo] || 1, t = (lo + (want - L[lo]) / seg) / K; return B(t); });
+}
 function animateArc(f, force) {
   const p = $("arcpath"), o = $("orb"), tr = $("trail"); if (!p || !p.getTotalLength) return;
-  const Ln = p.getTotalLength();
+  // 18 Nov 2026 (Notion: the opening still froze at the hand-over): behind the splash nothing is measured at all, and
+  // the point on the curve is worked out here (arcAt) instead of asking the browser (getPointAtLength forced a layout
+  // each time: about a tenth of a second on a phone while the page rose).
+  if (!force && arcWait() && !(reduce || st.motion === "off")) { arcF = f; return; }
+  const at0 = arcAt(p.getAttribute("d"));
   const gl = $("glow");
   const mg = $("moonG");
-  const setP = x => { const pt = p.getPointAtLength(Ln * x); o.setAttribute("cx", pt.x.toFixed(1)); o.setAttribute("cy", pt.y.toFixed(1)); if (mg) mg.setAttribute("transform", `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)})`); if (gl) { gl.setAttribute("cx", pt.x.toFixed(1)); gl.setAttribute("cy", pt.y.toFixed(1)); } tr.setAttribute("stroke-dasharray", `${(x * 100).toFixed(2)} 100`); };
+  const setPt = x => at0 ? at0(x) : p.getPointAtLength(p.getTotalLength() * x);
+  const setP = x => { const pt = setPt(x); o.setAttribute("cx", pt.x.toFixed(1)); o.setAttribute("cy", pt.y.toFixed(1)); if (mg) mg.setAttribute("transform", `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)})`); if (gl) { gl.setAttribute("cx", pt.x.toFixed(1)); gl.setAttribute("cy", pt.y.toFixed(1)); } tr.setAttribute("stroke-dasharray", `${(x * 100).toFixed(2)} 100`); };
   if (reduce || st.motion === "off") { setP(f); return; }
-  if (arcWait()) { setP(0); arcF = f; return; } // behind the splash: drawn as the door opens (see boot)
   if (!heroAnim && !force) { setP(f); return; }
   // The path is sampled once, so each frame only moves the dot (getPointAtLength on every frame forced a layout each time).
-  const N = 90, pts = []; for (let j = 0; j <= N; j++) { const q = p.getPointAtLength(Ln * f * j / N); pts.push([q.x, q.y]); }
+  const N = 90, pts = []; for (let j = 0; j <= N; j++) { const q = setPt(f * j / N); pts.push([q.x, q.y]); }
   const at = x => { const u = Math.max(0, Math.min(N, x * N)), j = Math.min(N - 1, Math.floor(u)), r = u - j, a = pts[j], c = pts[j + 1]; return [a[0] + (c[0] - a[0]) * r, a[1] + (c[1] - a[1]) * r]; };
   const put = x => { const [px, py] = at(x), sx = px.toFixed(1), sy = py.toFixed(1); o.setAttribute("cx", sx); o.setAttribute("cy", sy); if (mg) mg.setAttribute("transform", `translate(${sx} ${sy})`); if (gl) { gl.setAttribute("cx", sx); gl.setAttribute("cy", sy); } tr.setAttribute("stroke-dasharray", `${(x * f * 100).toFixed(2)} 100`); };
   const t0 = performance.now(), D = 1500;
   const step = now => { const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3); if (k < 1) { put(e); requestAnimationFrame(step); } else setP(f); };
   requestAnimationFrame(step);
 }
+/* The verse's day turning (00:01) on any page: Today is drawn again when it is open, and the widgets get the new
+   data either way (they also change on their own at that minute). */
+let votdK = "";
 setInterval(() => {
+  if (!document.hidden && !splashUp()) { const vp = votdDay(city(), Date.now()), k = vp.year + "-" + vp.month + "-" + vp.day, was = votdK; votdK = k;
+    if (was && k !== was) { widgetSync(); if (R.tab === "today") { render(false); return; } } }
   if (R.tab !== "today" || !snap || document.hidden) return;
   const now = Date.now();
   const ps = snap.ps, cur = ps && ps.cur;
@@ -1310,7 +1347,10 @@ const stList = () => { const q = stQuery.trim().toLowerCase(), qa = stQuery.trim
   (!q || [QM.meta[x.n - 1][1], QM.meta[x.n - 1][2], x.meaning, String(x.n), num(x.n)].join(" ").toLowerCase().includes(q) || QM.meta[x.n - 1][0].includes(qa))); };
 function studyRows(sel) {
   const l = stList();
-  return l.length ? l.map(x => { const m = QM.meta[x.n - 1]; return `<li><button type="button" class="rowlink" data-act="study" data-s="${x.n}"${sel === x.n ? ' aria-current="true"' : ""}><span class="no"><span>${num(x.n)}</span></span><span class="nm">${esc(stName(x.n))}<small>${num(m[3])} ${t("verses")} · ${t(m[4])}${st.read.includes(x.n) ? ` · <span class="done">✓ ${t("readmark")}</span>` : ""}</small>${window.IE_STUDY_NOTES && IE_STUDY_NOTES.get(x.n) ? `<small class="st-short">${esc(IE_STUDY_NOTES.get(x.n).short[st.lang] || IE_STUDY_NOTES.get(x.n).short.en)}</small>` : ""}<small class="st-th">${x.themes.map(stThemeName).map(esc).join(" · ")}</small></span><span class="an" lang="ar">${m[0]}</span></button></li>`; }).join("")
+  const row = x => { const m = QM.meta[x.n - 1], done = st.read.includes(x.n); return `<li class="st-li"><button type="button" class="rowlink" data-act="study" data-s="${x.n}"${sel === x.n ? ' aria-current="true"' : ""}><span class="no"><span>${num(x.n)}</span></span><span class="nm">${esc(stName(x.n))}<small>${num(m[3])} ${t("verses")} · ${t(m[4])}${st.read.includes(x.n) ? ` · <span class="done">✓ ${t("readmark")}</span>` : ""}</small>${window.IE_STUDY_NOTES && IE_STUDY_NOTES.get(x.n) ? `<small class="st-short">${esc(IE_STUDY_NOTES.get(x.n).short[st.lang] || IE_STUDY_NOTES.get(x.n).short.en)}</small>` : ""}<small class="st-th">${x.themes.map(stThemeName).map(esc).join(" · ")}</small></span><span class="an" lang="ar">${m[0]}</span></button>${rdBtn("q", x.n, done)}</li>`; };
+  // 18 Nov 2026: a new order at each opening (not while searching); the surahs marked as read in a section under the list
+  const unread = l.filter(x => !st.read.includes(x.n)), read = l.filter(x => st.read.includes(x.n));
+  return l.length ? (stQuery.trim() ? unread : shuffled(unread, "study")).map(row).join("") + (read.length ? `<li class="rd-li">${rdSection("q", read.length, read.map(row).join(""), x => `<ul class="rd-list">${x}</ul>`)}</li>` : "")
     : `<li class="note" style="padding:16px 0">${t("none")}</li>`;
 }
 function studyList(sel) {
@@ -1438,6 +1478,24 @@ function openStudyDesk(n) {
   const top = p.getBoundingClientRect().top + scrollY - 90; if (scrollY > top) scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });
 }
 
+/* ---------------- A new order at each opening, and "Mark as read" (18 Nov 2026) ----------------
+   Owner (Notion): the Qur'an study, Hadith and Dua lists show their contents in a new order each time the app is
+   opened (the order holds while it stays open, so a list does not jump about while being read), and each item can be
+   marked as read: it then leaves the list for a "Read" section under it, so the same ones do not keep coming up.
+   Qur'an study uses the same "read" as the reader (st.read, surah numbers); hadith st.hread (ids); duas st.dread. */
+const OPEN_SEED = (Math.random() * 4294967296) >>> 0;
+function shuffled(arr, salt) {
+  let a = (OPEN_SEED ^ [...salt].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261)) >>> 0;
+  const rnd = () => { a = (a + 0x6D2B79F5) >>> 0; let t2 = Math.imul(a ^ (a >>> 15), 1 | a); t2 = (t2 + Math.imul(t2 ^ (t2 >>> 7), 61 | t2)) ^ t2; return ((t2 ^ (t2 >>> 14)) >>> 0) / 4294967296; };
+  const o = arr.slice(); for (let i = o.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; } return o;
+}
+const rdBtn = (k, id, done) => k === "q"
+  // a surah row is narrow: a round check button, its words for screen readers and as a tooltip
+  ? `<button type="button" class="rd-btn rd-ic${done ? " soft" : ""}" data-act="rdmark" data-k="q" data-id="${id}" aria-pressed="${done}" aria-label="${esc(t(done ? "rd_undo" : "rd_mark") + ": " + stName(id))}" title="${esc(t(done ? "rd_undo" : "rd_mark"))}"><svg viewBox="0 0 24 24" aria-hidden="true">${done ? '<path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-2"/>' : '<path d="M5 12.5l4.5 4.5L19 7.5"/>'}</svg></button>`
+  : `<button type="button" class="btn ghost sm rd-btn${done ? " soft" : ""}" data-act="rdmark" data-k="${k}" data-id="${id}" aria-pressed="${done}">${done ? t("rd_undo") : t("rd_mark")}</button>`;
+const rdSection = (k, n, inner, wrap) => !n ? "" : `<details class="rd-sec" data-k="${k}"${rdOpen.has(k) ? " open" : ""}><summary>${t("rd_sec").replace("{n}", num(n))}</summary><p class="note">${t("rd_sec_n")}</p>${wrap ? wrap(inner) : inner}</details>`;
+const rdOpen = new Set();
+
 /* ---------------- DUAS ---------------- */
 let dQuery = "", dCat = "all";
 /* Dua cards show an equal-height preview. A dua that does not fit gets a "Read more" button that opens the
@@ -1449,7 +1507,11 @@ function duaList() {
   const list = DUAS.map((d, i) => [d, i]).filter(([d, i]) => (dCat === "all" || (dCat === "fav" ? st.fav.includes(i) : d.c === dCat)) &&
     (!q || [d.te, d.tb, d.en, d.bn, d.tl, d.bt].join(" ").toLowerCase().includes(q))).sort((x, y) => (y[0].c === "core") - (x[0].c === "core"));
   if (!list.length) return `<p class="note">${dCat === "fav" ? t("nofav") : t("none")}</p>`;
-  return list.map(([d, i]) => { const fav = st.fav.includes(i); const open = dOpen.has(i); return `<article class="card dua${open ? " open" : ""}" data-i="${i}"><div class="dua-head"><h3>${esc(bn() ? d.tb : d.te)}${d.k ? `<span class="badge dk dk-${d.k}">${t(d.k === "quran" ? "dk_quran" : "dk_decl")}</span>` : ""}</h3><button type="button" class="mini" data-act="fav" data-i="${i}" aria-pressed="${fav}" aria-label="${esc(t("save"))}">${ic("heart")}</button><button type="button" class="mini" data-act="copydua" data-i="${i}" aria-label="${esc(t("sh_copyof").replace("{t}", bn() ? d.tb : d.te))}">${ic("copy")}</button><button type="button" class="mini" data-act="share" data-k="dua" data-key="${i}" aria-haspopup="dialog" aria-label="${esc(t("sh_shareof").replace("{t}", bn() ? d.tb : d.te))}">${ic("share")}</button></div><div class="dua-body" id="dua-b-${i}"><p class="ar" lang="ar">${d.ar}</p>${st.tl ? `<p class="tl">${esc(bn() ? d.bt : d.tl)}</p>` : ""}<p>${esc(bn() ? d.bn : d.en)}</p></div><button type="button" class="linkish dua-more" data-act="duamore" data-i="${i}" aria-expanded="${open}" aria-controls="dua-b-${i}">${t(open ? "readless" : "readmore")}</button><p class="ref">${esc(bn() ? d.rb : d.re)}</p>${duaExtra(d)}</article>`; }).join("");
+  const card = ([d, i]) => { const fav = st.fav.includes(i), open = dOpen.has(i), done = st.dread.includes(i); return `<article class="card dua${open ? " open" : ""}${done ? " is-read" : ""}" data-i="${i}"><div class="dua-head"><h3>${esc(bn() ? d.tb : d.te)}${d.k ? `<span class="badge dk dk-${d.k}">${t(d.k === "quran" ? "dk_quran" : "dk_decl")}</span>` : ""}</h3><button type="button" class="mini" data-act="fav" data-i="${i}" aria-pressed="${fav}" aria-label="${esc(t("save"))}">${ic("heart")}</button><button type="button" class="mini" data-act="copydua" data-i="${i}" aria-label="${esc(t("sh_copyof").replace("{t}", bn() ? d.tb : d.te))}">${ic("copy")}</button><button type="button" class="mini" data-act="share" data-k="dua" data-key="${i}" aria-haspopup="dialog" aria-label="${esc(t("sh_shareof").replace("{t}", bn() ? d.tb : d.te))}">${ic("share")}</button></div><div class="dua-body" id="dua-b-${i}"><p class="ar pv" lang="ar">${d.ar}</p>${st.tl ? `<p class="tl">${esc(bn() ? d.bt : d.tl)}</p>` : ""}<p class="pv">${esc(bn() ? d.bn : d.en)}</p></div><button type="button" class="linkish dua-more" data-act="duamore" data-i="${i}" aria-expanded="${open}" aria-controls="dua-b-${i}">${t(open ? "readless" : "readmore")}</button><p class="ref">${esc(bn() ? d.rb : d.re)}</p>${duaExtra(d)}<div class="rd-foot">${rdBtn("d", i, done)}</div></article>`; };
+  // core remembrance first, then the rest in this opening's order; the read ones under them
+  const unread = list.filter(([, i]) => !st.dread.includes(i)), read = list.filter(([, i]) => st.dread.includes(i));
+  const order = q ? unread : unread.filter(([d]) => d.c === "core").concat(shuffled(unread.filter(([d]) => d.c !== "core"), "dua"));
+  return order.map(card).join("") + rdSection("d", read.length, read.map(card).join(""), x => `<div class="rd-list">${x}</div>`);
 }
 /* Face 7 core remembrance: a short sourced note, links to the sources, and (for a Qur'an verse) the way to read it in
    the reader with the translator's notes; marked as not yet reviewed by a qualified scholar. */
@@ -1458,6 +1520,7 @@ const duaExtra = d => !d.k ? "" : `<div class="dua-x">${d.fe && !bn() ? `<detail
 const fitDua = c => {
   if (c.classList.contains("open")) return;
   c.classList.remove("fits");
+  if (c.querySelector(".pv")) { if (!cutOff(c)) c.classList.add("fits"); return; }
   const b = c.querySelector(".dua-body");
   // A dua that is only a couple of lines longer than the preview is shown whole rather than hidden behind a button.
   if (b && b.scrollHeight <= b.clientHeight + 64) c.classList.add("fits");
@@ -1485,20 +1548,21 @@ const hRef = x => `${HCOLL[x.c][st.lang]} ${num(x.label || x.n)}`;
 const arRuns = s => esc(s).replace(/([؀-ۿ][؀-ۿً-ٰٟ\s،؛:\-]*[؀-ۿً-ٰٟ])/g, '<span class="ar-in" lang="ar" dir="rtl">$1</span>');
 function hadithList() {
   const list = HD.HADITH.filter(h => hCat === "all" || h.cats.includes(hCat));
-  return list.map(h => {
+  const card = h => {
+    const done = st.hread.includes(h.id);
     const tr = h[st.lang], refs = h.refs.filter(x => x.wording !== "similar"), sim = h.refs.filter(x => x.wording === "similar");
     const open = hOpen.has(h.id), cats = h.cats.map(c => HD.CATEGORIES.find(x => x[0] === c)).filter(Boolean);
-    return `<article class="card hadith" id="hd-${h.id}" aria-labelledby="hd-h-${h.id}">
+    return `<article class="card hadith${done ? " is-read" : ""}" id="hd-${h.id}" aria-labelledby="hd-h-${h.id}">
       <div class="hd-head"><h3 id="hd-h-${h.id}" class="hd-title">${esc(hRef(refs[0] || h.refs[0]))}</h3><span class="hd-cat">${cats.map(c => esc(bn() ? c[2] : c[1])).join(" · ")}</span></div>
       <div class="hd-main clamp${open ? " open" : ""}">
         <div class="clamp-body" id="hd-b-${h.id}">
-          <p class="ar hd-ar" lang="ar" dir="rtl">${esc(h.ar).replace(/\n/g, "<br>")}</p>
-          <p class="hd-tr" lang="${st.lang}">${(bn() ? arRuns(tr) : esc(tr)).replace(/\n/g, "<br>")}</p>
+          <p class="ar hd-ar pv" lang="ar" dir="rtl">${esc(h.ar).replace(/\n/g, "<br>")}</p>
+          <p class="hd-tr pv" lang="${st.lang}">${(bn() ? arRuns(tr) : esc(tr)).replace(/\n/g, "<br>")}</p>
         </div>
         <button type="button" class="linkish clamp-more" data-act="hdmore" data-id="${h.id}" aria-expanded="${open}" aria-controls="hd-b-${h.id}">${t(open ? "readless" : "readmore")}</button>
       </div>
       <p class="hd-ref">${refs.map(x => `<a href="${x.url}" target="_blank" rel="noopener noreferrer">${esc(hRef(x))}</a>`).join(" · ")} <span class="badge cur">${esc(h.grade.he[st.lang])}</span></p>
-      ${shActs("hadith", h.id, hRef(refs[0] || h.refs[0]))}
+      <div class="act-row">${shActs("hadith", h.id, hRef(refs[0] || h.refs[0]))}${rdBtn("h", h.id, done)}</div>
       <details class="fn"><summary>${t("hd_src")}</summary><div>
         <p><b>${t("hd_narr")}:</b> ${esc(h.narrator[st.lang])}</p>
         <p><b>${t("hd_grade")}:</b> ${esc(h.grade.collection[st.lang])}. HadeethEnc: ${esc(h.attribution[st.lang])}, ${esc(h.grade.he[st.lang])}</p>
@@ -1507,7 +1571,10 @@ function hadithList() {
         <p><b>${t("hd_trans")}:</b> <a href="${h.source[st.lang]}" target="_blank" rel="noopener noreferrer">HadeethEnc.com</a> (${t("hd_expl")})</p>
       </div></details>
     </article>`;
-  }).join("") || `<p class="note">${t("none")}</p>`;
+  };
+  if (!list.length) return `<p class="note">${t("none")}</p>`;
+  const unread = shuffled(list.filter(h => !st.hread.includes(h.id)), "hadith"), read = list.filter(h => st.hread.includes(h.id));
+  return unread.map(card).join("") + rdSection("h", read.length, read.map(card).join(""), x => `<div class="hd-list rd-list">${x}</div>`);
 }
 /* An-Nawawi's Forty (Phase 5.3): a separate collection in assets/nawawi.js, numbered 1–42 as an-Nawawi numbered it.
    Numbers 15 and 36 are the same HadeethEnc entries as two general records, so their text is read from there. */
@@ -1526,8 +1593,8 @@ function nawawiList() {
         <span class="nw-gr ${r.cls}">${t(r.cls === "hasan" ? "nw_hasan" : "nw_sahih")}</span>${r.flag ? `<span class="nw-flag">${t("nw_flag")}</span>` : ""}</div>
       <div class="hd-main clamp${open ? " open" : ""}">
         <div class="clamp-body" id="hd-b-${id}">
-          <p class="ar hd-ar" lang="ar" dir="rtl">${esc(unPUA(r.ar)).replace(/\n/g, "<br>")}</p>
-          <p class="hd-tr" lang="${st.lang}">${(bn() ? arRuns(tr) : esc(tr)).replace(/\n/g, "<br>")}</p>
+          <p class="ar hd-ar pv" lang="ar" dir="rtl">${esc(unPUA(r.ar)).replace(/\n/g, "<br>")}</p>
+          <p class="hd-tr pv" lang="${st.lang}">${(bn() ? arRuns(tr) : esc(tr)).replace(/\n/g, "<br>")}</p>
         </div>
         <button type="button" class="linkish clamp-more" data-act="hdmore" data-id="${id}" aria-expanded="${open}" aria-controls="hd-b-${id}">${t(open ? "readless" : "readmore")}</button>
       </div>
@@ -1576,9 +1643,9 @@ function nwGo(n) {
 function vMore() {
   const s = snap || snapshot(), hj = hijriNow(s);
   // Nov 2026 order: Duas, 99 Names, Prayer guide, Calendar, Developer message, then the rest as before.
-  const items = [["duas", "duas", t("duas_s")], ["names", "names", t("names_s")], ["guide", "guide", t("guide_s")], ["women", "women", t("women_s")], ["calendar", "calendar", hText(hj)], ["dev", "msg", t("dev_s")], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["feedback", "mail", t("feedback_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
+  const items = [["duas", "duas", t("duas_s")], ["names", "names", t("names_s")], ["guide", "guide", t("guide_s")], ["women", "women", t("women_s")], ...(NATIVE ? [["qibla", "qibla", t("qb_s")]] : []), ["calendar", "calendar", hText(hj)], ["dev", "msg", t("dev_s")], ["settings", "gear", t("settings_s")], ["about", "info", t("about_s")], ["feedback", "mail", t("feedback_s")], ["privacy", "lock", t("privacy_s")], ["terms", "doc", t("terms_s")]];
   return `<div class="page-head"><h2>${t("more")}</h2></div>${installCard()}
-  <ul class="card menu">${items.map(([k, icn, sub]) => `<li><button type="button" data-act="go" data-tab="more" data-sub="${k}"><span class="ic">${ic(icn)}</span><span class="grow"><b>${t(k === "names" ? "names99" : k)}</b><small>${esc(sub)}</small></span>${ic("chev", "chev")}</button></li>`).join("")}</ul>`;
+  <ul class="card menu">${items.map(([k, icn, sub]) => `<li><button type="button" data-act="go" data-tab="more" data-sub="${k}"><span class="ic">${ic(icn)}</span><span class="grow"><b>${t(k === "names" ? "names99" : k === "qibla" ? "qb_title" : k)}</b><small>${esc(sub)}</small></span>${ic("chev", "chev")}</button></li>`).join("")}</ul>`;
 }
 /* For women (16 Nov 2026, Notion). Shown only here in More (not in Settings). Confirming turns on the period-day option
    in the prayer tracker and the gentle reminders on those days; it then shows a verse on the worth of women (3:195),
@@ -1611,6 +1678,10 @@ function vWomen() {
     <div class="row w-acts"><button type="button" class="btn ghost" data-act="wclear">${t("w_clear")}</button><button type="button" class="btn ghost" data-act="woff">${t("w_off")}</button></div>
   </section>` : ""}`;
 }
+/* Qibla compass (18 Nov 2026, Notion): Android app only, in More. The page, its compass and its words are in
+   assets/qibla.js, loaded when the page is opened, so the first screen does not carry them. */
+let QB = null;
+const vQibla = () => (QB || (QB = window.IE_QIBLA({ t, num, esc, city, cname, back, buzz, reduce, post: fn => post.push(fn), route: () => R, $ }))).page();
 /* Share the prayer tracker as an image (16 Nov 2026, Notion): the last seven days, the streak, and a line at the
    bottom for Simply Made Studio (simplymadestudio.net). Period days show only as "Excused", never named. */
 async function trkShare() {
@@ -2005,6 +2076,8 @@ document.addEventListener("focusin", e => { const c = e.target.closest && e.targ
 document.addEventListener("focusout", e => { const c = e.target.closest && e.target.closest(".cal .c[data-k]"); if (c && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".cal .c[data-k]"))) hidePop(); });
 
 /* Zakat (Phase 5.3) — dormant since Face 7: no route reaches this view (see SUBS). Kept, with assets/zakat.js and st.zk, so it can be restored without data loss. */
+// 18 Nov 2026: assets/zakat.js is no longer loaded with the first screen (no page uses it); it is LAZY.zakat, to be
+// loaded with need("zakat") if the page comes back. The file itself is unchanged.
 const ZK = window.IE_ZAKAT;
 function zakatCalc() {
   const r = ZK.calc({ v: st.zk.v, basis: st.zk.basis, weights: st.zk.w, price: st.zk.price }), cur = st.zk.cur;
@@ -2419,7 +2492,7 @@ async function widgetData() {
     days.push({ from: D.base, to: N.base, dn: wgDayNo(y, m, d), p: PRAYERS.map(k => [pName(k, isFriD(D)), clock(D.tm[k]), D.abs(k)]), f, v,
       sr: A("sunrise"), pi: timesOk(Y) ? [pName("isha", isFriD(Y)), Y.abs("isha")] : null });
   }
-  return { v: 1, lang: st.lang, place: cname(c), soon: FORB_SOON, lab: { next: t("next"), cur: t("curp"), nocur: t("wg_nocur"), tomorrow: t("tomorrow"), votd: t("votd") },
+  return { v: 1, lang: st.lang, place: cname(c), soon: FORB_SOON, lab: { next: t("next"), cur: t("curp"), nocur: t("wg_nocur"), tomorrow: t("tomorrow"), votd: t("votd"), shr: t("wg_shr"), sav: t("wg_sav"), saved: t("wg_saved"), savefail: t("wg_savefail"), by: t("wg_by"), brand: t("brand") },
     col: { bg: cv("--surface"), ink: cv("--ink"), muted: cv("--muted"), accent: cv("--accent"), cur: cv("--gold") },
     bg: { mode: "auto", sets: WG_SETS }, days };
 }
@@ -2498,6 +2571,9 @@ function nfSet(k, on, b) {
 const SELF_FX = new Set(["trk", "xw", "markread", "nwread", "setvib", "snd", "sndk", "nfsnd"]);
 
 /* ---------------- events ---------------- */
+// The Read sections (18 Nov 2026) stay open or closed while their list is redrawn; opened, their cards are measured.
+document.addEventListener("toggle", e => { const d = e.target; if (!d.classList || !d.classList.contains("rd-sec")) return;
+  if (d.open) { rdOpen.add(d.dataset.k); if (d.dataset.k === "d") fitDuas(); else fitClamps(); } else rdOpen.delete(d.dataset.k); }, true);
 document.addEventListener("click", e => {
   if (NATIVE) { const a = e.target.closest('a[target="_blank"]'); if (a && /^https?:/.test(a.href)) { const u = new URL(a.href); e.preventDefault(); location.href = u.origin !== location.origin ? a.href : WEB + u.pathname.replace(/^\//, "") + u.search; return; } } // opens in the phone's browser
   const b = e.target.closest("[data-act]"); if (!b) { return; }
@@ -2614,6 +2690,14 @@ function act(a, d, b) {
     case "hcat": hCat = d.k; document.querySelectorAll('[data-act="hcat"]').forEach(x => x.setAttribute("aria-pressed", x.dataset.k === hCat)); $("hadith-list").innerHTML = hadithList(); fitClamps(); break;
     case "hcol": if (st.hcol !== d.k) { st.hcol = d.k; save(); render(false); scrollTo(0, 0); fitClamps(); } break;
     case "nwgo": nwGo(+d.n); break;
+    case "rdmark": {
+      const k = d.k, key = k === "h" ? d.id : +d.id, L = k === "q" ? "read" : k === "h" ? "hread" : "dread", was = st[L].includes(key);
+      st[L] = was ? st[L].filter(x => x !== key) : st[L].concat(key); save(); buzz(10);
+      toast(t(was ? "rd_back" : "rd_moved"));
+      if (k === "q") refreshStudy();
+      else { const host = $(k === "h" ? "hadith-list" : "dua-list"); if (host) { host.innerHTML = k === "h" ? hadithList() : duaList(); if (k === "d") fitDuas(); else fitClamps(); } }
+      break;
+    }
     case "nwread": { const n = +d.n, was = st.nwread.includes(n); st.nwread = was ? st.nwread.filter(x => x !== n) : st.nwread.concat(n); save();
       b.setAttribute("aria-pressed", !was); b.classList.toggle("soft", !was); b.textContent = !was ? "✓ " + t("nw_done") : t("nw_mark");
       const jb = document.querySelector(`.nw-jump [data-n="${n}"]`); if (jb) { jb.classList.toggle("done", !was); jb.setAttribute("aria-label", t("nw_no").replace("{n}", num(n)).replace("{t}", num(NW_N)) + (!was ? ", " + t("nw_done") : "")); }
@@ -2740,7 +2824,7 @@ nfSync();
   // The door opens; in the same frame the page (held still behind it) starts to rise, and the sun arc follows.
   let done = false; const go = () => { if (done || !sp) return; done = true;
     const v = $("view"), rise = v.classList.contains("hold");
-    if (rise) { [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); v.classList.add("door"); }
+    if (rise) v.classList.add("door"); // the page rises as one layer (app.css .view.door.enter)
     landEnd = performance.now() + (rise ? 1100 : 0);
     sp.classList.add("out"); if (rise) { v.classList.remove("hold"); v.classList.add("enter"); }
     // Only the splash goes. 15 Nov 2026: removing "door" here as well switched the page's rise animation (rise-door →
@@ -2750,7 +2834,8 @@ nfSync();
     // has run (about 1.9 s), not in the middle of them: taking a full-screen layer out costs a frame, and the work that
     // waits for the splash to go (reminders, the widget) now starts after the landing instead of during it.
     setTimeout(() => sp.classList.add("gone"), 600); setTimeout(() => { sp.remove(); }, rise ? 1900 : 700);
-    if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), rise ? 260 : 0); } };
+    // the sun arc moves once the page has risen (it redraws inside the rising layer, which made that layer repaint)
+    if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), rise ? 820 : 0); } };
   // How long the opening lasts once it is on screen. Nov 2026 (14th): the first open in a session (a cold start in the
   // app) plays the four-second opening; with reduced motion it shows the still picture for a moment instead. A tap or a
   // key skips it at any time. Later opens in the same session do not wait.
@@ -2758,14 +2843,10 @@ nfSync();
   const arm = t0 => { settled.then(() => setTimeout(go, Math.max(0, MIN - (performance.now() - t0)))); setTimeout(go, MIN + 1200); };
   if (sp) { sp.addEventListener("pointerdown", go); addEventListener("keydown", go, { once: true }); }
   if (!NATIVE) { if (sp) arm(0); return; }
-  // In the app the splash waits, still, under Android's launch screen (theme-boot.js adds sp-hold), which shows the same
-  // doorway in the same place. It is handed over as soon as the first screen has been painted (two frames), no longer
-  // after the fonts and the verse too: the doorway animates while they finish, and the door waits for them instead.
-  // 15 Nov 2026: assets/splash-go.js normally does this before app.js runs (window.__spT0 = when); this is the fallback.
-  let rel = false; const release = () => { if (rel) return; rel = true;
-    if (!window.__spT0) { window.__spT0 = performance.now(); natQ("SplashScreen", "hide", { fadeOutDuration: 150 }); h.classList.remove("sp-hold"); }
-    if (sp) arm(window.__spT0); };
-  if (window.__spT0) release(); else { requestAnimationFrame(() => requestAnimationFrame(release)); setTimeout(release, 1200); } })();
+  // In the app (18 Nov 2026) the opening plays from its first painted frame; assets/splash-go.js notes when that was
+  // (window.__spT0). If it has not run, the clock starts now.
+  if (!window.__spT0) { window.__spT0 = performance.now(); natQ("SplashScreen", "hide", { fadeOutDuration: 0 }); }
+  if (sp) arm(window.__spT0); })();
 /* Android app: the Back button and leaving the app. Back closes an open sheet, then steps back through pages, then returns
    to Today; on Today the app closes into its door (a short fade into the doorway) and Android takes it to the background.
    Coming back reverses that fade. Presses while it is closing are ignored. */

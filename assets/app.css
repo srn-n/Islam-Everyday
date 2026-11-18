@@ -1372,11 +1372,6 @@ html[data-vt][data-motion="fade"]::view-transition-new(root){animation:vt-fi .34
 /* Android app only (html.native, set by theme-boot.js). */
 html.native{-webkit-tap-highlight-color:transparent}
 html.native :is(button,a,.opt,nav.tabs){-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-/* The colour Android drew before the page. theme-boot.js sets it inline in the app (14 Nov 2026): this theme's own ground
-   on Android 13+ and 11 and older, the default Sandstone / Jade on Android 12. These are only the fallbacks. */
-:root{--sys-ground:#F3EADB}
-@media (prefers-color-scheme:dark){:root{--sys-ground:#08120F}}
-html[data-theme="light"]{--sys-ground:#F3EADB}html[data-theme="dark"]{--sys-ground:#08120F}
 /* Leaving the app from Today: the page sinks a little and fades into the ground colour while the doorway draws itself
    closed; Android then takes the app to the background. Coming back plays it in reverse. */
 .bye{position:fixed;inset:0;z-index:300;display:grid;place-items:center;background:var(--ground);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .24s cubic-bezier(.4,0,.2,1),visibility 0s linear .24s}
@@ -1468,7 +1463,9 @@ html.closing nav.tabs{transform:translateY(12px)}
 /* ================= Nov 2026 (2): opening, tab bar, segmented controls ================= */
 /* Behind the (opaque) splash the page is held: drawn, but still. As the door opens it settles into place by movement
    only. It stays fully drawn throughout, so nothing has to be painted from scratch at that moment and nothing blinks. */
-.view.door.enter>*{animation:rise-door .62s var(--bounce) both;animation-delay:calc(140ms + var(--i,0)*30ms)}
+/* 18 Nov 2026 (Notion: the opening still froze at the hand-over): the page rises as one layer, not each card on its
+   own layer with its own delay (a dozen layers being made at the moment the splash leaves cost a frame or two). */
+.view.door.enter{animation:rise-door .62s var(--bounce) .14s both}.view.door.enter>*{animation:none}
 @keyframes rise-door{from{transform:translateY(26px) scale(.98)}to{transform:none}}
 /* Tab bar: the pill is its own element so it can stretch on the way (app.js nav()). */
 nav.tabs .ind::before{content:none}
@@ -1607,7 +1604,6 @@ html[data-lang="bn"] .sp-promise [lang="bn"]{display:inline-flex}
    - the doorway and words leave a little more gently (a softer curve, a smaller zoom), keeping the 15 Nov order. */
 .sp-in,.sp-logo,.sp-sun,.sp-sky,.sp-halo,.sp-ring,.sp-name span,.sp-by,.sp-tag,.sp-bar i{will-change:transform,opacity}
 html:not(.native) .sp-logo{animation:sp-settle 1.2s cubic-bezier(.22,1,.36,1) both,sp-breathe 3.2s ease-in-out 2.3s infinite alternate}
-html.native .sp-logo{animation:sp-breathe 3.2s ease-in-out 2.3s infinite alternate}
 @keyframes sp-settle{from{transform:translateY(10px) scale(.94)}to{transform:none}}
 @keyframes sp-breathe{from{transform:none}to{transform:translateY(-3px) scale(1.015)}}
 @keyframes sp-o{to{opacity:1}}
@@ -1617,12 +1613,10 @@ html.native .sp-logo{animation:sp-breathe 3.2s ease-in-out 2.3s infinite alterna
 @keyframes sp-ring{0%{opacity:0;transform:scale(.7)}15%{opacity:.42}100%{opacity:0;transform:scale(1.9)}}
 @keyframes sp-bar{to{transform:scaleX(1)}}
 @keyframes sp-failsafe{to{opacity:0;visibility:hidden;pointer-events:none}}
-/* Android app: held still (first frame = the launch screen's doorway) until Android's launch screen fades, then it
-   starts from the launch screen's colour (light or dark, as chosen in the app). */
-html.sp-hold .splash,html.sp-hold .splash *{animation-play-state:paused!important}
-html.native .splash{animation:sp-sysbg .5s ease both,sp-failsafe .4s ease 12s forwards}
-html.native.sp-hold .splash{animation-play-state:paused!important}
-@keyframes sp-sysbg{from{background-color:var(--sys-ground)}}
+/* Android app (18 Nov 2026, Notion): Android's launch screen is the plain ground now, so the doorway comes in here, on
+   its own layer, from the first painted frame: nothing waits, and nothing is shown still before it moves. */
+html.native .sp-logo{animation:sp-door-in .7s cubic-bezier(.22,1,.36,1) both,sp-breathe 3.2s ease-in-out 2.3s infinite alternate}
+@keyframes sp-door-in{from{opacity:0;transform:translateY(8px) scale(.9)}to{opacity:1;transform:none}}
 /* No movement: the finished picture at once (no ripples, no bar); the app waits a short moment, then opens. */
 @media (prefers-reduced-motion:reduce){
   .splash *{animation:none!important;transition:none!important}
@@ -1684,3 +1678,49 @@ html.native.sp-hold .splash{animation-play-state:paused!important}
 .dpick .icon-btn:disabled{opacity:.35;cursor:default}
 /* 17 Nov 2026: a solid icon (For the believing women) takes the colour its list draws its icons in. */
 .menu .ic svg [data-solid]{fill:var(--accent)}
+/* 18 Nov 2026 (owner, Notion): a closed hadith or dua previews the start of the Arabic (two lines) and then the start
+   of the meaning (three lines), instead of only the Arabic; "Read more" opens the whole card. */
+.hd-main:not(.open):not(.fits) .clamp-body,.dua:not(.open):not(.fits) .dua-body{max-height:none}
+.hd-main .clamp-body{align-content:start}@media (min-width:1024px){.hd-main:not(.open) .clamp-body{min-height:0}} /* the preview sits at the top; no stretched gaps */
+.hd-main:not(.open):not(.fits) .clamp-body::after,.dua:not(.open):not(.fits) .dua-body::after{display:none}
+.hd-main:not(.open) .pv,.dua:not(.open) .pv{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;max-height:3lh}
+.hd-main:not(.open) .pv.ar,.dua:not(.open) .pv.ar{-webkit-line-clamp:2;max-height:2lh}
+/* max-height in lines too: with Arabic marks Chrome can lay a clamped paragraph out taller than its lines */
+.dua:not(.open):not(.fits) .dua-body>.tl{display:none}
+/* Mark as read, and the Read section under each list (18 Nov 2026). */
+.rd-foot{display:flex;justify-content:flex-end;margin-top:4px}
+.act-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.act-row>.rd-btn{margin-left:auto}
+.rd-btn{min-height:36px}
+.rd-btn.soft{color:var(--muted)}
+.st-li{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line)}
+.st-li .rowlink{border-top:0;flex:1;min-width:0}
+.rd-ic{flex:none;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--accent);display:grid;place-items:center;cursor:pointer;margin-right:2px}
+.rd-ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rd-ic:hover{border-color:var(--accent)}
+.rd-ic.soft{color:var(--muted)}
+.rd-li{list-style:none;border-top:1px solid var(--line);padding-top:6px}
+.rd-sec{margin-top:16px;border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:4px 14px}
+.rd-sec>summary{cursor:pointer;min-height:48px;display:flex;align-items:center;font-weight:600;color:var(--accent)}
+.rd-sec>.note{margin:0 0 10px}
+.rd-sec .rd-list{display:grid;gap:12px;margin:0 0 12px;padding:0;list-style:none}
+.rd-sec .card.is-read{background:var(--surface-2)}
+.rd-sec ul.rd-list .st-li:first-child{border-top:0}
+/* Qibla compass (18 Nov 2026, app only) */
+.qb{text-align:center}
+.qb-wrap{position:relative;width:min(78vw,300px);aspect-ratio:1;margin:6px auto 10px}
+.qb-wrap svg{position:absolute;inset:0;width:100%;height:100%}
+.qb-fix{z-index:1;fill:var(--accent)}
+.qb-dial{transform-origin:50% 50%;will-change:transform}
+.qb-dial .ring{fill:var(--surface-2,var(--surface));stroke:var(--line);stroke-width:2}
+.qb-dial .ticks line{stroke:var(--muted);stroke-width:1.2}.qb-dial .ticks .maj{stroke:var(--ink);stroke-width:2}
+.qb-dial .card text{fill:var(--muted);font-weight:600;font-size:17px;text-anchor:middle}.qb-dial .card .n{fill:var(--accent)}
+.qb-dial .qline{stroke:var(--gold);stroke-width:2.5;stroke-dasharray:4 5;stroke-linecap:round}
+.qb-dial .kaaba rect{fill:var(--ink)}.qb-dial .kaaba .band{stroke:var(--gold);stroke-width:3}
+.qb-dial .hub{fill:var(--ink)}
+.qb-wrap.on .ring{stroke:var(--accent);stroke-width:5}
+.qb-state{font-weight:700;font-size:1.15rem;margin:4px 0}.qb-state.ok{color:var(--accent)}.qb-state.warn{color:var(--muted);font-weight:400;font-size:.95rem}
+.qb-deg{margin:2px 0 8px;color:var(--muted)}
+/* 18 Nov 2026 (Notion): room under the "I'm a woman" confirm box on For the believing women */
+.w-intro{margin-bottom:22px}.w-intro .row{margin-top:14px}.w-intro .row+.note{margin-top:12px;margin-bottom:6px}
+.qb-help .note+.note{margin-top:10px}

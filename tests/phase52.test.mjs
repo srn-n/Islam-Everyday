@@ -9,6 +9,7 @@ import { read, loadBrowser } from "./helpers.mjs";
 const ctx = loadBrowser("assets/data.js", "assets/votd.js", "assets/votd-en.js", "assets/locale.js");
 const V = ctx.DINSATHI_VOTD, E = ctx.IE_VOTD_EN, LOC = ctx.IE_LOCALE, { I18N } = ctx.DINSATHI;
 for (const l of ["en", "bn"]) Object.assign(I18N[l], loadBrowser("assets/women.js").IE_WOMEN.I18N[l]); // the For women page's words load with its texts
+for (const l of ["en", "bn"]) Object.assign(I18N[l], loadBrowser("assets/guide.js").IE_GUIDE.I18N[l], loadBrowser("assets/qibla.js").IE_QIBLA.I18N[l]); // the Prayer guide's and the Qibla compass's words load with them
 const app = read("assets/app.js"), css = read("assets/app.css");
 
 /* ---------- Daily Ayah English explanations ---------- */

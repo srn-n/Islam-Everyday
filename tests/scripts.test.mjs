@@ -19,6 +19,7 @@ test("data.js exposes the expected data", () => {
 test("every UI string the app uses exists in English and Bangla", () => {
   const { I18N } = loadBrowser("assets/data.js").DINSATHI, app = read("assets/app.js");
   for (const l of ["en", "bn"]) Object.assign(I18N[l], loadBrowser("assets/women.js").IE_WOMEN.I18N[l]); // the For women page's words load with its texts
+  for (const l of ["en", "bn"]) Object.assign(I18N[l], loadBrowser("assets/guide.js").IE_GUIDE.I18N[l], loadBrowser("assets/qibla.js").IE_QIBLA.I18N[l]); // the Prayer guide's and the Qibla compass's words load with them
   const keys = new Set([...app.matchAll(/\bt\("([a-z0-9_]+)"\)/g)].map(m => m[1]));
   assert.ok(keys.size > 50);
   const missing = [...keys].filter(k => I18N.en[k] == null || I18N.bn[k] == null);

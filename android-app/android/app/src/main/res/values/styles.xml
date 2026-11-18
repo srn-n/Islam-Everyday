@@ -14,12 +14,13 @@
         <item name="android:windowBackground">@color/ground</item>
     </style>
 
-    <!-- Launch screen: the ground colour with the doorway in the centre (drawable/splash_door). The page's own splash
-         shows the same doorway in the same place, so the opening is one continuous picture with no empty moment. -->
+    <!-- Launch screen (18 Nov 2026, Notion: "start the animation right away on tap, no picture first"): the theme's
+         ground colour only, no icon, and it ends as soon as the app has drawn (capacitor.config: launchShowDuration 0).
+         The page's opening starts at once on the same colour, so the first thing that moves is the opening itself. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/ground</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door</item>
-        <item name="windowSplashScreenAnimationDuration">700</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="windowSplashScreenAnimationDuration">0</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:windowBackground">@color/ground</item>
         <!-- Android 11 and older draw their launch picture before the app runs, in the PHONE's light or dark colour;

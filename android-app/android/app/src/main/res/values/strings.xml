@@ -11,5 +11,7 @@
     <string name="wg_verse_d">Today\'s verse from the app</string>
     <string name="wg_verse_lg_name">Verse for today (large)</string>
     <string name="wg_verse_lg_d">The whole verse, with more room</string>
+    <string name="wg_share">Share this verse</string>
+    <string name="wg_save">Save this verse as a picture</string>
     <string name="wg_empty">Open Islam Everyday once to show this.</string>
 </resources>

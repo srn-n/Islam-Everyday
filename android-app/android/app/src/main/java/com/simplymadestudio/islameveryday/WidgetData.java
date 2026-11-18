@@ -60,10 +60,27 @@ final class WidgetData {
         return null;
     }
 
+    /** 18 Nov 2026 (Notion): the Verse for today changes at 00:01, one minute after the day turns (VOTD_LAG in the app). */
+    static final long VERSE_LAG = 60000;
+
+    /** The verse to show now: the one of the day that was on one minute ago. */
+    static JSONObject verseNow(JSONObject d, long now) {
+        JSONObject day = dayAt(d, now - VERSE_LAG);
+        if (day == null) day = dayAt(d, now); // data written in that first minute starts with the new day
+        return day == null ? null : day.optJSONObject("v");
+    }
+
+    /** When the verse next changes: 00:01 after the day of one minute ago, or 0 when the data has run out. */
+    static long nextVerse(JSONObject d, long now) {
+        JSONObject day = dayAt(d, now - VERSE_LAG);
+        return day == null ? 0 : day.optLong("to") + VERSE_LAG;
+    }
+
     /** Text colours on a picture: white, with a soft gold for the highlight (the picture has a dark wash). */
     static final int PIC_INK = 0xFFFFFFFF, PIC_MUTED = 0xE6FFFFFF, PIC_ACCENT = 0xFFFFE2A6;
-    /** 17 Nov 2026 (owner): the current prayer in a colour too, not the next prayer's: a soft mint over the pictures. */
-    static final int PIC_CUR = 0xFFAEF0DA;
+    /** 18 Nov 2026 (Notion): only the current prayer is in colour, and not a neon one: over the pictures it is the
+     *  same soft gold as the other highlights (the mint of 17 Nov is gone). */
+    static final int PIC_CUR = PIC_ACCENT;
 
     /**
      * The picture behind one kind of widget now ("prayer", "verse" or "large"), or null for the theme colour.

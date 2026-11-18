@@ -25,11 +25,11 @@ test("Android: Back closes a sheet, steps back, returns to Today, then closes th
     assert.ok(app.includes(s), s);
 });
 
-test("Android: the splash waits for the launch screen and starts from its colour", () => {
-  assert.match(boot, /r\.className \+= " native sp-hold"/);
-  assert.match(css, /html\.sp-hold \.splash,html\.sp-hold \.splash \*\{animation-play-state:paused!important\}/);
+test("Android: the opening plays from its first frame on the theme's own colour (18 Nov 2026)", () => {
+  assert.match(boot, /r\.className \+= " native";/);
+  assert.doesNotMatch(boot + css + app, /sp-hold|sp-sysbg|--sys-ground/, "no waiting under the launch screen, no easing in from Android's colour");
   assert.match(app, /natQ\("SplashScreen", "hide"/);
-  assert.match(css, /@keyframes sp-sysbg\{from\{background-color:var\(--sys-ground\)\}\}/);
+  assert.match(css, /html\.native \.sp-logo\{animation:sp-door-in \.7s/, "the doorway comes in on the page");
 });
 
 test("Android: share, copy and links go through the app; nothing offered that a web view cannot do", () => {
@@ -62,11 +62,13 @@ test("privacy policy covers the Android app (location, no network, backup, feedb
 });
 
 test("smooth opening: the splash waits for fonts and the verse, and nothing redraws the whole page under it", () => {
-  assert.match(app, /requestAnimationFrame\(\(\) => requestAnimationFrame\(release\)\)/, "released after the first painted frame");
+  assert.match(app, /if \(!window\.__spT0\) \{ window\.__spT0 = performance\.now\(\);/, "timed from the first painted frame");
   assert.match(app, /Promise\.all\(\[fr, votdP\]\)/, "waits for fonts and the Verse for today");
   assert.match(app, /document\.querySelector\("#view \.a-verse"\)/, "the verse arriving redraws only its card");
   assert.doesNotMatch(app, /qEnsure\(i\)\.catch\(\(\) => \{\}\)\.then\(\(\) => \{ if \(R\.tab === "today" && !R\.sub\) render\(false\); \}\)/);
-  assert.match(app, /if \(arcWait\(\)\) \{ setP\(0\); arcF = f; return; \}/, "the sun arc waits for the door to open");
+  assert.match(app, /if \(!force && arcWait\(\) && !\(reduce \|\| st\.motion === "off"\)\) \{ arcF = f; return; \}/, "the sun arc waits for the door to open, measuring nothing");
+  assert.match(app, /setTimeout\(\(\) => animateArc\(f, true\), rise \? 820 : 0\)/, "and moves once the page has risen");
+  assert.doesNotMatch(app.slice(app.indexOf("function animateArc"), app.indexOf("function animateArc") + 2500), /getPointAtLength\(Ln/, "points on the curve are worked out (arcAt), not measured");
   assert.match(app, /if \(!splashUp\(\) && \(now >= snap\.next\.at/, "the minute redraw waits for the splash");
   assert.match(app, /const keep = !anim && performance\.now\(\) < landEnd \? \[\.\.\.v\.classList\]\.filter\(c => c === "door" \|\| c === "enter"\)/, "a redraw during the rise keeps it running");
 });

@@ -18,17 +18,19 @@ test("launch colours: generated from app.css, one launch theme per light/dark pa
   for (const l of LIGHT) for (const d of DARK) {
     const n = l + "_" + d;
     assert.match(day, new RegExp(`name="lg_${n}">${COL[l].g}<`)); assert.match(night, new RegExp(`name="lg_${n}">${COL[d].g}<`));
-    assert.match(day, new RegExp(`name="la_${n}">${COL[l].a}<`)); assert.match(night, new RegExp(`name="la_${n}">${COL[d].a}<`));
-    assert.match(th, new RegExp(`<style name="Launch\\.${cap(l)}\\.${cap(d)}" parent="AppTheme\\.NoActionBarLaunch">[\\s\\S]*?@drawable/splash_door_${n}<`));
-    assert.match(read(R + `drawable/splash_door_${n}.xml`), new RegExp(`@color/la_${n}"`));
+    // 18 Nov 2026: the ground only, no icon, no animation (the page's opening starts at once)
+    assert.match(th, new RegExp(`<style name="Launch\\.${cap(l)}\\.${cap(d)}" parent="AppTheme\\.NoActionBarLaunch">[\\s\\S]*?@drawable/splash_blank<[\\s\\S]*?AnimationDuration">0<`));
+    assert.ok(!exists(R + `drawable/splash_door_${n}.xml`), "doorway drawable removed");
   }
   const pl = read(J + "AppearancePlugin.java"), hex = c => "0xFF" + c.slice(1);
   assert.ok(pl.includes(`LIGHT_GROUND = { ${LIGHT.map(k => hex(COL[k].g)).join(", ")} }`), "Java light grounds = app.css");
   assert.ok(pl.includes(`DARK_GROUND = { ${DARK.map(k => hex(COL[k].g)).join(", ")} }`), "Java dark grounds = app.css");
   // the default launch screen (before a theme is saved, and on Android 12) is a new install's: Sandstone / Jade
-  assert.match(read(R + "values/colors.xml"), new RegExp(`name="ground">${COL.sandstone.g}<[\\s\\S]*name="launch_accent">${COL.sandstone.a}<`));
-  assert.match(read(R + "values-night/colors.xml"), new RegExp(`name="ground">${COL.jade.g}<[\\s\\S]*name="launch_accent">${COL.jade.a}<`));
-  assert.match(read(R + "drawable/splash_door.xml"), /@color\/launch_accent/);
+  assert.match(read(R + "values/colors.xml"), new RegExp(`name="ground">${COL.sandstone.g}<`));
+  assert.match(read(R + "values-night/colors.xml"), new RegExp(`name="ground">${COL.jade.g}<`));
+  assert.ok(!exists(R + "drawable/splash_door.xml"));
+  const cfg = JSON.parse(read("android-app/capacitor.config.json")).plugins.SplashScreen;
+  assert.equal(cfg.launchShowDuration, 0, "Android's launch screen ends as soon as the app draws"); assert.equal(cfg.launchFadeOutDuration, 0);
 });
 
 test("launch: Android 13+ picks the pair's launch theme; the window and WebView start on the theme's ground", () => {
@@ -42,9 +44,8 @@ test("launch: Android 13+ picks the pair's launch theme; the window and WebView 
   assert.ok(main.indexOf("setBackgroundDrawable(new ColorDrawable(AppearancePlugin.ground(this)))") < main.indexOf("super.onCreate"), "window colour before the first frame");
   // night mode is set again only when it changes (setting it again can redraw the screen)
   assert.match(pl, /getDefaultNightMode\(\) != want/); assert.match(pl, /getInt\("nm", -1\) != m/);
-  // the page starts on what Android drew: its own ground, except Android 12 (default Sandstone / Jade)
-  assert.match(boot, /var a12 = \/Android 12\[;\) L\]\/\.test\(navigator\.userAgent \|\| ""\);/);
-  assert.match(boot, /setProperty\("--sys-ground", a12 \? \(dark \? "#08120F" : "#F3EADB"\) : "var\(--ground\)"\)/);
+  // 18 Nov 2026: the page no longer eases in from Android's colour (on Android 12 that was the wrong theme for a moment)
+  assert.doesNotMatch(boot, /--sys-ground/);
   assert.match(app, /const nk = st\.mode \+ "\|" \+ st\.lightTheme \+ "\|" \+ st\.darkTheme;/);
 });
 
@@ -63,7 +64,7 @@ test("open: no blink as the splash leaves; content fades before the ground; the 
   // 17 Nov 2026: a softer curve and a smaller zoom; the doorway and words are still gone before the ground lifts (0.16 s)
   assert.match(css, /\.splash\.out \.sp-in\{opacity:0;transform:scale\(1\.04\);transition:opacity \.24s cubic-bezier\(\.4,0,\.2,1\)/);
   assert.match(css, /html:not\(\.native\) \.sp-logo\{animation:sp-settle/, "the website's doorway settles in");
-  assert.match(css, /html\.native \.sp-logo\{animation:sp-breathe 3\.2s ease-in-out 2\.3s infinite alternate\}/, "no settle in the app: it starts where Android's launch screen left it");
+  assert.match(css, /html\.native \.sp-logo\{animation:sp-door-in \.7s cubic-bezier\(\.22,1,\.36,1\) both,sp-breathe 3\.2s ease-in-out 2\.3s infinite alternate\}/, "the app's doorway comes in on its own layer from the first frame");
   assert.match(css, /transition:opacity \.38s cubic-bezier\(\.4,0,\.2,1\) \.16s,visibility 0s linear \.56s/);
-  assert.match(css, /\.view\.door\.enter>\*\{animation:rise-door \.62s var\(--bounce\) both;animation-delay:calc\(140ms \+ var\(--i,0\)\*30ms\)\}/);
+  assert.match(css, /\.view\.door\.enter\{animation:rise-door \.62s var\(--bounce\) \.14s both\}\.view\.door\.enter>\*\{animation:none\}/, "the page rises as one layer");
 });

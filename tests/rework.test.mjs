@@ -101,8 +101,9 @@ test("splash: the doorway is there from the first frame, and the three promises 
   assert.doesNotMatch(css, /\.sp-arch\{[^}]*stroke-dashoffset/, "the doorway is drawn, not drawn in");
   assert.match(html, /<p class="sp-promise"><span lang="en"><b>No account<\/b><i><\/i><b>No ads<\/b><i><\/i><b>No data collected<\/b><\/span><span lang="bn">/);
   assert.match(read("assets/theme-boot.js"), /r\.setAttribute\("data-lang", st\.lang === "bn" \? "bn" : "en"\)/);
-  assert.match(read("android-app/android/app/src/main/res/values/styles.xml"), /windowSplashScreenAnimatedIcon">@drawable\/splash_door</);
-  assert.match(css, /\.sp-logo\{position:absolute;left:50%;top:50%;width:120px;height:130\.5px;margin:-65\.25px 0 0 -60px\}/, "where Android's launch screen draws it");
+  // 18 Nov 2026: Android's launch screen has no icon now; the page draws the doorway in the same place as before
+  assert.match(read("android-app/android/app/src/main/res/values/styles.xml"), /windowSplashScreenAnimatedIcon">@drawable\/splash_blank</);
+  assert.match(css, /\.sp-logo\{position:absolute;left:50%;top:50%;width:120px;height:130\.5px;margin:-65\.25px 0 0 -60px\}/);
 });
 
 test("tab bar is kept and updated, so its pill slides; segmented controls have a sliding pill", () => {
@@ -115,13 +116,13 @@ test("tab bar is kept and updated, so its pill slides; segmented controls have a
 });
 
 test("opening: the app hands over at the first painted frame; the page waits drawn and settles as the door opens", () => {
-  // 15 Nov 2026: assets/splash-go.js hands over two frames after the splash is painted, before app.js; app.js falls back.
-  assert.match(read("assets/splash-go.js"), /requestAnimationFrame\(function \(\) \{ requestAnimationFrame\(go\); \}\)/);
-  assert.match(app, /if \(window\.__spT0\) release\(\); else \{ requestAnimationFrame\(\(\) => requestAnimationFrame\(release\)\); setTimeout\(release, 1200\); \}/);
+  // 18 Nov 2026: assets/splash-go.js notes the first painted frame (the opening is already playing); app.js falls back.
+  assert.match(read("assets/splash-go.js"), /requestAnimationFrame\(go\)/);
+  assert.match(app, /if \(!window\.__spT0\) \{ window\.__spT0 = performance\.now\(\); natQ\("SplashScreen", "hide", \{ fadeOutDuration: 0 \}\); \}/);
   const html = read("index.html"); assert.ok(html.indexOf('id="splash"') < html.indexOf("assets/splash-go.js") && html.indexOf("assets/splash-go.js") < html.indexOf("assets/quran-meta.js"), "right after the splash, before the larger scripts");
   assert.match(app, /if \(sp\) arm\(window\.__spT0\)/, "four seconds counted from the hand-over");
   assert.match(app, /const held = anim && !viaVT && underSplash\(\);/);
-  assert.match(css, /\.view\.door\.enter>\*\{animation:rise-door/);
+  assert.match(css, /\.view\.door\.enter\{animation:rise-door/);
   assert.doesNotMatch(css, /\.view\.hold>\*\{opacity:0\}/, "the page is never hidden behind the splash (that forced a full repaint as the door opened)");
   assert.match(css, /\.v-today>:nth-child\(n\+5\)\{content-visibility:auto/);
 });

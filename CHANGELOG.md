@@ -2,6 +2,23 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Shuffled lists with a Read section, shorter previews, a Qibla compass, widget share and save, an opening that starts at once (18 November 2026)
+
+### Added
+- **Mark as read:** each hadith, dua and Qur'an study surah has a "Mark as read" button. Marked ones move to a "Read" section under the list (closed until you open it) and stay there after the app is closed; "Move back to the list" returns one. Saved on the phone only.
+- **Qibla compass (Android app, More):** the direction of the Ka'bah from the place chosen in Settings, in degrees from north, with a compass that turns as you turn the phone. The ring lights up and the phone buzzes once when you face the Qibla. If the phone has no compass, the direction in degrees is still shown. Nothing is saved or sent. Not on the website.
+- **Large Verse for today widget: share and save.** Two small buttons under the verse: Share opens the phone's share sheet with the verse and its reference; Save puts a picture of the verse (in your theme's colours, with "Simply Made Studio") in Pictures › Islam Everyday. Neither opens the app. (On Android 7 to 9 Save opens the share sheet with the picture instead, since saving there would need a storage permission.)
+
+### Changed
+- **Hadith, duas and Qur'an study lists** come in a new order each time the app is opened (the opening duas stay first). The order holds while the app is open; searching shows the usual order.
+- **Hadith and dua cards** show two lines of the Arabic, then three lines of the meaning, then Read more.
+- **Large Verse for today widget:** the reference is at the top in the middle, with "Verse for today" under it, and the verse is centred in the box.
+- **Prayer widget:** only the current prayer and its time are in colour, in a soft colour (gold over the pictures); the mint is gone, and the next prayer is plain text.
+- **Verse for today** changes at 00:01 every day, in the app (on any page) and in the widgets, which now wake on time for it when the phone allows exact alarms.
+- **Opening (Android app):** Android's launch screen is now just your theme's colour with no picture, and it ends as soon as the app draws, so the opening animation starts straight away and always in your theme's colours (on Android 12 it used to begin in the default colours for a moment). The doorway comes in on the page itself, the page rises as one piece when the door opens, and the sun's path starts after it has risen, so the hand-over no longer stutters.
+- **For the believing women:** more room under the "I'm a woman" box.
+- **Faster first screen:** the Prayer guide's words now load with the Prayer guide, and the unused zakat file no longer loads at start.
+
 ## Four new themes, the app's own calendar, shared pictures in your theme, a smoother opening (17 November 2026)
 
 ### Added

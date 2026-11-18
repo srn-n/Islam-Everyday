@@ -22,17 +22,24 @@ public class VerseWidget extends AppWidgetProvider {
 
     /** Its own wake-up alarm (each kind of widget has one). */
     protected int alarmCode() { return 2; }
+    /** The large one has share and save buttons and puts the reference at the top (18 Nov 2026, Notion). */
+    protected boolean large() { return false; }
+
+    /** The save button's broadcast (VerseShare.save). */
+    static final String ACTION_SAVE = "com.simplymadestudio.islameveryday.VERSE_SAVE";
 
     @Override
     public void onUpdate(Context c, AppWidgetManager m, int[] ids) {
         JSONObject d = WidgetData.load(c);
         long now = System.currentTimeMillis();
-        JSONObject day = WidgetData.dayAt(d, now), vs = day == null ? null : day.optJSONObject("v");
+        JSONObject vs = WidgetData.verseNow(d, now);
         String pic = WidgetData.picAt(d, now, picSet());
         for (int id : ids) m.updateAppWidget(id, build(c, m, id, d, vs, pic));
-        // the next verse at local midnight; with pictures changing on their own, also at each prayer time
-        long next = day == null ? 0 : day.optLong("to"), pc = WidgetData.nextPicChange(d, now);
-        WidgetData.scheduleNext(c, getClass(), alarmCode(), pc > 0 && pc < next ? pc : next);
+        // the next verse at 00:01, on time when the app may set exact alarms; with pictures changing on their own,
+        // also at each prayer time
+        long next = WidgetData.nextVerse(d, now), pc = WidgetData.nextPicChange(d, now);
+        boolean pcFirst = pc > 0 && (next <= 0 || pc < next);
+        WidgetData.scheduleNext(c, getClass(), alarmCode(), pcFirst ? pc : next, true);
     }
 
     private RemoteViews build(Context c, AppWidgetManager m, int id, JSONObject d, JSONObject vs, String pic) {
@@ -52,7 +59,16 @@ public class VerseWidget extends AppWidgetProvider {
         v.setTextViewText(R.id.wg_label, WidgetData.lab(d, "votd"));
         v.setTextViewText(R.id.wg_text, vs.optString("t"));
         v.setTextViewText(R.id.wg_ref, vs.optString("r"));
-        v.setTextColor(R.id.wg_label, acc); v.setTextColor(R.id.wg_text, ink); v.setTextColor(R.id.wg_ref, muted);
+        v.setTextColor(R.id.wg_text, ink);
+        if (large()) {
+            // the reference at the top in the accent colour, the label under it, the two buttons below the verse
+            v.setTextColor(R.id.wg_ref, acc); v.setTextColor(R.id.wg_label, muted);
+            v.setInt(R.id.wg_share, "setColorFilter", muted); v.setInt(R.id.wg_save, "setColorFilter", muted);
+            v.setOnClickPendingIntent(R.id.wg_share, VerseShare.sharePi(c, d, vs, alarmCode() * 10 + 1));
+            v.setOnClickPendingIntent(R.id.wg_save, VerseShare.savePi(c, getClass(), alarmCode() * 10 + 2));
+        } else {
+            v.setTextColor(R.id.wg_label, acc); v.setTextColor(R.id.wg_ref, muted);
+        }
         return v;
     }
 
@@ -63,6 +79,7 @@ public class VerseWidget extends AppWidgetProvider {
 
     @Override
     public void onReceive(Context c, Intent i) {
+        if (ACTION_SAVE.equals(i.getAction())) { VerseShare.save(c); return; }
         if (WidgetData.ACTION_TICK.equals(i.getAction())) {
             AppWidgetManager m = AppWidgetManager.getInstance(c);
             onUpdate(c, m, m.getAppWidgetIds(new ComponentName(c, getClass())));

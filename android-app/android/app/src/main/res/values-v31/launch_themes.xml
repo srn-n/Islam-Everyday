@@ -4,202 +4,202 @@
     <!-- Android 13+: the launch screen of the next start, chosen by AppearancePlugin.splashTheme(). -->
     <style name="Launch.Classic.Jade" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_classic_jade</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_jade</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_classic_jade</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_jade</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_classic_jade</item>
     </style>
     <style name="Launch.Classic.Indigo" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_classic_indigo</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_indigo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_classic_indigo</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_indigo</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_classic_indigo</item>
     </style>
     <style name="Launch.Classic.Teal" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_classic_teal</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_teal</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_classic_teal</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_teal</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_classic_teal</item>
     </style>
     <style name="Launch.Classic.Ember" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_classic_ember</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_ember</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_classic_ember</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_ember</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_classic_ember</item>
     </style>
     <style name="Launch.Classic.Violet" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_classic_violet</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_violet</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_classic_violet</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_classic_violet</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_classic_violet</item>
     </style>
     <style name="Launch.Sky.Jade" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sky_jade</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_jade</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sky_jade</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_jade</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sky_jade</item>
     </style>
     <style name="Launch.Sky.Indigo" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sky_indigo</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_indigo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sky_indigo</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_indigo</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sky_indigo</item>
     </style>
     <style name="Launch.Sky.Teal" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sky_teal</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_teal</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sky_teal</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_teal</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sky_teal</item>
     </style>
     <style name="Launch.Sky.Ember" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sky_ember</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_ember</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sky_ember</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_ember</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sky_ember</item>
     </style>
     <style name="Launch.Sky.Violet" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sky_violet</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_violet</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sky_violet</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sky_violet</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sky_violet</item>
     </style>
     <style name="Launch.Sandstone.Jade" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sandstone_jade</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_jade</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sandstone_jade</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_jade</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sandstone_jade</item>
     </style>
     <style name="Launch.Sandstone.Indigo" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sandstone_indigo</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_indigo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sandstone_indigo</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_indigo</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sandstone_indigo</item>
     </style>
     <style name="Launch.Sandstone.Teal" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sandstone_teal</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_teal</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sandstone_teal</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_teal</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sandstone_teal</item>
     </style>
     <style name="Launch.Sandstone.Ember" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sandstone_ember</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_ember</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sandstone_ember</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_ember</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sandstone_ember</item>
     </style>
     <style name="Launch.Sandstone.Violet" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sandstone_violet</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_violet</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sandstone_violet</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sandstone_violet</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sandstone_violet</item>
     </style>
     <style name="Launch.Sage.Jade" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sage_jade</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sage_jade</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sage_jade</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sage_jade</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sage_jade</item>
     </style>
     <style name="Launch.Sage.Indigo" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sage_indigo</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sage_indigo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sage_indigo</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sage_indigo</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sage_indigo</item>
     </style>
     <style name="Launch.Sage.Teal" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sage_teal</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sage_teal</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sage_teal</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sage_teal</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sage_teal</item>
     </style>
     <style name="Launch.Sage.Ember" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sage_ember</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sage_ember</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sage_ember</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sage_ember</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sage_ember</item>
     </style>
     <style name="Launch.Sage.Violet" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_sage_violet</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_sage_violet</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_sage_violet</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_sage_violet</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_sage_violet</item>
     </style>
     <style name="Launch.Rose.Jade" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_rose_jade</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_rose_jade</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_rose_jade</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_rose_jade</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_rose_jade</item>
     </style>
     <style name="Launch.Rose.Indigo" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_rose_indigo</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_rose_indigo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_rose_indigo</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_rose_indigo</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_rose_indigo</item>
     </style>
     <style name="Launch.Rose.Teal" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_rose_teal</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_rose_teal</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_rose_teal</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_rose_teal</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_rose_teal</item>
     </style>
     <style name="Launch.Rose.Ember" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_rose_ember</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_rose_ember</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_rose_ember</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_rose_ember</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_rose_ember</item>
     </style>
     <style name="Launch.Rose.Violet" parent="AppTheme.NoActionBarLaunch">
         <item name="windowSplashScreenBackground">@color/lg_rose_violet</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_door_rose_violet</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="android:windowSplashScreenBackground">@color/lg_rose_violet</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_door_rose_violet</item>
-        <item name="android:windowSplashScreenAnimationDuration">700</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
         <item name="android:windowBackground">@color/lg_rose_violet</item>
     </style>
 </resources>

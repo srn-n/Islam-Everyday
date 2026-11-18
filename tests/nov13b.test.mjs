@@ -24,13 +24,12 @@ test("startup: the first frame follows the appearance chosen in the app", () => 
   const R = "android-app/android/app/src/main/res/";
   assert.match(read(R + "values/styles.xml"), /android:windowDisablePreview">true/);
   assert.ok(exists(R + "values-v31/styles.xml")); assert.doesNotMatch(read(R + "values-v31/styles.xml"), /windowDisablePreview"/);
-  assert.match(read(R + "values-v31/styles.xml"), /windowSplashScreenAnimatedIcon/);
+  assert.match(read(R + "values-v31/styles.xml"), /windowSplashScreenAnimatedIcon">@drawable\/splash_blank</);
   assert.match(main, /registerPlugin\(AppearancePlugin\.class\)/);
   assert.match(app, /natQ\("Appearance", "set", \{ mode: st\.mode, light: st\.lightTheme, dark: st\.darkTheme \}\)/);
-  assert.match(css, /html\[data-theme="light"\]\{--sys-ground:#F3EADB\}html\[data-theme="dark"\]\{--sys-ground:#08120F\}/);
   assert.match(read("assets/theme-boot.js"), /meta\[name="color-scheme"\]/);
-  // the opening animation itself is unchanged
-  assert.match(css, /html\.native \.splash\{animation:sp-sysbg/);
+  // 18 Nov 2026: the opening starts on the theme's own ground, never eased in from another colour
+  assert.doesNotMatch(css, /sp-sysbg/);
 });
 
 test("Android 14+: reminders held back by the phone are explained, with the switch to allow exact times", () => {

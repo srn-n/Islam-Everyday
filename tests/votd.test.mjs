@@ -79,7 +79,8 @@ test("calendar boundaries: month ends, leap days and year ends advance by exactl
 test("no random choice anywhere in the Daily Ayah path; language does not change the entry", () => {
   const app = read("assets/app.js"), body = app.slice(app.indexOf("function votdBody"), app.indexOf("/* Moon drawn"));
   assert.doesNotMatch(read("assets/votd.js") + body, /Math\.random/);
-  assert.match(app, /votdFor\(s\.p\.year, s\.p\.month, s\.p\.day\)/, "entry depends only on the city's local date");
+  assert.match(app, /const vp = votdDay\(s\.c, s\.now\), v = votdPick = votdFor\(vp\.year, vp\.month, vp\.day\)/, "entry depends only on the city's local date (from 00:01)");
+  assert.match(app, /const VOTD_LAG = 6e4, votdDay = \(c, now\) => zoneParts\(c\.zone, new Date\(now - VOTD_LAG\)\)/);
   assert.match(app, /function votdFor\(y, m, d\) \{[^]*?IE_VOTD_DAY\.pick\(wd\)[^]*?VOTD\.entryFor\(y, m, d\)/);
   assert.doesNotMatch(body, /slice\(|substr|…|text-overflow/, "whole passage shown");
   assert.match(body, /e\.ctx\[st\.lang\]/, "context note in the current language");

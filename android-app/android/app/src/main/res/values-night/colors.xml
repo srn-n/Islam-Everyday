@@ -2,6 +2,5 @@
 <resources>
     <!-- Dark default (Jade), as values/colors.xml. -->
     <color name="ground">#08120F</color>
-    <color name="launch_accent">#5DCAAE</color>
     <color name="colorAccent">#5DCAAE</color>
 </resources>

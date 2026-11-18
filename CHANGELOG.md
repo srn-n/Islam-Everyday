@@ -2,6 +2,11 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## The landing on Today, reworked (18 November 2026, evening)
+
+### Changed
+- **From the opening to Today (in the app and on phones):** rebuilt as two clean steps on one colour. First the doorway, the words and the bar drift forward a little and fade, leaving the plain background. Then Today fades in and glides up into place, with the top and tab bars fading in alongside. Before, the whole opening faded out over the page while the page moved under it, and the phone also had to draw the page for the first time in those same frames, which is what made it feel sticky. Now the page is drawn quietly during the opening's last moments and is ready before the door opens. The computer website is unchanged.
+
 ## A smoother opening and landing (18 November 2026, later)
 
 ### Changed

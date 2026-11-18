@@ -122,7 +122,7 @@ test("opening: the app hands over at the first painted frame; the page waits dra
   const html = pageHtml(); assert.ok(html.indexOf('id="splash"') < html.indexOf("assets/splash-go.js") && html.indexOf("assets/splash-go.js") < html.indexOf("assets/quran-meta.js"), "right after the splash, before the larger scripts");
   assert.match(app, /if \(sp\) arm\(window\.__spT0\)/, "four seconds counted from the hand-over");
   assert.match(app, /const held = anim && !viaVT && underSplash\(\);/);
-  assert.match(css, /\.view\.door\.enter\{animation:rise-door/);
+  assert.match(css, /html\.land-in #view\{animation:land-view/);
   assert.doesNotMatch(css, /\.view\.hold>\*\{opacity:0\}/, "the page is never hidden behind the splash (that forced a full repaint as the door opened)");
   assert.match(css, /\.v-today>:nth-child\(n\+5\)\{content-visibility:auto/);
 });

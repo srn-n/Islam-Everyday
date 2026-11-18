@@ -3,9 +3,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { read, p, exists } from "./helpers.mjs";
+import { read, p, exists, pageHtml } from "./helpers.mjs";
 
-const app = read("assets/app.js"), css = read("assets/app.css"), boot = read("assets/theme-boot.js");
+const app = read("assets/app.js"), css = read("assets/app.css"), boot = read("assets/theme-boot.js"), html = read("index.html");
 const J = "android-app/android/app/src/main/java/com/simplymadestudio/islameveryday/", R = "android-app/android/app/src/main/res/";
 const LIGHT = ["classic", "sky", "sandstone", "sage", "rose"], DARK = ["jade", "indigo", "teal", "ember", "violet"]; // 17 Nov 2026: five each
 const cap = s => s[0].toUpperCase() + s.slice(1);
@@ -58,21 +58,27 @@ test("Today redraws in place: coming back to the app or the minute tick changes 
   assert.match(app, /v\.dataset\.pg = ""; todayTpl = null;/, "the loading state resets it");
 });
 
-test("open: no blink as the splash leaves; content fades before the ground; the page rises after", () => {
-  // 18 Nov 2026: taken out between the page's glide (to 0.9 s) and the sun's path (from 0.96 s), when nothing moves
-  assert.match(app, /setTimeout\(\(\) => \{ sp\.remove\(\); \}, rise \? 920 : 700\);/); assert.match(app, /setTimeout\(\(\) => sp\.classList\.add\("gone"\), 600\)/);
-  assert.doesNotMatch(app, /sp\.remove\(\); v\.classList\.remove\("door"\)/, "removing door mid-rise restarted it from invisible (the blink)");
-  // 17 Nov 2026: a softer curve and a smaller zoom; the doorway and words are still gone before the ground lifts (0.16 s)
-  assert.match(css, /\.splash\.out \.sp-in\{opacity:0;transform:scale\(1\.04\);transition:opacity \.24s cubic-bezier\(\.4,0,\.2,1\)/);
-  // 18 Nov 2026, phones and the app: through the door (scale 1.07 over 0.8 s), the ground fading slower (0.12–0.67 s)
-  assert.match(css, /html\.native \.splash\.out \.sp-in\{opacity:0;transform:scale\(1\.07\);transition:opacity \.34s cubic-bezier\(\.4,0,\.2,1\),transform \.8s cubic-bezier\(\.22,1,\.36,1\)\}/);
-  assert.match(css, /html\.native \.splash\{transition:opacity \.55s cubic-bezier\(\.4,0,\.2,1\) \.12s,visibility 0s linear \.67s\}/);
+test("open: the landing is two clean steps on one colour (18 Nov 2026 rework)", () => {
+  // 1. the doorway, words and bar drift forward and fade; the ground stays; 2. the ground goes and the page fades in
+  assert.match(css, /html\.land-in \.splash\.out\{opacity:1;visibility:hidden;transition:visibility 0s linear \.3s\}/);
+  assert.match(css, /html\.land-in \.splash\.out \.sp-in\{opacity:0;transform:scale\(1\.05\);transition:opacity \.28s/);
+  assert.match(css, /html\.land-pre #view\{opacity:0;transform:translateY\(16px\)\}/, "the page waits drawn, see-through");
+  assert.match(css, /:is\(html\.land-pre,html\.land-in\) :is\(#view,\.top,nav\.tabs\)\{will-change:opacity,transform\}/, "on its own layer before the door opens");
+  assert.match(css, /html\.land-in #view\{animation:land-view \.75s cubic-bezier\(\.22,1,\.36,1\) \.26s both\}/);
+  assert.match(css, /@keyframes land-view\{from\{opacity:0;transform:translateY\(16px\)\}to\{opacity:1;transform:none\}\}/);
+  // prime: the hidden page is drawn during the opening's last 1.5 s, not in the frames the door opens
+  assert.match(css, /html\.prime \.splash:not\(\.out\)\{opacity:\.999\}/); assert.match(css, /html\.land-pre\.prime #view,html\.land-pre\.prime :is\(\.top,nav\.tabs\)\{opacity:\.01\}/);
+  assert.match(app, /setTimeout\(prime, Math\.max\(0, left - 1500\)\)/);
+  assert.match(app, /if \(!primed && h\.classList\.contains\("land-pre"\)\) \{ prime\(\); setTimeout\(go, 180\); return; \}/, "a tap to skip gives the page a moment to be drawn");
+  assert.match(app, /if \(held\) document\.documentElement\.classList\.add\("landing", "land-pre"\);/);
+  assert.match(app, /rise = h\.classList\.contains\("land-pre"\)/, "not the view's hold, which a quiet redraw clears");
+  assert.match(app, /setTimeout\(\(\) => \{ sp\.remove\(\); h\.classList\.remove\("prime"\); if \(rise\) h\.classList\.remove\("land-in", "landing"\); \}, rise \? 1080 : 700\);/);
   assert.match(css, /html\.landing nav\.tabs\{background:var\(--surface\)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important\}/, "no blur to redo while the page moves");
-  assert.match(app, /if \(rise\) h\.classList\.add\("landing"\);/); assert.match(app, /setTimeout\(\(\) => h\.classList\.remove\("landing"\), 940\)/);
   assert.match(app, /const afterSplash = fn => \(\) => \{ if \(\$\("splash"\) \|\| performance\.now\(\) < landEnd\)/, "waiting work waits for the landing to finish");
-  assert.match(css, /html:not\(\.native\) \.sp-logo\{animation:sp-settle/, "the website's doorway settles in");
-  assert.match(css, /html\.native \.sp-logo\{animation:sp-door-in \.7s cubic-bezier\(\.22,1,\.36,1\) both,sp-breathe 3\.2s ease-in-out 2\.3s infinite alternate\}/, "the app's doorway comes in on its own layer from the first frame");
+  assert.match(html, /<span class="sp-bar"[\s\S]*<\/p><\/div><\/div>\n<aside/, "bar, skip and promises are inside .sp-in, so they leave with it");
+  // the computer website keeps its own exit
+  assert.match(css, /\.splash\.out \.sp-in\{opacity:0;transform:scale\(1\.04\);transition:opacity \.24s cubic-bezier\(\.4,0,\.2,1\)/);
   assert.match(css, /transition:opacity \.38s cubic-bezier\(\.4,0,\.2,1\) \.16s,visibility 0s linear \.56s/);
-  assert.match(css, /\.view\.door\.enter\{animation:rise-door \.8s cubic-bezier\(\.22,1,\.36,1\) \.1s both\}\.view\.door\.enter>\*\{animation:none\}/, "the page glides up as one layer");
-  assert.match(css, /@keyframes rise-door\{from\{transform:translateY\(22px\)\}to\{transform:none\}\}/, "no overshoot, no zoom");
+  assert.match(css, /html:not\(\.native\) \.sp-logo\{animation:sp-settle/, "the website's doorway settles in");
+  assert.match(css, /html\.native \.sp-logo\{animation:sp-door-in \.7s cubic-bezier\(\.22,1,\.36,1\) both,sp-breathe 3\.2s ease-in-out 2\.3s infinite alternate\}/);
 });

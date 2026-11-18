@@ -35,9 +35,9 @@ test("opening (14 Nov 2026): four seconds on the first open, smooth, tap to skip
   const i = app.indexOf('const sp = $("splash")'); assert.ok(i > app.indexOf("render(true);"), "after the first render");
   assert.match(app, /const MIN = !first \? 0 : reduce \|\| st\.motion === "off" \? 1200 : 4000;/, "four seconds on a cold start");
   assert.doesNotMatch(app + read("assets/theme-boot.js"), /sp-long/, "one opening, no long/short versions");
-  assert.match(app, /const arm = t0 => \{ settled\.then\(\(\) => setTimeout\(go, Math\.max\(0, MIN - \(performance\.now\(\) - t0\)\)\)\); setTimeout\(go, MIN \+ 1200\); \};/, "the door waits for fonts and the verse, with a failsafe");
+  assert.match(app, /const arm = t0 => \{ settled\.then\(\(\) => \{ const left = MIN - \(performance\.now\(\) - t0\);[^}]*setTimeout\(go, Math\.max\(0, left\)\); \}\); setTimeout\(go, MIN \+ 1200\); \};/, "the door waits for fonts and the verse, with a failsafe");
   assert.match(app, /if \(!NATIVE\) \{ if \(sp\) arm\(0\); return; \}/);
-  assert.match(app, /sp\.classList\.add\("out"\); if \(rise\) \{ v\.classList\.remove\("hold"\); v\.classList\.add\("enter"\); \}/, "the page rises in the same frame as the door opens");
+  assert.match(app, /if \(rise\) \{ h\.classList\.remove\("land-pre"\); h\.classList\.add\("land-in"\); \} v\.classList\.remove\("hold"\);\n    sp\.classList\.add\("out"\);/, "the landing starts in the same frame as the door opens");
   assert.match(app, /sp\.addEventListener\("pointerdown", go\); addEventListener\("keydown", go, \{ once: true \}\)/, "tap or key skips it");
   assert.match(css, /\.sp-bar i\{[^}]*animation:sp-bar 4s linear forwards\}/, "the bar fills over the four seconds");
   // smooth: only opacity and transform are animated (no letter-spacing, background movement or SVG internals)

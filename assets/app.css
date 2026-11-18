@@ -1465,10 +1465,6 @@ html.closing nav.tabs{transform:translateY(12px)}
    only. It stays fully drawn throughout, so nothing has to be painted from scratch at that moment and nothing blinks. */
 /* 18 Nov 2026 (Notion: the opening still froze at the hand-over): the page rises as one layer, not each card on its
    own layer with its own delay (a dozen layers being made at the moment the splash leaves cost a frame or two). */
-.view.door.enter{animation:rise-door .8s cubic-bezier(.22,1,.36,1) .1s both}.view.door.enter>*{animation:none}
-/* 18 Nov 2026 (owner: "the fade to the landing page more smooth"): one even glide up, no overshoot and no zoom (a zoom
-   redraws the text of the whole page at a new size). */
-@keyframes rise-door{from{transform:translateY(22px)}to{transform:none}}
 /* Tab bar: the pill is its own element so it can stretch on the way (app.js nav()). */
 nav.tabs .ind::before{content:none}
 nav.tabs .ind>i{display:block;width:56px;height:32px;border-radius:99px;background:var(--accent-2);transform-origin:50% 50%}
@@ -1619,18 +1615,30 @@ html:not(.native) .sp-logo{animation:sp-settle 1.2s cubic-bezier(.22,1,.36,1) bo
    its own layer, from the first painted frame: nothing waits, and nothing is shown still before it moves. */
 html.native .sp-logo{animation:sp-door-in .7s cubic-bezier(.22,1,.36,1) both,sp-breathe 3.2s ease-in-out 2.3s infinite alternate}
 @keyframes sp-door-in{from{opacity:0;transform:translateY(8px) scale(.9)}to{opacity:1;transform:none}}
-/* The landing (18 Nov 2026, owner: "fading to the landing page more smooth"), in the app and on phones (where the page
-   rises behind the opening): the doorway and words drift forward and fade, as if passing through the door (0.8 s);
-   the plain ground fades a little later and more slowly (0.12–0.67 s) while the page glides up under it (0.1–0.9 s).
-   While that happens (html.landing, set by app.js until the page has settled) the top bar and the tab bar are solid,
-   without their background blur: blurring a page that moves under them had to be redone on every frame. The tab bar's
-   glass comes back gently once the page is still. */
-@media (pointer:coarse){
-  .splash{transition:opacity .55s cubic-bezier(.4,0,.2,1) .12s,visibility 0s linear .67s}
-  .splash.out .sp-in{opacity:0;transform:scale(1.07);transition:opacity .34s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.22,1,.36,1)}
-}
-html.native .splash{transition:opacity .55s cubic-bezier(.4,0,.2,1) .12s,visibility 0s linear .67s}
-html.native .splash.out .sp-in{opacity:0;transform:scale(1.07);transition:opacity .34s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.22,1,.36,1)}
+/* The landing, reworked (18 Nov 2026, owner: "the fade before the landing page is still sticky; rework the whole
+   animation"). Measured before: when the door opened, the whole opening (a full-screen layer) faded out over the whole
+   page while the page rose under it, so for the first frames the phone had two full screens to blend and the page to
+   style, paint and draw for the first time; that was the stick. Now it happens in two clean steps on one colour, and
+   only in the app and on phones (html.land-pre / html.land-in, set by app.js; the computer website is unchanged):
+   1. the doorway, the words and the bar drift forward a little and fade (0.28 s); the ground stays;
+   2. the ground (the same colour as the page's) is simply taken away, and the page, which has been waiting fully drawn
+      but see-through on its own layer, fades in and glides up 16 px (from 0.26 s, 0.75 s), the top and tab bars fading
+      in with it. Every frame of both steps is only the graphics chip blending finished layers. */
+html.land-pre #view{opacity:0;transform:translateY(16px)}
+html.land-pre :is(.top,nav.tabs){opacity:0}
+:is(html.land-pre,html.land-in) :is(#view,.top,nav.tabs){will-change:opacity,transform}
+html.land-pre .view .dayviz .sunpath{animation:none;stroke-dasharray:none}
+/* "prime" (app.js, 1.5 s before the door opens): a page that is fully hidden is not drawn at all, so it used to be drawn
+   (rasterised) in the very frames the door opened. For the opening's last 1.5 s the page is 1 % visible under a
+   99.9 % opening (no eye can see either), so the phone draws it while the opening still plays. */
+html.prime .splash:not(.out){opacity:.999}
+html.land-pre.prime #view,html.land-pre.prime :is(.top,nav.tabs){opacity:.01}
+html.land-in #view{animation:land-view .75s cubic-bezier(.22,1,.36,1) .26s both}
+html.land-in :is(.top,nav.tabs){animation:land-fade .5s cubic-bezier(.4,0,.2,1) .26s both}
+@keyframes land-view{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes land-fade{from{opacity:0}to{opacity:1}}
+html.land-in .splash.out{opacity:1;visibility:hidden;transition:visibility 0s linear .3s}
+html.land-in .splash.out .sp-in{opacity:0;transform:scale(1.05);transition:opacity .28s cubic-bezier(.4,0,1,1),transform .5s cubic-bezier(.4,0,.2,1)}
 html.landing .top{background:var(--ground)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html.landing nav.tabs{background:var(--surface)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 /* No movement: the finished picture at once (no ripples, no bar); the app waits a short moment, then opens. */

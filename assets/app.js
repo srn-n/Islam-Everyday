@@ -732,6 +732,8 @@ function render(anim, viaVT) {
   // It used to play its rise unseen, then show fully as the splash faded, blink out and rise again.
   const held = anim && !viaVT && underSplash();
   v.classList.toggle("hold", held);
+  // the page waits under the opening fully drawn but see-through, the bars in their landing look (app.css "landing")
+  if (held) document.documentElement.classList.add("landing", "land-pre");
   if (anim && !reduce && !viaVT && !held) { v.classList.remove("enter"); [...v.children].forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))); void v.offsetWidth; v.classList.add("enter"); }
   else v.classList.remove("enter");
   post.forEach(fn => fn());
@@ -2822,27 +2824,29 @@ nfSync();
   let fr = Promise.resolve(); try { if (document.fonts) fr = document.fonts.ready; } catch (e) {}
   const settled = Promise.race([Promise.all([fr, votdP]).then(() => { try { void document.body.offsetHeight; return document.fonts && document.fonts.ready; } catch (e) {} }), new Promise(r => setTimeout(r, 900))]);
   // The door opens; in the same frame the page (held still behind it) starts to rise, and the sun arc follows.
-  let done = false; const go = () => { if (done || !sp) return; done = true;
-    const v = $("view"), rise = v.classList.contains("hold");
-    if (rise) v.classList.add("door"); // the page rises as one layer (app.css .view.door.enter)
-    // 18 Nov 2026 (owner: a smoother landing): the page glides up for 0.9 s, the sun's path runs after it (0.95–2.45 s),
-    // and nothing else waits for the main thread until both are done (landEnd; afterSplash holds reminders and widget
-    // data until then). The hidden splash is taken out between the two, when nothing is moving.
-    landEnd = performance.now() + (rise ? 2600 : 0);
-    if (rise) h.classList.add("landing"); // solid top and tab bars while the page moves (app.css html.landing)
-    sp.classList.add("out"); if (rise) { v.classList.remove("hold"); v.classList.add("enter"); }
-    // Only the splash goes. 15 Nov 2026: removing "door" here as well switched the page's rise animation (rise-door →
-    // rise-b) while it was still playing, so it restarted from invisible: the page blinked out and faded in again on
-    // every open. The class is cleared by the next render (v.className), long after the rise has finished.
-    setTimeout(() => sp.classList.add("gone"), 600); setTimeout(() => { sp.remove(); }, rise ? 920 : 700);
-    if (rise) setTimeout(() => h.classList.remove("landing"), 940);
-    // the sun arc moves once the page has risen (it redraws inside the rising layer, which made that layer repaint)
-    if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), rise ? 960 : 0); } };
+  // The door opens. 18 Nov 2026 (owner: "still sticky; rework the whole animation"): in the app and on phones it is two
+  // clean steps on one colour (app.css "The landing, reworked"): the doorway and words drift forward and fade, then the
+  // plain ground is taken away and the page, already drawn under it, fades in and glides up with the bars. Nothing is
+  // styled, painted or drawn for the first time in those frames; the sun's path and any waiting work come after.
+  // prime: see app.css; a tap to skip before it gets a moment for the page to be drawn first
+  let primed = false; const prime = () => { if (primed) return; primed = true; h.classList.add("prime"); };
+  let done = false; const go = () => { if (done || !sp) return;
+    if (!primed && h.classList.contains("land-pre")) { prime(); setTimeout(go, 180); return; }
+    done = true;
+    // html.land-pre, not the view's "hold": a quiet redraw under the opening (the verse arriving) clears "hold"
+    const v = $("view"), rise = h.classList.contains("land-pre");
+    landEnd = performance.now() + (rise ? 2700 : 0);
+    if (rise) { h.classList.remove("land-pre"); h.classList.add("land-in"); } v.classList.remove("hold");
+    sp.classList.add("out");
+    setTimeout(() => sp.classList.add("gone"), rise ? 320 : 600);
+    // taken out and the landing classes cleared once the page has settled (1.01 s), before the sun's path starts
+    setTimeout(() => { sp.remove(); h.classList.remove("prime"); if (rise) h.classList.remove("land-in", "landing"); }, rise ? 1080 : 700);
+    if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), rise ? 1140 : 0); } };
   // How long the opening lasts once it is on screen. Nov 2026 (14th): the first open in a session (a cold start in the
   // app) plays the four-second opening; with reduced motion it shows the still picture for a moment instead. A tap or a
   // key skips it at any time. Later opens in the same session do not wait.
   const MIN = !first ? 0 : reduce || st.motion === "off" ? 1200 : 4000;
-  const arm = t0 => { settled.then(() => setTimeout(go, Math.max(0, MIN - (performance.now() - t0)))); setTimeout(go, MIN + 1200); };
+  const arm = t0 => { settled.then(() => { const left = MIN - (performance.now() - t0); setTimeout(prime, Math.max(0, left - 1500)); setTimeout(go, Math.max(0, left)); }); setTimeout(go, MIN + 1200); };
   if (sp) { sp.addEventListener("pointerdown", go); addEventListener("keydown", go, { once: true }); }
   if (!NATIVE) { if (sp) arm(0); return; }
   // In the app (18 Nov 2026) the opening plays from its first painted frame; assets/splash-go.js notes when that was

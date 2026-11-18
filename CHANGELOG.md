@@ -2,6 +2,11 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Title bar fix (19 November 2026)
+
+### Fixed
+- **Android app opened under a black "Islam Everyday" title bar** (build #23). The status bar change touched the app window too early, before the app had set its theme, so Android built the window with the plain app theme and its title bar. The status bar colours are now set right after the app's theme is in place (still before the first frame), and the title bar is gone.
+
 ## Theme-matched status bar, a quick reopen, even Today boxes on the website, Go to the tracker fixed (19 November 2026)
 
 ### Fixed

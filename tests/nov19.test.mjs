@@ -12,7 +12,10 @@ test("phone status and navigation bars follow the theme from the first frame", (
   assert.match(ap, /static void bars\(Activity a\)/);
   assert.match(ap, /c\.setAppearanceLightStatusBars\(!dark\);/); assert.match(ap, /c\.setAppearanceLightNavigationBars\(!dark\);/);
   assert.match(ap, /w\.setStatusBarColor\(android\.graphics\.Color\.TRANSPARENT\);/, "the theme's ground shows behind the bar");
-  assert.equal((ma.match(/AppearancePlugin\.bars\(this\);/g) || []).length, 2, "before the first frame and after the bridge's own settings");
+  // only after super.onCreate: touching the decor view earlier built it with the launch theme's action bar (build #23)
+  assert.equal((ma.match(/AppearancePlugin\.bars\(this\);/g) || []).length, 1);
+  assert.ok(ma.indexOf("AppearancePlugin.bars(this);") > ma.indexOf("super.onCreate(savedInstanceState);"), "after super.onCreate");
+  assert.doesNotMatch(ma.slice(0, ma.indexOf("super.onCreate(savedInstanceState);")), /getDecorView|bars\(/, "nothing reaches the decor view before it");
   assert.match(ap, /getBridge\(\)\.getWebView\(\)\.setBackgroundColor\(g\);\n\s*\} catch \(Exception ignored\) \{\}\n\s*bars\(getActivity\(\)\);/, "and when the appearance changes");
   assert.match(boot, /Capacitor\.nativePromise\("SystemBars", "setStyle", \{ style: dark \? "DARK" : "LIGHT" \}\)/, "the page sets it before app.js too");
 });

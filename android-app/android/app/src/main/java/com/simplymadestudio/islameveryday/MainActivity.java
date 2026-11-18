@@ -18,7 +18,6 @@ public class MainActivity extends BridgeActivity {
         // The window behind everything: the ground colour of the theme chosen in the app (14 Nov 2026), set before the
         // first frame. On Android 11 and older that IS the first thing on screen (no system launch picture).
         getWindow().setBackgroundDrawable(new ColorDrawable(AppearancePlugin.ground(this)));
-        AppearancePlugin.bars(this); // status and navigation bars in the theme's light or dark from the first frame
         registerPlugin(AppearancePlugin.class);
         registerPlugin(WidgetsPlugin.class); // what the home-screen widgets show
         registerPlugin(RingerPlugin.class); // the phone's sound profile, for the app's own sounds
@@ -28,7 +27,10 @@ public class MainActivity extends BridgeActivity {
         // are one colour from the first frame to the opening.
         if (getBridge() != null && getBridge().getWebView() != null) getBridge().getWebView().setBackgroundColor(g);
         getWindow().setBackgroundDrawable(new ColorDrawable(g));
-        AppearancePlugin.bars(this); // again: the bridge's own bar settings ran during super.onCreate
+        // Status and navigation bars in the theme's light or dark (19 Nov 2026). Only here, after super.onCreate: reaching
+        // the window's decor view any earlier builds it with the launch theme, which has an action bar, and the app then
+        // opened under a black "Islam Everyday" title bar (build #23). This still runs before the first frame is drawn.
+        AppearancePlugin.bars(this);
         // Android 13+: the next start's launch screen in the chosen themes' colours (kept by Android between starts).
         AppearancePlugin.applySplash(this);
     }

@@ -2,6 +2,12 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## A smoother opening and landing (18 November 2026, later)
+
+### Changed
+- **Opening:** it no longer stands still for a moment just after it appears. The app's scripts now start only once the opening is already playing, so its animations run on the phone's graphics chip while the app gets ready underneath (in the app; the website loads as before).
+- **Landing on Today (in the app and on phones):** the doorway and words drift forward and fade as if you pass through the door, the background fades a little later and more slowly, and the page glides up evenly (no overshoot, no zoom). The top and tab bars stay solid while the page moves and the tab bar's glass comes back gently once it is still. The sun's path starts after the page has settled, and reminders and widget updates wait until the landing is over.
+
 ## Shuffled lists with a Read section, shorter previews, a Qibla compass, widget share and save, an opening that starts at once (18 November 2026)
 
 ### Added

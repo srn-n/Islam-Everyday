@@ -2,9 +2,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { gzipSync } from "node:zlib";
-import { read, exists, loadBrowser } from "./helpers.mjs";
+import { read, exists, loadBrowser, pageHtml } from "./helpers.mjs";
 
-const app = read("assets/app.js"), css = read("assets/app.css"), html = read("index.html"), sw = read("sw.js");
+const app = read("assets/app.js"), css = read("assets/app.css"), html = pageHtml(), sw = read("sw.js");
 const lazy = JSON.parse(app.match(/const LAZY = (\{[^\n]+\});/)[1].replace(/(\w+):/g, '"$1":'));
 const lazyFiles = [...new Set(Object.values(lazy).flat())].map(n => `assets/${n}.js`);
 

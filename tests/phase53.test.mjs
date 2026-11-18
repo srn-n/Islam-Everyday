@@ -5,9 +5,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import vm from "node:vm";
-import { read, json, loadBrowser } from "./helpers.mjs";
+import { read, json, loadBrowser, pageHtml } from "./helpers.mjs";
 
-const app = read("assets/app.js"), css = read("assets/app.css"), html = read("index.html"), sw = read("sw.js");
+const app = read("assets/app.js"), css = read("assets/app.css"), html = pageHtml(), sw = read("sw.js");
 const { I18N } = loadBrowser("assets/data.js").DINSATHI;
 for (const l of ["en", "bn"]) Object.assign(I18N[l], loadBrowser("assets/women.js").IE_WOMEN.I18N[l]); // the For women page's words load with its texts
 for (const l of ["en", "bn"]) Object.assign(I18N[l], loadBrowser("assets/guide.js").IE_GUIDE.I18N[l], loadBrowser("assets/qibla.js").IE_QIBLA.I18N[l]); // the Prayer guide's and the Qibla compass's words load with them

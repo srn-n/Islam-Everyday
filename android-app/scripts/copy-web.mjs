@@ -10,7 +10,8 @@ rmSync(out, { recursive: true, force: true }); mkdirSync(out);
 // entry by entry: www/ can sit inside the website folder (android-app/ in the repo), and Node refuses to copy a folder into itself
 for (const e of readdirSync(src)) if (!SKIP.has(e) && !e.startsWith("stale-") && !e.endsWith(".log"))
   cpSync(join(src, e), join(out, e), { recursive: true, filter: p => !basename(p).endsWith(".log") });
-const html = readFileSync(join(out, "index.html"), "utf8");
+// 18 Nov 2026: the app's scripts are listed in assets/boot-load.js, which index.html loads
+const html = readFileSync(join(out, "index.html"), "utf8") + (existsSync(join(out, "assets/boot-load.js")) ? readFileSync(join(out, "assets/boot-load.js"), "utf8") : "");
 for (const need of ["assets/theme-boot.js", "assets/app.js"]) if (!html.includes(need)) { console.error("index.html does not load " + need); process.exit(1); }
 if (!readFileSync(join(out, "assets/app.js"), "utf8").includes('natQ("App", "minimizeApp")')) { console.error("This website copy predates the Android changes (Nov 2026). Update IslamEverydayWeb first."); process.exit(1); }
 console.log(`Copied ${src} -> www/`);

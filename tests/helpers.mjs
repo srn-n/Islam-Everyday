@@ -26,3 +26,12 @@ export function loadBrowser(...files) {
 }
 let meta;
 export const quranMeta = () => meta || (meta = loadBrowser("assets/quran-meta.js").QURAN_META);
+
+/* 18 Nov 2026: index.html loads the app's scripts through assets/boot-load.js (so the opening is already playing when
+   they run). For checks about which scripts the page loads and in what order, this is index.html with that list
+   written out as the <script> tags it stands for, right after the loader's own tag. */
+export function pageHtml() {
+  const html = read("index.html"), L = JSON.parse(read("assets/boot-load.js").match(/var L = (\[[^\]]*\])/)[1]);
+  const tag = '<script src="assets/boot-load.js"></script>';
+  return html.replace(tag, tag + L.map(s => `<script src="${s}"></script>`).join(""));
+}

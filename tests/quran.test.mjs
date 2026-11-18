@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { json, read, exists, pad, quranMeta, skeleton } from "./helpers.mjs";
+import { json, read, exists, pad, quranMeta, skeleton, pageHtml } from "./helpers.mjs";
 
 const META = quranMeta().meta;
 const LANGS = ["ar", "en", "bn"];
@@ -106,6 +106,6 @@ test("the app fetches translations only from local files (no runtime API)", () =
   assert.ok(fetches.length > 0);
   for (const f of fetches) assert.doesNotMatch(f, /https?:/, `remote fetch: ${f}`);
   assert.doesNotMatch(read("sw.js"), /fonts\.googleapis|gstatic/);
-  assert.doesNotMatch(read("index.html"), /fonts\.googleapis|gstatic|https?:\/\/(?!www\.w3\.org)/);
+  assert.doesNotMatch(pageHtml(), /fonts\.googleapis|gstatic|https?:\/\/(?!www\.w3\.org)/);
 });
 

@@ -67,7 +67,7 @@ test("smooth opening: the splash waits for fonts and the verse, and nothing redr
   assert.match(app, /document\.querySelector\("#view \.a-verse"\)/, "the verse arriving redraws only its card");
   assert.doesNotMatch(app, /qEnsure\(i\)\.catch\(\(\) => \{\}\)\.then\(\(\) => \{ if \(R\.tab === "today" && !R\.sub\) render\(false\); \}\)/);
   assert.match(app, /if \(!force && arcWait\(\) && !\(reduce \|\| st\.motion === "off"\)\) \{ arcF = f; return; \}/, "the sun arc waits for the door to open, measuring nothing");
-  assert.match(app, /setTimeout\(\(\) => animateArc\(f, true\), rise \? 820 : 0\)/, "and moves once the page has risen");
+  assert.match(app, /setTimeout\(\(\) => animateArc\(f, true\), rise \? 960 : 0\)/, "and moves once the page has risen");
   assert.doesNotMatch(app.slice(app.indexOf("function animateArc"), app.indexOf("function animateArc") + 2500), /getPointAtLength\(Ln/, "points on the curve are worked out (arcAt), not measured");
   assert.match(app, /if \(!splashUp\(\) && \(now >= snap\.next\.at/, "the minute redraw waits for the splash");
   assert.match(app, /const keep = !anim && performance\.now\(\) < landEnd \? \[\.\.\.v\.classList\]\.filter\(c => c === "door" \|\| c === "enter"\)/, "a redraw during the rise keeps it running");

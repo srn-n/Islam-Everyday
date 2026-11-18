@@ -1379,7 +1379,7 @@ html.native :is(button,a,.opt,nav.tabs){-webkit-user-select:none;user-select:non
 .bye path{fill:none;stroke:var(--accent);stroke-width:20;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .3s cubic-bezier(.4,0,.2,1)}
 html.closing .bye{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .22s cubic-bezier(.4,0,.2,1),visibility 0s}
 html.closing .bye path{stroke-dashoffset:0}
-html.native .shell,html.native nav.tabs{transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+html.native .shell{transition:transform .28s cubic-bezier(.2,.8,.2,1)}html.native nav.tabs{transition:transform .28s cubic-bezier(.2,.8,.2,1),background-color .5s ease,-webkit-backdrop-filter .5s ease,backdrop-filter .5s ease}
 html.closing .shell{transform:scale(.96)}
 html.closing nav.tabs{transform:translateY(12px)}
 ::view-transition{pointer-events:none}
@@ -1465,8 +1465,10 @@ html.closing nav.tabs{transform:translateY(12px)}
    only. It stays fully drawn throughout, so nothing has to be painted from scratch at that moment and nothing blinks. */
 /* 18 Nov 2026 (Notion: the opening still froze at the hand-over): the page rises as one layer, not each card on its
    own layer with its own delay (a dozen layers being made at the moment the splash leaves cost a frame or two). */
-.view.door.enter{animation:rise-door .62s var(--bounce) .14s both}.view.door.enter>*{animation:none}
-@keyframes rise-door{from{transform:translateY(26px) scale(.98)}to{transform:none}}
+.view.door.enter{animation:rise-door .8s cubic-bezier(.22,1,.36,1) .1s both}.view.door.enter>*{animation:none}
+/* 18 Nov 2026 (owner: "the fade to the landing page more smooth"): one even glide up, no overshoot and no zoom (a zoom
+   redraws the text of the whole page at a new size). */
+@keyframes rise-door{from{transform:translateY(22px)}to{transform:none}}
 /* Tab bar: the pill is its own element so it can stretch on the way (app.js nav()). */
 nav.tabs .ind::before{content:none}
 nav.tabs .ind>i{display:block;width:56px;height:32px;border-radius:99px;background:var(--accent-2);transform-origin:50% 50%}
@@ -1617,6 +1619,20 @@ html:not(.native) .sp-logo{animation:sp-settle 1.2s cubic-bezier(.22,1,.36,1) bo
    its own layer, from the first painted frame: nothing waits, and nothing is shown still before it moves. */
 html.native .sp-logo{animation:sp-door-in .7s cubic-bezier(.22,1,.36,1) both,sp-breathe 3.2s ease-in-out 2.3s infinite alternate}
 @keyframes sp-door-in{from{opacity:0;transform:translateY(8px) scale(.9)}to{opacity:1;transform:none}}
+/* The landing (18 Nov 2026, owner: "fading to the landing page more smooth"), in the app and on phones (where the page
+   rises behind the opening): the doorway and words drift forward and fade, as if passing through the door (0.8 s);
+   the plain ground fades a little later and more slowly (0.12–0.67 s) while the page glides up under it (0.1–0.9 s).
+   While that happens (html.landing, set by app.js until the page has settled) the top bar and the tab bar are solid,
+   without their background blur: blurring a page that moves under them had to be redone on every frame. The tab bar's
+   glass comes back gently once the page is still. */
+@media (pointer:coarse){
+  .splash{transition:opacity .55s cubic-bezier(.4,0,.2,1) .12s,visibility 0s linear .67s}
+  .splash.out .sp-in{opacity:0;transform:scale(1.07);transition:opacity .34s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.22,1,.36,1)}
+}
+html.native .splash{transition:opacity .55s cubic-bezier(.4,0,.2,1) .12s,visibility 0s linear .67s}
+html.native .splash.out .sp-in{opacity:0;transform:scale(1.07);transition:opacity .34s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.22,1,.36,1)}
+html.landing .top{background:var(--ground)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.landing nav.tabs{background:var(--surface)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 /* No movement: the finished picture at once (no ripples, no bar); the app waits a short moment, then opens. */
 @media (prefers-reduced-motion:reduce){
   .splash *{animation:none!important;transition:none!important}

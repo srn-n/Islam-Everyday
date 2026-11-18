@@ -1,12 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { read, json, exists, p, loadBrowser, local } from "./helpers.mjs";
+import { read, json, exists, p, loadBrowser, local, pageHtml } from "./helpers.mjs";
 
 const pngSize = f => { const b = readFileSync(p(f)); assert.equal(b.toString("ascii", 1, 4), "PNG", `${f} is a PNG`); return [b.readUInt32BE(16), b.readUInt32BE(20)]; };
 
 test("public name is Islam Everyday everywhere users see it", () => {
-  const m = json("manifest.webmanifest"), html = read("index.html"), { I18N } = loadBrowser("assets/data.js").DINSATHI;
+  const m = json("manifest.webmanifest"), html = pageHtml(), { I18N } = loadBrowser("assets/data.js").DINSATHI;
   assert.equal(m.name, "Islam Everyday"); assert.equal(m.short_name, "Islam Everyday");
   assert.match(html, /<title>Islam Everyday<\/title>/); assert.match(html, /apple-mobile-web-app-title" content="Islam Everyday"/);
   assert.equal(I18N.en.brand, "Islam Everyday"); assert.equal(I18N.bn.brand, "Islam Everyday");

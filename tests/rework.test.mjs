@@ -2,9 +2,9 @@
 // (How to pray was removed on 14 Nov 2026 at the owner's request; its tests went with it.)
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { read, loadBrowser, exists, json } from "./helpers.mjs";
+import { read, loadBrowser, exists, json, pageHtml } from "./helpers.mjs";
 
-const app = read("assets/app.js"), css = read("assets/app.css"), html = read("index.html"), sw = read("sw.js");
+const app = read("assets/app.js"), css = read("assets/app.css"), html = pageHtml(), sw = read("sw.js");
 const { I18N } = loadBrowser("assets/data.js").DINSATHI;
 const HR = loadBrowser("assets/heroes.js").IE_HEROES;
 const verses = (l, s) => { const j = json(`data/quran/${l}/${String(s).padStart(3, "0")}.json`); return Array.isArray(j) ? j : j.t; };
@@ -119,7 +119,7 @@ test("opening: the app hands over at the first painted frame; the page waits dra
   // 18 Nov 2026: assets/splash-go.js notes the first painted frame (the opening is already playing); app.js falls back.
   assert.match(read("assets/splash-go.js"), /requestAnimationFrame\(go\)/);
   assert.match(app, /if \(!window\.__spT0\) \{ window\.__spT0 = performance\.now\(\); natQ\("SplashScreen", "hide", \{ fadeOutDuration: 0 \}\); \}/);
-  const html = read("index.html"); assert.ok(html.indexOf('id="splash"') < html.indexOf("assets/splash-go.js") && html.indexOf("assets/splash-go.js") < html.indexOf("assets/quran-meta.js"), "right after the splash, before the larger scripts");
+  const html = pageHtml(); assert.ok(html.indexOf('id="splash"') < html.indexOf("assets/splash-go.js") && html.indexOf("assets/splash-go.js") < html.indexOf("assets/quran-meta.js"), "right after the splash, before the larger scripts");
   assert.match(app, /if \(sp\) arm\(window\.__spT0\)/, "four seconds counted from the hand-over");
   assert.match(app, /const held = anim && !viaVT && underSplash\(\);/);
   assert.match(css, /\.view\.door\.enter\{animation:rise-door/);

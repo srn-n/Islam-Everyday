@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import vm from "node:vm";
-import { read, exists, loadBrowser } from "./helpers.mjs";
+import { read, exists, loadBrowser, pageHtml } from "./helpers.mjs";
 
 const SCRIPTS = ["assets/quran-meta.js", "assets/data.js", "assets/votd.js", "assets/names.js", "assets/bnfix.js", "assets/xtrack.js", "assets/hadith.js", "assets/glossary.js", "assets/app.js", "sw.js"];
 
@@ -27,7 +27,7 @@ test("every UI string the app uses exists in English and Bangla", () => {
 });
 
 test("index.html loads every script and stylesheet it needs, all local", () => {
-  const html = read("index.html");
+  const html = pageHtml();
   const refs = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(m => m[1]);
   for (const f of ["assets/fonts.css", "assets/app.css", "assets/quran-meta.js", "assets/data.js", "assets/votd.js", "assets/app.js"]) assert.ok(refs.includes(f), f);
   // Oct 2026: page data (99 Names, Stories, Study, Hadith, Guide, Legal) is loaded on demand by app.js; every file exists and is precached.
@@ -51,6 +51,6 @@ test("service worker precaches files that exist and only caches same-origin requ
 });
 
 test("no analytics, trackers or accounts", () => {
-  const all = SCRIPTS.map(read).join("\n") + read("index.html");
+  const all = SCRIPTS.map(read).join("\n") + pageHtml();
   assert.doesNotMatch(all, /google-analytics|gtag\(|googletagmanager|plausible|mixpanel|segment\.io|sentry|firebase|signin|sign-in|login/i);
 });

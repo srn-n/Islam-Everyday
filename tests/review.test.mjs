@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readdirSync, statSync, readFileSync } from "node:fs";
 import vm from "node:vm";
-import { json, read, p, pad, loadBrowser, quranMeta, exists } from "./helpers.mjs";
+import { json, read, p, pad, loadBrowser, quranMeta, exists, pageHtml } from "./helpers.mjs";
 
 const en = s => json(`data/quran/en/${pad(s)}.json`);
 const verse = ref => { const [s, a] = ref.split(":").map(Number); return en(s)[a - 1]; };
@@ -111,7 +111,7 @@ test("service worker: install precaches every script index.html loads, bypassing
   await sw.run("install");
   const urls = sw.added.map(r => r.url);
   assert.ok(sw.added.every(r => r.cache === "reload"), "cache: reload");
-  for (const m of read("index.html").matchAll(/<script[^>]+src="([^"]+)"/g)) assert.ok(urls.includes(m[1]), `${m[1]} precached`);
+  for (const m of pageHtml().matchAll(/<script[^>]+src="([^"]+)"/g)) assert.ok(urls.includes(m[1]), `${m[1]} precached`);
   for (const f of ["assets/hadith.js", "assets/glossary.js", "assets/xtrack.js", "assets/bnfix.js"]) assert.ok(urls.includes(f));
   for (const u of urls) if (u !== "./") assert.ok(statSync(p(u)).isFile(), `${u} exists`);
 });

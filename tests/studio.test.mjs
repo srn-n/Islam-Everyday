@@ -2,9 +2,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
-import { read, loadBrowser, exists, local } from "./helpers.mjs";
+import { read, loadBrowser, exists, local, pageHtml } from "./helpers.mjs";
 
-const app = read("assets/app.js"), css = read("assets/app.css"), html = read("index.html");
+const app = read("assets/app.js"), css = read("assets/app.css"), html = pageHtml();
 
 test("no credit under a personal name; Simply Made Studio is credited", () => {
   const files = ["index.html", ...local(["README.md"]), "manifest.webmanifest", ...readdirSync(new URL("../assets", import.meta.url)).filter(f => f.endsWith(".js")).map(f => "assets/" + f)];

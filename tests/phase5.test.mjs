@@ -1,7 +1,7 @@
 // Phase 5: Hadith library, English corrections round 2, word help, tracker date navigation.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { json, read, exists, pad, loadBrowser, quranMeta } from "./helpers.mjs";
+import { json, read, exists, pad, loadBrowser, quranMeta, pageHtml } from "./helpers.mjs";
 
 const HD = loadBrowser("assets/hadith.js").IE_HADITH;
 const XT = () => loadBrowser("assets/xtrack.js").IE_XTRACK;
@@ -143,7 +143,7 @@ test("tracker UI: selected date, previous/next, picker limited to stored days, e
 
 /* ---------- wiring ---------- */
 test("phase 5 scripts load before app.js and are precached; caches moved to v6", () => {
-  const html = read("index.html"), sw = read("sw.js");
+  const html = pageHtml(), sw = read("sw.js");
   for (const f of ["assets/hadith.js", "assets/glossary.js"]) {
     // Oct 2026: page data may instead be loaded on demand by app.js (LAZY); it must still be precached for offline use.
     assert.ok(exists(f)); assert.ok((html.indexOf(f) > 0 && html.indexOf(f) < html.indexOf("assets/app.js")) || lazyList().includes(f), f); assert.ok(sw.includes(`"${f}"`), f);

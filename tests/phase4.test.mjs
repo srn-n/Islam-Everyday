@@ -1,7 +1,7 @@
 // Phase 4: English translation corrections, Bangla short tafsir, dua previews and the extra worship record.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { json, read, exists, pad, quranMeta, loadBrowser } from "./helpers.mjs";
+import { json, read, exists, pad, quranMeta, loadBrowser, pageHtml } from "./helpers.mjs";
 
 const META = quranMeta().meta;
 const en = s => json(`data/quran/en/${pad(s)}.json`);
@@ -144,7 +144,7 @@ test("extra worship is wired separately from the five fard records", () => {
 });
 
 test("new scripts are loaded before app.js and precached", () => {
-  const html = read("index.html"), sw = read("sw.js");
+  const html = pageHtml(), sw = read("sw.js");
   for (const f of ["assets/bnfix.js", "assets/xtrack.js"]) {
     assert.ok(exists(f));
     assert.ok(html.indexOf(f) > 0 && html.indexOf(f) < html.indexOf("assets/app.js"), `${f} before app.js`);

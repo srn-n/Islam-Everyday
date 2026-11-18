@@ -2506,7 +2506,7 @@ let nfExact = "";
 const nfExactSet = r => { const v = (r && r.exact_alarm) || ""; if (v === nfExact) return; nfExact = v; if (R.tab === "more" && R.sub === "settings") render(); };
 const nfExactAsk = () => { if (NATIVE) nat("LocalNotifications", "checkExactNotificationSetting").then(nfExactSet, () => {}); };
 /* Work that can wait (reminders, widget data) waits while the opening plays, so it cannot make it stutter. */
-const afterSplash = fn => () => { if ($("splash")) { setTimeout(afterSplash(fn), 400); return; } fn(); };
+const afterSplash = fn => () => { if ($("splash") || performance.now() < landEnd) { setTimeout(afterSplash(fn), 400); return; } fn(); };
 // For women: the texts of the gentle reminders are loaded first when a period day is marked (assets/women.js).
 const nfGo = () => womenOn() && Object.keys(st.pd || {}).length && !lazyDone.has("women") ? need("women").then(nfRun, nfRun) : nfRun();
 const nfSync = () => { clearTimeout(nfT); nfT = setTimeout(afterSplash(nfGo), 500); };
@@ -2825,17 +2825,19 @@ nfSync();
   let done = false; const go = () => { if (done || !sp) return; done = true;
     const v = $("view"), rise = v.classList.contains("hold");
     if (rise) v.classList.add("door"); // the page rises as one layer (app.css .view.door.enter)
-    landEnd = performance.now() + (rise ? 1100 : 0);
+    // 18 Nov 2026 (owner: a smoother landing): the page glides up for 0.9 s, the sun's path runs after it (0.95–2.45 s),
+    // and nothing else waits for the main thread until both are done (landEnd; afterSplash holds reminders and widget
+    // data until then). The hidden splash is taken out between the two, when nothing is moving.
+    landEnd = performance.now() + (rise ? 2600 : 0);
+    if (rise) h.classList.add("landing"); // solid top and tab bars while the page moves (app.css html.landing)
     sp.classList.add("out"); if (rise) { v.classList.remove("hold"); v.classList.add("enter"); }
     // Only the splash goes. 15 Nov 2026: removing "door" here as well switched the page's rise animation (rise-door →
     // rise-b) while it was still playing, so it restarted from invisible: the page blinked out and faded in again on
     // every open. The class is cleared by the next render (v.className), long after the rise has finished.
-    // 16 Nov 2026 (Notion: a smoother landing): the hidden splash is taken out once the page has risen and the sun arc
-    // has run (about 1.9 s), not in the middle of them: taking a full-screen layer out costs a frame, and the work that
-    // waits for the splash to go (reminders, the widget) now starts after the landing instead of during it.
-    setTimeout(() => sp.classList.add("gone"), 600); setTimeout(() => { sp.remove(); }, rise ? 1900 : 700);
+    setTimeout(() => sp.classList.add("gone"), 600); setTimeout(() => { sp.remove(); }, rise ? 920 : 700);
+    if (rise) setTimeout(() => h.classList.remove("landing"), 940);
     // the sun arc moves once the page has risen (it redraws inside the rising layer, which made that layer repaint)
-    if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), rise ? 820 : 0); } };
+    if (arcF != null) { const f = arcF; arcF = null; setTimeout(() => animateArc(f, true), rise ? 960 : 0); } };
   // How long the opening lasts once it is on screen. Nov 2026 (14th): the first open in a session (a cold start in the
   // app) plays the four-second opening; with reduced motion it shows the still picture for a moment instead. A tap or a
   // key skips it at any time. Later opens in the same session do not wait.

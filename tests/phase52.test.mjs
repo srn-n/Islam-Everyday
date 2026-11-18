@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { read, loadBrowser } from "./helpers.mjs";
+import { read, loadBrowser, pageHtml } from "./helpers.mjs";
 
 const ctx = loadBrowser("assets/data.js", "assets/votd.js", "assets/votd-en.js", "assets/locale.js");
 const V = ctx.DINSATHI_VOTD, E = ctx.IE_VOTD_EN, LOC = ctx.IE_LOCALE, { I18N } = ctx.DINSATHI;
@@ -216,6 +216,6 @@ test("day chart: computed from solar position, sunrise/sunset as events, text sc
 });
 
 test("new scripts are loaded before app.js and precached", () => {
-  const html = read("index.html"), sw = read("sw.js");
+  const html = pageHtml(), sw = read("sw.js");
   for (const f of ["assets/votd-en.js", "assets/locale.js"]) { assert.ok(html.indexOf(f) > 0 && html.indexOf(f) < html.indexOf("assets/app.js"), f); assert.ok(sw.includes(`"${f}"`), f); }
 });

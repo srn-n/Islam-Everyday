@@ -80,3 +80,15 @@ test("Qibla compass: in the app's More only, bearing from the chosen place, word
 test("For the believing women: room under the confirm box", () => {
   assert.match(css, /\.w-intro\{margin-bottom:22px\}\.w-intro \.row\{margin-top:14px\}\.w-intro \.row\+\.note\{margin-top:12px;margin-bottom:6px\}/);
 });
+
+test("opening: the app's scripts start only once the opening is playing (assets/boot-load.js)", () => {
+  const html = read("index.html"), bl = read("assets/boot-load.js");
+  assert.ok(html.indexOf('id="splash"') < html.indexOf("assets/splash-go.js") && html.indexOf("assets/splash-go.js") < html.indexOf("assets/boot-load.js"));
+  assert.doesNotMatch(html, /assets\/app\.js/, "no plain script tags for the big scripts");
+  const L = JSON.parse(bl.match(/var L = (\[[^\]]*\])/)[1]);
+  assert.equal(L[0], "assets/quran-meta.js"); assert.equal(L[L.length - 1], "assets/app.js");
+  assert.match(bl, /s\.async = false;/, "same order");
+  assert.match(bl, /requestAnimationFrame\(function \(\) \{ requestAnimationFrame\(function \(\) \{ setTimeout\(add, 0\); \}\); \}\);/, "app: two painted frames first");
+  assert.match(bl, /if \(!\/\(\^\|\\s\)native\(\\s\|\$\)\/\.test\(document\.documentElement\.className\)\) \{ add\(\); return; \}/, "website: at once");
+  assert.match(read("sw.js"), /"assets\/boot-load\.js"/);
+});

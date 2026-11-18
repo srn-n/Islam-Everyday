@@ -2,8 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
-import { read, loadBrowser, p } from "./helpers.mjs";
-const app = read("assets/app.js"), css = read("assets/app.css"), html = read("index.html"), X = loadBrowser("assets/data.js").DINSATHI, { I18N } = X;
+import { read, loadBrowser, p, pageHtml } from "./helpers.mjs";
+const app = read("assets/app.js"), css = read("assets/app.css"), html = pageHtml(), X = loadBrowser("assets/data.js").DINSATHI, { I18N } = X;
 
 test("An-Nawawi cards wrap on phones (the month-name no-wrap rule no longer matches .nw)", () => {
   assert.doesNotMatch(css, /\{\.nw\{white-space:nowrap\}\}/);

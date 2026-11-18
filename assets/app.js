@@ -9,7 +9,7 @@ const LOC = window.IE_LOCALE, VE = window.IE_VOTD_EN, DV = window.IE_DAYVIZ;
 /* Phone speed (Oct 2026): page data that the Today screen does not need is loaded only when its page opens, so a phone
    downloads about a third of the scripts before the first screen appears. LAZY lists each group's files in load order;
    bindLazy() picks up the globals they define. The service worker still precaches all of them for offline use. */
-const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"], women: ["women"], qibla: ["qibla"], zakat: ["zakat"], share: ["share", "share-img"] };
+const LAZY = { names: ["names", "name-stories"], guide: ["names", "guide"], hadith: ["hadith", "nawawi"], study: ["study", "study-notes"], stories: ["stories"], legal: ["legal"], women: ["women"], qibla: ["qibla"], zakat: ["zakat"], desk: ["desk-today"], share: ["share", "share-img"] };
 let NM, NAMES = [], GD, HD, NW, SD, ST, LG = null, WM = null, HCOLL = {}, NW_N = 0;
 const lazyDone = new Set(), lazyP = {}, lazyFiles = new Set();
 /* Phones (touch screen) get the on-demand loading; computers with a mouse keep the previous behaviour: everything is
@@ -18,6 +18,7 @@ const phone = () => { try { return matchMedia("(pointer: coarse)").matches; } ca
 function bindLazy() {
   NM = window.DINSATHI_NAMES; NAMES = NM ? NM.names : []; GD = window.IE_GUIDE; HD = window.IE_HADITH; NW = window.IE_NAWAWI;
   SD = window.IE_STUDY; ST = window.IE_STORIES; LG = window.IE_LEGAL || null; WM = window.IE_WOMEN || null;
+  if (window.IE_DESK_TODAY && !DT) todayGrid(); // the desktop Today layout, as soon as its file arrives
   if (GD && GD.I18N && !GD._in) { GD._in = 1; for (const l in GD.I18N) if (I18N[l]) Object.assign(I18N[l], GD.I18N[l]); } // the Prayer guide's words (assets/guide.js)
   if (window.IE_QIBLA && window.IE_QIBLA.I18N && !window.IE_QIBLA._in) { const Q = window.IE_QIBLA; Q._in = 1; for (const l in Q.I18N) if (I18N[l]) Object.assign(I18N[l], Q.I18N[l]); }
   // The For women page's words come with its texts (assets/women.js), so the first screen does not carry them.
@@ -180,17 +181,9 @@ const P = {
 const ic = (n, cls) => `<svg viewBox="0 0 24 24" aria-hidden="true"${cls ? ` class="${cls}"` : ""}>${P[n]}</svg>`;
 
 /* ---------------- theme ---------------- */
-/* Appearance (Face 7). The mode (System, Light, Dark) picks the appearance; each appearance has three themes and
-   remembers its own choice: st.lightTheme (classic | sky | sandstone | sage | rose) and st.darkTheme (jade | indigo | teal |
-   ember | violet; the last two of each added 17 Nov 2026).
-   A light theme is only ever shown in the light appearance and a dark theme only in the dark one.
-   Migration, idempotent and non-destructive (st.palette/st.mode are left in place):
-   - Phase 5.2 st.theme: light/dark/system keep that mode; emerald → light + Emerald; indigo → dark + Indigo.
-   - Phase 5.3 st.palette: emerald/sandstone → that light theme; indigo → Indigo Moon; burgundy → Plum Dusk
-     (Burgundy had a light variant; it is no longer offered as a light theme, so light falls back to Classic Teal).
-   - Nov 2026: Emerald Ivory and Plum Dusk were removed; whoever had them gets Sky Blue (light) and Deep Teal (dark).
-     Interaction motion "playful" was removed; it becomes "subtle" (Slide). The new option is "fade".
-   assets/theme-boot.js applies the same rules before first paint. st.glass, st.motion and st.scene are new. */
+/* Appearance (Face 7): the mode (System, Light, Dark) picks the appearance; each remembers its own theme
+   (st.lightTheme, st.darkTheme). Older settings (st.theme, st.palette, removed themes and "playful" motion) are migrated
+   here without being deleted, by the same rules as assets/theme-boot.js. History: AGENTS.md. */
 const MODES = ["system", "light", "dark"], LIGHT_TH = ["classic", "sky", "sandstone", "sage", "rose"], DARK_TH = ["jade", "indigo", "teal", "ember", "violet"]; // 17 Nov 2026: Sage, Rose, Ember, Violet added
 const GLASS = ["subtle", "balanced", "high", "solid"], MOTION = ["off", "subtle", "fade"];
 const SCENES = ["landscape", "sky", "mosque", "dunes", "mountains", "sea", "forest", "fields", "canyon"];
@@ -321,13 +314,9 @@ function cdLine(s, nx, ok) {
 function countdown(ms) { const s = Math.max(0, Math.floor(ms / 1000)); return num(pad2(Math.floor(s / 3600)) + ":" + pad2(Math.floor(s % 3600 / 60)) + ":" + pad2(s % 60)); }
 /* Today's times are usable only if they are finite and in order (high latitudes can break the formulas). */
 function timesOk(D) { const tm = D.tm, o = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"]; return o.every(k => Number.isFinite(tm[k]) && tm[k] >= 0 && tm[k] <= 24) && o.every((k, i) => !i || tm[k] > tm[o[i - 1]]) && tm.isha - tm.maghrib <= 8; }
-/* Times when voluntary (nafl) prayer is avoided (Phase 5.3). Sources: Sahih Muslim 831 (three times tied to the sun),
-   Sahih al-Bukhari 586 (after the Fajr and Asr prayers), and Ibn Baz's fatwa "Awqat an-nahy 'an salat an-nafilah".
-   Sunrise, solar transit (Dhuhr) and sunset come from the same solar formulas as the prayer times, for the selected city
-   and date. The sources describe the sunrise period as "until the sun has risen a spear's length" and the zenith period
-   as "short", without minutes; this app uses 15 and 10 minutes as stated approximations (the same windows as the
-   "Times to avoid" card). The "after Fajr" and "after Asr" periods depend on having prayed, so they are shown only
-   when that prayer is ticked in today's tracker. Nothing is shown when the times are not reliable. */
+/* Times when voluntary (nafl) prayer is avoided (Phase 5.3): Sahih Muslim 831, Sahih al-Bukhari 586 and Ibn Baz's
+   fatwa "Awqat an-nahy". Sun times come from the prayer-time formulas; the sources give no minutes ("a spear's length",
+   "short"), so 15 and 10 minutes are stated approximations. "After Fajr/Asr" shows only once that prayer is ticked today; nothing shows when times are unreliable. */
 const FORB_SOON = 10; // minutes of notice before a sun-based period begins
 function forbiddenNow(s) {
   if (!timesOk(s.d0)) return null;
@@ -432,10 +421,8 @@ function pruneLog(s) { const keep = new Set(); let [y, m, d] = [s.p.year, s.p.mo
 const glossLine = text => { if (bn() || !GL) return ""; const g = GL.forText(text); return g.length ? `<p class="gloss"><span class="gl-h">${t("gl_title")}</span> ${g.map(([w, m]) => `<span class="gl"><i>${esc(w)}</i> = ${esc(m)}</span>`).join(" · ")}</p>` : ""; };
 
 /* ---------------- tracker date navigation (Phase 5) ----------------
-   The tracker opens on today's date in the selected city. Earlier dates can be chosen to record or correct the five
-   prayers for that date; each date has its own record in st.log, so editing a past date never changes today.
-   Dates are handled as Y-M-D keys only (XT.shift / XT.clamp), never parsed as UTC timestamps. Records are kept for
-   120 days (pruneLog), so the picker allows today and the 119 days before it; future dates cannot be selected. */
+   Today in the selected city, or any of the 119 days before it (records are kept 120 days, pruneLog); each date has
+   its own st.log record. Dates are Y-M-D keys only (XT.shift / XT.clamp), never UTC timestamps; no future dates. */
 const KEEP_DAYS = 120;
 let tSel = null;                                   // selected date key, or null for today
 const trackKey = s => tSel ? XT.clamp(tSel, XT.shift(s.key, -(KEEP_DAYS - 1)), s.key) : s.key;
@@ -678,11 +665,9 @@ function popChosen(a, k) {
 }
 let post = [], heroAnim = false;
 const underSplash = () => { const sp = $("splash"); return !!sp && !sp.classList.contains("out") && (NATIVE || phone()) && !reduce && st.motion !== "off"; };
-/* In-place redraw (14 Nov 2026). `prev` is the markup the page was last drawn from and `next` the new markup (both
-   detached templates); `live` is what is on screen. Only parts whose markup changed are touched, and only the
-   attributes that changed in the markup: what scripts set later (the sun's place on the arc, the ring, the segment
-   thumbs, the "read more" fit) stays as it is, and an unchanged picture is never reloaded. If the page on screen does not
-   have the shape `prev` describes, that part is simply drawn again. */
+/* In-place redraw (14 Nov 2026): only the parts and attributes whose markup changed between `prev` and `next` are
+   touched on `live`, so what scripts set later stays and unchanged pictures never reload; a part whose shape differs
+   is drawn again. */
 let todayTpl = null;
 function patchKids(live, prev, next) {
   const L = [...live.childNodes].filter(n => !(n.nodeType === 1 && n.classList.contains("seg-th"))), P = [...prev.childNodes], N = [...next.childNodes];
@@ -739,8 +724,13 @@ function render(anim, viaVT) {
   post.forEach(fn => fn());
   segThumbs();
   fitClamps();
+  todayGrid();
   if (fd) { const el = [...v.querySelectorAll("[data-act]")].find(x => x.dataset.act === fd.act && x.dataset.k === fd.k && x.dataset.i === fd.i && x.dataset.s === fd.s); if (el) el.focus({ preventScroll: true }); }
 }
+/* Today on the website at desktop widths (19 Nov 2026, Notion: uneven gaps between the boxes): three columns that each
+   stack their own boxes, worked out in assets/desk-today.js (LAZY.desk, loaded on computers only, never in the app). */
+let DT = null;
+const todayGrid = () => { const f = window.IE_DESK_TODAY; if (!f) return; (DT || (DT = f({ $, NATIVE, route: () => R })))(); };
 const back = (label) => `<button type="button" class="icon-btn" data-act="back" aria-label="${esc(label || t("back"))}">${ic("back")}</button>`;
 
 /* ---------------- toast / burst / sheet ---------------- */
@@ -841,12 +831,8 @@ const SCENE = (() => {
     dunesF, dunesM, dunesN, crest, oasis: palm(640, 318, 60, 6) + palm(676, 322, 76, -8) + palm(706, 320, 52, 4),
     peaks: pk.d, peaks2: pk2.d, lake, sea, cliff, rocks, forest, fields, canyon };
 })();
-/* Prayer scene (Face 7, st.scene): "landscape" is the original scene and the default; "sky" keeps only the sky,
-   clouds and a low horizon so the sun/moon arc leads; "mosque" draws one quiet silhouette. All use the same
-   time-of-day colours (--s1…--m3) and the same scrim, so the text contrast is unchanged. If the SVG fails to draw,
-   the sky gradient and scrim behind the text remain.
-   Nov 2026: six more (dunes, mountains, sea, forest, fields, canyon), and st.sceneAuto: a different scene each day,
-   in turn, with the mosque on Fridays. */
+/* Prayer scene (st.scene): landscape (default), sky, mosque, dunes, mountains, sea, forest, fields, canyon, all in the
+   same time-of-day colours and scrim; st.sceneAuto changes it daily (the mosque on Fridays). */
 /* Motion advice (Nov 2026): Android 12 and newer handle the slide smoothly; older phones get the lighter fade.
    Read from the browser's user agent ("Android 11"); null off Android. */
 const andVer = () => { const m = /Android (\d+)/.exec(navigator.userAgent || ""); return m ? +m[1] : null; };
@@ -979,7 +965,7 @@ function vToday() {
       return `<li class="${k === "sunrise" ? "minor" : ""}${isC ? " is-cur" : ""}${isN ? " is-next" : ""}"${isC ? ' aria-current="time"' : ""}><span class="nm">${pName(k, fri)}${isC ? `<span class="badge cur">${t("curb")}</span>` : ""}${isN ? `<span class="badge nxt">${t("nextb")}</span>` : ""}</span><span class="tm">${clock(hrs)}${when ? `<small class="when">${when}</small>` : ""}</span></li>`; }).join("")}</ol>
     ${fri ? `<p class="note jum-note" role="note">${t("jum_note")}</p>` : ""}
     <p class="adhan-note">${t("adhannote")}</p>
-    <p class="note times-foot">${t("pm_hint")} <a href="#trk-h" class="linkish">${t("pm_go")}</a></p>
+    <p class="note times-foot">${t("pm_hint")} <button type="button" class="linkish" data-act="jumpto" data-to="trk-h">${t("pm_go")}</button></p>
   </section>
 
   <section class="card verse a-verse" aria-labelledby="votd-h">
@@ -1481,10 +1467,8 @@ function openStudyDesk(n) {
 }
 
 /* ---------------- A new order at each opening, and "Mark as read" (18 Nov 2026) ----------------
-   Owner (Notion): the Qur'an study, Hadith and Dua lists show their contents in a new order each time the app is
-   opened (the order holds while it stays open, so a list does not jump about while being read), and each item can be
-   marked as read: it then leaves the list for a "Read" section under it, so the same ones do not keep coming up.
-   Qur'an study uses the same "read" as the reader (st.read, surah numbers); hadith st.hread (ids); duas st.dread. */
+   Qur'an study, Hadith and Duas: a new order per opening (steady while open); a read item moves to a "Read" section.
+   State: st.read (surahs, shared with the reader), st.hread (hadith ids), st.dread (dua indexes). */
 const OPEN_SEED = (Math.random() * 4294967296) >>> 0;
 function shuffled(arr, salt) {
   let a = (OPEN_SEED ^ [...salt].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261)) >>> 0;
@@ -1980,7 +1964,7 @@ function calDetail(i) {
   return `<h3 class="sec-title" id="cal-dt">${esc(calLong(i))}</h3>
     <p class="cd-h">${esc(hLong(i.h))} <span class="badge past">${t("cal_calc")}</span></p>
     <ul class="cd-tags">${i.today ? `<li class="td">${t("t_today")}</li>` : ""}${i.wh ? `<li class="wh">${t("wd_badge")} (${num(i.h.d)})</li>` : ""}${i.evs.map(e => `<li class="ev">${esc(L(e))}</li>`).join("")}</ul>
-    ${i.wh && i.tash ? `<p class="cd-warn" role="note">${t("wd_tash")}</p>` : i.wh && i.ram ? `<p class="note">${t("wd_ram")}</p>` : i.wh ? `<p class="note">${t("wd_day")} <a href="#wd-h" class="linkish">${t("wd_more")}</a></p>` : ""}
+    ${i.wh && i.tash ? `<p class="cd-warn" role="note">${t("wd_tash")}</p>` : i.wh && i.ram ? `<p class="note">${t("wd_ram")}</p>` : i.wh ? `<p class="note">${t("wd_day")} <button type="button" class="linkish" data-act="jumpto" data-to="wd-h">${t("wd_more")}</button></p>` : ""}
     <p class="note">${t("cal_eve")}</p>
     <div class="fplan">
       <label class="fp-row"><input type="checkbox" id="fp-check" data-k="${i.k}"${p.f ? " checked" : ""}${i.tash ? " disabled" : ""}> ${t("fp_check")}</label>
@@ -2432,12 +2416,9 @@ function holdPos(get, off) {
 }
 
 /* ---------------- reminders (Nov 2026) ----------------
-   Five prayer reminders a day (each with that day's hero line), the three sun-based times to avoid voluntary prayer
-   (with when each ends), and the week's Qur'an line every Thursday at 8 pm in the chosen city. All are worked out on
-   the device from the same prayer times as the Today page; nothing is sent to a server.
-   Android app: scheduled ahead for NF_DAYS days with Capacitor's LocalNotifications and renewed on every open, so they
-   arrive when the app is closed. Website: there is no server to push from, so they can only be shown while the page is
-   open (checked every 15 s). ids are stable per day and slot, so re-scheduling replaces rather than duplicates. */
+   Five prayer reminders a day, the three sun-based times to avoid voluntary prayer and Thursday's Qur'an line, all
+   worked out on the device. App: scheduled NF_DAYS ahead with LocalNotifications and renewed on every open (stable
+   ids, so nothing doubles). Website: shown only while the page is open (checked every 15 s). No server. */
 const NF_DAYS = 10;
 const nfAny = () => !!(st.nf.pray || st.nf.forb || st.nf.thu || st.nf.tahajjud || st.nf.duha);
 const nfCan = () => { try { return NATIVE || "Notification" in window; } catch (e) { return false; } };
@@ -2679,6 +2660,12 @@ function act(a, d, b) {
     case "surah": closeSheet(); if (desk() && R.tab === "quran" && R.sub === "all") { openSurahDesk(+d.s, +d.a || 0); break; } go({ tab: "quran", sub: "all", surah: +d.s, ayah: +d.a || 0 }); break;
     case "story": go({ tab: "quran", sub: "stories", story: d.k }); break;
     case "sgrp": sgGroup = d.k; refreshStories(); break;
+    // 19 Nov 2026: in-page links (Go to the tracker, a calendar day's "more") glide to their section; as #hash links
+    // the router read them as unknown pages and drew the page again
+    case "jumpto": { const hd = $(b.dataset.to), sec = hd && (hd.closest("section") || hd); if (!sec) break;
+      const top = $("top"), off = (top ? Math.max(0, top.getBoundingClientRect().bottom) : 0) + 10;
+      scrollTo({ top: Math.max(0, sec.getBoundingClientRect().top + scrollY - off), behavior: reduce ? "auto" : "smooth" });
+      if (!hd.hasAttribute("tabindex")) hd.setAttribute("tabindex", "-1"); hd.focus({ preventScroll: true }); break; }
     case "sgjump": { const h = $("sg-ref-h"); if (h) { h.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); h.focus({ preventScroll: true }); } break; }
     case "study": if (desk() && R.tab === "quran" && R.sub !== "all") { openStudyDesk(+d.s); break; } go({ tab: "quran", study: +d.s }); break;
     case "stg": stGroup = d.k; stTheme = "all"; refreshStudy(); break;
@@ -2814,6 +2801,9 @@ else if (!(navigator.connection && navigator.connection.saveData)) {
 sndApply();
 if (SND) { const un = () => { SND.unlock(); SND.resume(); }; addEventListener("pointerdown", un, true); addEventListener("keydown", un, true);
   document.addEventListener("visibilitychange", () => { if (document.hidden) SND.pause(); else SND.resume(); }); }
+// 19 Nov 2026: when the app was last in use (only a time, on the phone), so a reopen soon after gets the quick opening.
+if (NATIVE) { const seen = () => { try { localStorage.setItem("ie.seen", String(Date.now())); } catch (e) {} };
+  seen(); document.addEventListener("visibilitychange", () => { if (document.hidden) seen(); }); addEventListener("pagehide", seen); setInterval(() => { if (!document.hidden) seen(); }, 6e4); }
 if (NATIVE) { const rg = m => { ringer = (m && m.mode) || "normal"; if (SND) SND.setMuted(ringer !== "normal"); const el = $("snd-prof"); if (el) el.textContent = sndProfile(); };
   const ask = () => nat("Ringer", "getMode").then(rg, () => {}); ask();
   try { window.Capacitor.addListener("Ringer", "ringerChange", rg); window.Capacitor.addListener("App", "resume", () => { ask(); nfSync(); widgetSync(); }); } catch (e) {} }
@@ -2823,11 +2813,7 @@ nfSync();
   // Fonts and the Verse for today (at most 0.9 s): the door waits for them, so neither re-lays out the page as it opens.
   let fr = Promise.resolve(); try { if (document.fonts) fr = document.fonts.ready; } catch (e) {}
   const settled = Promise.race([Promise.all([fr, votdP]).then(() => { try { void document.body.offsetHeight; return document.fonts && document.fonts.ready; } catch (e) {} }), new Promise(r => setTimeout(r, 900))]);
-  // The door opens; in the same frame the page (held still behind it) starts to rise, and the sun arc follows.
-  // The door opens. 18 Nov 2026 (owner: "still sticky; rework the whole animation"): in the app and on phones it is two
-  // clean steps on one colour (app.css "The landing, reworked"): the doorway and words drift forward and fade, then the
-  // plain ground is taken away and the page, already drawn under it, fades in and glides up with the bars. Nothing is
-  // styled, painted or drawn for the first time in those frames; the sun's path and any waiting work come after.
+  // The door opens (18 Nov 2026 rework; app and phones): two steps on one colour, see app.css "The landing, reworked".
   // prime: see app.css; a tap to skip before it gets a moment for the page to be drawn first
   let primed = false; const prime = () => { if (primed) return; primed = true; h.classList.add("prime"); };
   let done = false; const go = () => { if (done || !sp) return;
@@ -2845,7 +2831,9 @@ nfSync();
   // How long the opening lasts once it is on screen. Nov 2026 (14th): the first open in a session (a cold start in the
   // app) plays the four-second opening; with reduced motion it shows the still picture for a moment instead. A tap or a
   // key skips it at any time. Later opens in the same session do not wait.
-  const MIN = !first ? 0 : reduce || st.motion === "off" ? 1200 : 4000;
+  // 19 Nov 2026: in the app, an open within 30 minutes of last use is quick (html.sp-quick, set by theme-boot.js).
+  const quick = h.classList.contains("sp-quick");
+  const MIN = quick ? 750 : !first ? 0 : reduce || st.motion === "off" ? 1200 : 4000;
   const arm = t0 => { settled.then(() => { const left = MIN - (performance.now() - t0); setTimeout(prime, Math.max(0, left - 1500)); setTimeout(go, Math.max(0, left)); }); setTimeout(go, MIN + 1200); };
   if (sp) { sp.addEventListener("pointerdown", go); addEventListener("keydown", go, { once: true }); }
   if (!NATIVE) { if (sp) arm(0); return; }

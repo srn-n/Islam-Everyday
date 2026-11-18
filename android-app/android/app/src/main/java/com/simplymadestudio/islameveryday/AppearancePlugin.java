@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Build;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -68,6 +70,25 @@ public class AppearancePlugin extends Plugin {
         try { int id = splashTheme(a); if (id != 0) a.getSplashScreen().setSplashScreenTheme(id); } catch (Exception ignored) {}
     }
 
+    /**
+     * The phone's status and navigation bars (19 Nov 2026, Notion: "at the opening the phone's notification bar does not
+     * match the app's theme"): see-through, so the theme's ground behind them shows, with dark icons on light themes
+     * and light icons on dark ones. Set before the first frame (MainActivity) and again when the appearance changes.
+     */
+    @SuppressWarnings("deprecation")
+    static void bars(Activity a) {
+        if (a == null) return;
+        try {
+            android.view.Window w = a.getWindow();
+            boolean dark = isDark(a);
+            w.setStatusBarColor(android.graphics.Color.TRANSPARENT);
+            w.setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+            WindowInsetsControllerCompat c = WindowCompat.getInsetsController(w, w.getDecorView());
+            c.setAppearanceLightStatusBars(!dark);
+            c.setAppearanceLightNavigationBars(!dark);
+        } catch (Exception ignored) {}
+    }
+
     /** Applies the mode to this run and, on Android 12 and later, to the launch screen of the next start. */
     static void apply(Context c, String mode) {
         boolean light = "light".equals(mode), dark = "dark".equals(mode);
@@ -105,6 +126,7 @@ public class AppearancePlugin extends Plugin {
                 getActivity().getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(g));
                 if (getBridge() != null && getBridge().getWebView() != null) getBridge().getWebView().setBackgroundColor(g);
             } catch (Exception ignored) {}
+            bars(getActivity());
         });
         call.resolve();
     }

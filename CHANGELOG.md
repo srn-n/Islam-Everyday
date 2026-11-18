@@ -2,6 +2,16 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Theme-matched status bar, a quick reopen, even Today boxes on the website, Go to the tracker fixed (19 November 2026)
+
+### Fixed
+- **"Go to the tracker" on Today** no longer looks like the app refreshing: it glides down to the Prayer tracker. The "more" link on a calendar day had the same problem and works the same way now.
+- **Phone status bar at the opening (Android app):** the status bar and navigation bar take the theme's background, with light or dark icons to match, from the very first frame and whenever the appearance changes. Before, the icons followed the phone until the app had started.
+
+### Changed
+- **Reopening soon after use (Android app):** if the app was in use in the last 30 minutes and Android had closed it in the background, it now opens with a quick version of the opening in your theme (about three quarters of a second) instead of the full four seconds. Only the time of last use is kept on the phone.
+- **Today on the website (computers only, never in the app):** the boxes now sit in three columns that each stack evenly, with the same space between every box and the columns ending level. They rearrange by themselves when a box changes size.
+
 ## The landing on Today, reworked (18 November 2026, evening)
 
 ### Changed

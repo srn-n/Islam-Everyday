@@ -40,5 +40,14 @@
   // easing in from Android's default colour, which showed the wrong theme for a moment on Android 12).
   try { if (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) {
     r.className += " native";
+    // 19 Nov 2026 (Notion): the phone's status bar icons in the theme's own light or dark from the very first frame
+    // (before, they followed the phone until app.js ran). MainActivity sets them natively too.
+    try { var q = Capacitor.nativePromise("SystemBars", "setStyle", { style: dark ? "DARK" : "LIGHT" }); if (q && q.catch) q.catch(function () {}); } catch (e) {}
+    // 19 Nov 2026 (Notion: "when the phone reloads the app shortly after it was last used, a sandal-coloured page comes
+    // up for a second; give that a very quick opening in the theme"): if the app was in use in the last 30 minutes
+    // (Android closed it in the background, or the page reloaded), the opening is a short one (html.sp-quick, app.css):
+    // the finished doorway fades in and opens at once, instead of the four-second opening. "ie.seen" is only a time.
+    var seen = 0; try { seen = +localStorage.getItem("ie.seen") || 0; } catch (e) {}
+    if (seen && Date.now() - seen < 18e5) r.className += " sp-quick";
   } } catch (e) {}
 })();

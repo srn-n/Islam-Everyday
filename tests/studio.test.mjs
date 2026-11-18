@@ -28,12 +28,12 @@ test("the splash is in the page itself, themed, and needs no script to play", ()
 test("the splash respects reduced motion and the app's Motion off setting", () => {
   assert.match(css, /@media \(prefers-reduced-motion:reduce\)\{\n  \.splash \*\{animation:none!important;transition:none!important\}/);
   assert.match(css, /:root\[data-motion="off"\] \.splash \*\{animation:none!important;transition:none!important\}/);
-  assert.match(app, /const MIN = !first \? 0 : reduce \|\| st\.motion === "off" \? 1200 : 4000;/, "a short still moment instead of the animation");
+  assert.match(app, /const MIN = quick \? 750 : !first \? 0 : reduce \|\| st\.motion === "off" \? 1200 : 4000;/, "a short still moment instead of the animation");
 });
 
 test("opening (14 Nov 2026): four seconds on the first open, smooth, tap to skip; later opens do not wait", () => {
   const i = app.indexOf('const sp = $("splash")'); assert.ok(i > app.indexOf("render(true);"), "after the first render");
-  assert.match(app, /const MIN = !first \? 0 : reduce \|\| st\.motion === "off" \? 1200 : 4000;/, "four seconds on a cold start");
+  assert.match(app, /const MIN = quick \? 750 : !first \? 0 : reduce \|\| st\.motion === "off" \? 1200 : 4000;/, "four seconds on a cold start");
   assert.doesNotMatch(app + read("assets/theme-boot.js"), /sp-long/, "one opening, no long/short versions");
   assert.match(app, /const arm = t0 => \{ settled\.then\(\(\) => \{ const left = MIN - \(performance\.now\(\) - t0\);[^}]*setTimeout\(go, Math\.max\(0, left\)\); \}\); setTimeout\(go, MIN \+ 1200\); \};/, "the door waits for fonts and the verse, with a failsafe");
   assert.match(app, /if \(!NATIVE\) \{ if \(sp\) arm\(0\); return; \}/);

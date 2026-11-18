@@ -490,6 +490,8 @@ nav.tabs .ind::before{content:"";width:56px;height:32px;border-radius:99px;backg
   .a-fast .duo{grid-template-columns:1fr;gap:14px}
   .a-forb{grid-area:forb}.a-verse{grid-area:verse;align-self:start}
   .a-tiles{grid-area:tiles}
+  /* website only (app.js todayGrid): three columns that each stack their own boxes, in 4 px rows */
+  .v-today.mas{grid-template-areas:none;grid-template-rows:none;grid-auto-rows:4px;row-gap:0}
 
   /* qur'an: list + reader side by side */
   .v-quran{display:block}
@@ -1648,6 +1650,15 @@ html.landing nav.tabs{background:var(--surface)!important;-webkit-backdrop-filte
   .sp-ring,.sp-bar{display:none}
 }
 :root[data-motion="off"] .splash *{animation:none!important;transition:none!important}
+/* The quick opening (19 Nov 2026, Notion), in the app when it is reopened within 30 minutes of last use (Android had
+   closed it in the background, or the page reloaded): the finished doorway, name and promises fade in together in
+   0.4 s, then the door opens as usual (about 0.75 s in all), in the theme's colours from the first frame. */
+html.sp-quick .sp-in *{animation:none!important}
+html.sp-quick :is(.sp-sky,.sp-halo,.sp-name span,.sp-by,.sp-tag,.sp-promise){opacity:1;transform:none}
+html.sp-quick .sp-sun{transform:none}
+html.sp-quick :is(.sp-ring,.sp-bar,.sp-skip){display:none}
+html.sp-quick .sp-in{animation:sp-quick-in .4s cubic-bezier(.22,1,.36,1) backwards}
+@keyframes sp-quick-in{from{opacity:0;transform:scale(.97)}}
 :root[data-motion="off"] :is(.sp-sky,.sp-halo,.sp-name span,.sp-by,.sp-tag,.sp-promise,.sp-skip){opacity:1;transform:none}
 :root[data-motion="off"] .sp-sun{transform:none}
 :root[data-motion="off"] :is(.sp-ring,.sp-bar){display:none}

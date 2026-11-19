@@ -38,3 +38,8 @@ test("Developer message: the owner's note in both languages, loaded with legal.j
   assert.match(app, /LG\.DEV\[st\.lang === "bn" \? "bn" : "en"\]/);
   assert.match(app, /data-act="go" data-tab="more" data-sub="feedback">\$\{t\("feedback"\)\}/);
 });
+
+test("Android versionCode is above 1: Play already holds the AAB with versionCode 1 (build #25)", () => {
+  const v = +read("android-app/android/app/build.gradle").match(/versionCode (\d+)/)[1];
+  assert.ok(v >= 2, "raise versionCode by 1 for every AAB uploaded to Play");
+});

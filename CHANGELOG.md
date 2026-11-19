@@ -2,6 +2,15 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Developer message and privacy page for Google Play (19 November 2026)
+
+### Added
+- **More → Developer message:** the page was blank; it now has the developer's own note in English and Bangla (why the app exists, keep learning, nothing here is checked by a scholar, free forever with no ads, accounts or subscriptions), with a Feedback button. The text lives in `assets/legal.js` and loads with that page, so the first screen is no bigger.
+- **`privacy.html`:** the Privacy Policy as a plain web page (English and Bangla, no scripts) at https://islam-everyday.vercel.app/privacy.html, for Google Play's privacy policy link. Google's reviewers need a normal page; the old link opened a screen inside the app. The page is built from `assets/legal.js` by `tools/build-privacy.mjs`, and a test fails if the two ever differ. The Android app does not carry the page.
+
+### Changed
+- **Privacy Policy → Children:** the app is now described as made for everyone, including children from about 7 years old, and the section says plainly that there are no accounts, ads, analytics or tracking. "Last updated" is now 19 November 2026.
+
 ## Language name (19 November 2026)
 
 ### Changed

@@ -5,7 +5,7 @@ import { resolve, join, basename } from "node:path";
 const src = resolve(process.env.WEB_DIR || process.argv[2] || "../IslamEverydayWeb"), out = resolve("www");
 if (!existsSync(join(src, "index.html")) || !existsSync(join(src, "assets/app.js"))) { console.error(`Website not found at ${src}. Set WEB_DIR.`); process.exit(1); }
 const SKIP = new Set([".git", ".github", ".vercel", "node_modules", "android-app", "_to_delete", "tests", "tools", "docs", "scripts", "brand", "sw.js", "vercel.json", ".vercelignore",
-  "package.json", "package-lock.json", "README.md", "CHANGELOG.md", "RESEARCH.md"]);
+  "package.json", "package-lock.json", "README.md", "CHANGELOG.md", "RESEARCH.md", "privacy.html"]);
 rmSync(out, { recursive: true, force: true }); mkdirSync(out);
 // entry by entry: www/ can sit inside the website folder (android-app/ in the repo), and Node refuses to copy a folder into itself
 for (const e of readdirSync(src)) if (!SKIP.has(e) && !e.startsWith("stale-") && !e.endsWith(".log"))

@@ -38,7 +38,7 @@ function need(g) {
 }
 /* Which group a route or a shared link needs (null: nothing extra). */
 const routeGroup = r => r.tab === "quran" ? (r.sub === "stories" ? "stories" : (r.sub === "all" || r.surah) ? null : "study")
-  : r.tab === "hadith" ? "hadith" : r.tab === "more" ? ({ names: "names", guide: "guide", about: "legal", terms: "legal", privacy: "legal", women: "women", qibla: "qibla" }[r.sub] || null) : null;
+  : r.tab === "hadith" ? "hadith" : r.tab === "more" ? ({ names: "names", guide: "guide", about: "legal", terms: "legal", privacy: "legal", dev: "legal", women: "women", qibla: "qibla" }[r.sub] || null) : null;
 const hashGroup = h => /^story\//.test(h) ? "stories" : /^name\//.test(h) ? "names" : /^(hadith|nawawi)\//.test(h) ? "hadith" : null;
 const PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"], ROWS = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
 const TABS = ["today", "quran", "hadith", "more"]; // Nov 2026: Hadith is a tab; Duas moved into More
@@ -1680,9 +1680,12 @@ async function trkShare() {
   const u = URL.createObjectURL(blob), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(u), 5000); toast(t("sh_saved"));
 }
-/* Developer message (Nov 2026): left blank on purpose until the owner sends the message. */
+/* Developer message (19 Nov 2026): the owner's note, kept in assets/legal.js (LG.DEV) so it loads with that page. */
 function vDev() {
-  return `<div class="page-head">${back()}<h2>${t("dev")}</h2></div>`;
+  const d = LG && LG.DEV && LG.DEV[st.lang === "bn" ? "bn" : "en"];
+  return `<div class="page-head">${back()}<h2>${t("dev")}</h2></div>${d ? `<section class="card pad legal"><h3 class="sec-title">${esc(d.title)}</h3>
+  ${d.p.map(p => `<p>${esc(p)}</p>`).join("")}<p class="note">${esc(d.sign)}</p>
+  <p><button type="button" class="btn" data-act="go" data-tab="more" data-sub="feedback">${t("feedback")}</button></p></section>` : ""}`;
 }
 /* Install as an app (Oct 2026). Chrome/Edge/Samsung Internet: our own button opens the browser's install dialog.
    iPhone/iPad Safari has no install API, so it gets the two-step instruction instead. Hidden once installed. */

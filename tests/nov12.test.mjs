@@ -12,7 +12,7 @@ test("tabs: Today, Qur'an, Hadith, More; Duas lives in More; old links still wor
   const m = app.slice(app.indexOf("function vMore()"), app.indexOf("function vDev()"));
   const order = [...m.matchAll(/\["(\w+)", "\w+", /g)].map(x => x[1]);
   assert.deepEqual(order.slice(0, 7), ["duas", "names", "guide", "women", "qibla", "calendar", "dev"]); // 16 Nov: For women after Prayer guide; 18 Nov: the Qibla compass (app only)
-  assert.match(app, /function vDev\(\) \{\n  return `<div class="page-head">\$\{back\(\)\}<h2>\$\{t\("dev"\)\}<\/h2><\/div>`;/, "blank for now");
+  assert.match(app, /function vDev\(\) \{/); // 19 Nov: the owner's message, from assets/legal.js
 });
 
 test("notification sounds: phone default or one of three app sounds, each on its own channel", () => {

@@ -77,6 +77,7 @@ test("the English explanation is a separate layer: shown for English only, never
 /* ---------- English (India) / English (US) ---------- */
 test("language settings offer English (India), English (US) and Bangla; India is the default", () => {
   assert.deepEqual([...LOC.VARIANTS.map(v => v.id)], ["en-IN", "en-US", "bn"]);
+  assert.equal(LOC.VARIANTS[0].label, "English (UK)", "19 Nov 2026: the en-IN variant is shown as English (UK)");
   assert.equal(LOC.variant(undefined), "en-IN"); assert.equal(LOC.variant("en-AU"), "en-IN");
   assert.equal(LOC.tag("en", "en-US"), "en-US"); assert.equal(LOC.tag("bn", "en-US"), "bn-BD"); assert.equal(LOC.tag("en", null), "en-IN");
   assert.match(app, /const DEF = \{ lang: "en", loc: "en-IN"/);

@@ -610,7 +610,7 @@ aboutbody:"Islam Everyday নামাজ, কুরআন ও যিকির�
 };
 /* Phase 5.2 strings */
 Object.assign(I18N.en, {
-lang_h:"English (India) is the default. The variants change spelling and date formats only.",
+lang_h:"English (UK) is the default. The variants change spelling and date formats only.",
 appearance:"Appearance",appearance_h:"System follows your device or browser. Light and Dark each keep their own theme, chosen below.",md_system:"System",md_light:"Light",md_dark:"Dark",theme_h:"Three themes for each appearance. Choosing a theme from the other group switches the appearance to match. Saved on this device.",pl_classic:"Classic Teal",pl_sandstone:"Sandstone Teal",pl_jade:"Midnight Jade",pl_indigo:"Indigo Moon",
 cal_today:"Go to today",cal_hint:"Select a day for details. With a keyboard: arrow keys move between days, Page Up and Page Down change month.",
 cal_calc:"Calculated",cal_noadj:"",cal_adj:", adjusted by {n} day",

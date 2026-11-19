@@ -1,7 +1,8 @@
 /* Islam Everyday — interface language variants (Phase 5.2).
  *
  * The app has two content languages, English and Bangla (st.lang = "en" | "bn"). English comes in two interface
- * variants (st.loc): English (India), the default, and English (US). The variant changes only the interface:
+ * variants (st.loc): English (UK), the default (id "en-IN": shown as "English (UK)" since 19 Nov 2026, formats
+ * unchanged), and English (US). The variant changes only the interface:
  *   - dates and numbers are formatted with Intl for "en-IN" or "en-US" (Bangla uses "bn-BD");
  *   - "am"/"pm" is written "AM"/"PM" in the US variant;
  *   - in the US variant, interface strings written in British/Indian spelling use US spelling (see US below).
@@ -15,7 +16,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
   const VARIANTS = [
-    { id: "en-IN", lang: "en", label: "English (India)", short: "EN" },
+    { id: "en-IN", lang: "en", label: "English (UK)", short: "EN" },
     { id: "en-US", lang: "en", label: "English (US)", short: "EN" },
     { id: "bn", lang: "bn", label: "বাংলা", short: "বাং" }
   ];

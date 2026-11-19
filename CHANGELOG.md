@@ -2,6 +2,11 @@
 
 Phases 1–3 were built under the working name DinSathi; the project folder is still `DinSathi-Web`.
 
+## Language name (19 November 2026)
+
+### Changed
+- **Settings → Language:** "English (India)" is now called "English (UK)". Only the name changed: spelling, dates and number formats are exactly as before, and anyone who had it selected keeps it.
+
 ## Title bar fix (19 November 2026)
 
 ### Fixed

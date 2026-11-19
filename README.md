@@ -277,7 +277,7 @@ index     = ((dayNumber mod 180) + 180) mod 180                       (0 = sched
 
 ### Language and themes (Phase 5.2, 5.3)
 
-- Settings → Language: **English (India)** (default), **English (US)** and **বাংলা**. The English variants share the same content; they change date and number formats (Intl `en-IN` or `en-US`), "am/pm" or "AM/PM", and US spelling of interface strings. Religious texts are never respelled. Switching keeps the page, filters, the selected date and the card or verse being read. The header button still switches between English and Bangla, keeping the chosen English variant.
+- Settings → Language: **English (UK)** (default; id `en-IN`), **English (US)** and **বাংলা**. The English variants share the same content; they change date and number formats (Intl `en-IN` or `en-US`), "am/pm" or "AM/PM", and US spelling of interface strings. Religious texts are never respelled. Switching keeps the page, filters, the selected date and the card or verse being read. The header button still switches between English and Bangla, keeping the chosen English variant.
 - Phase 5.3: **Appearance** (System, Light, Dark) and **Theme** (colour palette) are separate settings. Palettes: Classic (the app's own), Emerald & Ivory, **Sandstone & Deep Teal**, **Burgundy & Warm Parchment**, and Midnight Indigo & Gold; each has a light and a dark set built from the same tokens. System follows the device and changes live when the device switches. `assets/theme-boot.js` runs in `<head>` before the stylesheet, so the saved choice is applied before the first paint (no flash) on every page. A Phase 5.2 setting is migrated (Emerald → Emerald palette in Light, Midnight Indigo → Indigo palette in Dark). All 10 sets are contrast-checked: body text at least 7:1, muted text and accents at least 4.5:1, focus ring at least 3:1. *(Face 7 replaced these palettes with three themes per appearance; see "Face 7 facelift" above. The six sets are checked the same way.)*
 - A restrained glass effect (translucent blur) is used only for the header, its buttons, the tab bar, segmented controls, the tracker date control, the sidebar's next-prayer box and the calendar popover. Cards and all reading surfaces stay opaque. Without `backdrop-filter` support, or with "reduce transparency" or "more contrast", these fall back to solid surfaces.
 
@@ -395,7 +395,7 @@ assets/data.js             UI strings (English/Bangla), duas, cities, methods, e
 assets/quran-meta.js       Surah names and metadata
 assets/votd.js             Verse for today: 180-day schedule, themes, context notes, date rule
 assets/votd-en.js          English Al-Mukhtasar explanations for the 267 scheduled verses, source record, editorial notes
-assets/locale.js           English (India) / English (US) variants: Intl locale, AM/PM, US spelling of interface strings
+assets/locale.js           English (UK) (en-IN) / English (US) variants: Intl locale, AM/PM, US spelling of interface strings
 assets/names.js            99 Names: content, sources, per-entry status
 assets/guide.js            Prayer guide: rak'ahs by school, terms, sources
 assets/bnfix.js            Display-time repair of legacy Bangla font characters in the short tafsir
